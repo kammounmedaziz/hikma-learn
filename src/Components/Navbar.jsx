@@ -11,8 +11,9 @@ const Navbar = () => {
     const navItems = [
         { href: "#Home", label: "Home" },
         { href: "#About", label: "About" },
-        { href: "#Team", label: "Team" },
-        { href: "#Statistics", label: "Statistics" },
+        { href: "#Courses", label: "Courses" },
+        { href: "#Exams", label: "Exams" },
+        { href: "#Dhashboard", label: "Dhashboard" },
     ];
 
     useEffect(() => {
@@ -101,7 +102,7 @@ const Navbar = () => {
                             onClick={(e) => scrollToSection(e, "#Home")}
                             className="text-xl font-bold bg-gradient-to-r from-[#f75555] to-[#203bb3] bg-clip-text text-transparent"
                         >
-                            AeroCraft
+                            HIKMA LEARN
                         </a>
                     </div>
     

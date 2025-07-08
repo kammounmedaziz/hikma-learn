@@ -15,15 +15,7 @@ const Header = memo(() => (
         About The Project
       </h2>
     </div>
-    <p 
-      className="mt-2 text-gray-400 max-w-2xl mx-auto text-base sm:text-lg flex items-center justify-center gap-2"
-      data-aos="zoom-in-up"
-      data-aos-duration="800"
-    >
-      <Sparkles className="w-5 h-5 text-red-400" />
-      Your Best Solution For ..............
-      <Sparkles className="w-5 h-5 text-red-400" />
-    </p>
+    
   </div>
 ));
 Header.displayName = "Header";
@@ -50,7 +42,7 @@ const ProfileImage = memo(() => (
           <div className="absolute inset-0 bg-gradient-to-t from-red-500/20 via-transparent to-blue-500/20 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-700 hidden sm:block" />
           
           <img
-            src="../../public/imgs/Photo.jpg"
+            src="../../src/assets/media/hikma learn.jpg"
             alt="Profile"
             className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110 group-hover:rotate-2"
             loading="lazy"
@@ -112,16 +104,19 @@ const AboutPage = () => {
               data-aos-duration="1000"
             >
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#f1636f] to-[#a855f7]">
-                AESS PROJECT
+                HIKMA LEARN
               </span>
-              <span 
-                className="block mt-2 text-gray-200"
-                data-aos="fade-right"
-                data-aos-duration="1300"
-              >
-                AeroCraft
-              </span>
+              
             </h2>
+            <p 
+      className="mt-2 text-gray-400 max-w-2xl mx-auto text-base sm:text-lg flex items-center justify-center gap-2"
+      data-aos="zoom-in-up"
+      data-aos-duration="800"
+    >
+      <Sparkles className="w-5 h-5 text-red-400" />
+      Because every voice deserves to shine
+      <Sparkles className="w-5 h-5 text-red-400" />
+    </p>
             
             <p 
               className="text-base sm:text-lg lg:text-xl text-gray-400 leading-relaxed text-justify pb-4 sm:pb-0"
