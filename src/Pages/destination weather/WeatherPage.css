@@ -1,0 +1,22 @@
+.main {
+  background-color: transparent;
+  color: white;
+  padding: 20px;
+}
+
+.navbar-main {
+  color: white;
+  margin-bottom: 20px;
+}
+
+.warningBanner {
+  color: #ff6b6b;
+  padding: 15px;
+  background-color: rgba(255, 0, 0, 0.1);
+  border-radius: 5px;
+  margin-top: 20px;
+}
+
+.warningBanner {
+  @apply p-4 bg-red-900/50 border border-red-700 rounded-lg text-red-200 mt-6;
+}

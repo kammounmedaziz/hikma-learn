@@ -1,0 +1,18 @@
+body {
+  background-color: #f8f9fa;
+  font-family: arial, sans-serif;
+}
+
+.navbar-main h1 {
+  padding: 0.66rem 0;
+  text-align: center;
+  background-color: #4e4d4a;
+  font-family: Poppins, sans-serif;
+  font-size: 1.8rem;
+  color: #fff;
+}
+
+.warningBanner {
+  margin-top: 1rem;
+  text-align: center;
+}

@@ -1,0 +1,33 @@
+.weatherData {
+  margin-top: 1% !important;
+  margin-bottom: 25px;
+  background-color: white;
+}
+
+.currentTemp {
+  font-size: 4em;
+  font-weight: 400;
+}
+
+.currentCity {
+  font-size: 1.5em;
+  font-weight: 100;
+}
+
+.currentDay,
+.currentDesc {
+  font-size: 1em;
+  font-weight: 100;
+}
+
+.weatherData,
+.currentCity,
+.currentDay,
+.currentDesc {
+  padding-left: 12px;
+}
+
+.celsius {
+  font-size: 0.4em;
+  margin-top: 12px;
+}

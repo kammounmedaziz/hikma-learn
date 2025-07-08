@@ -1,0 +1,12 @@
+td {
+  text-align: center;
+  padding-bottom: 0 !important;
+}
+
+.weeklyData {
+  padding: 0 !important;
+}
+
+.rowWeeklyData {
+  padding-top: 24px !important;
+}
