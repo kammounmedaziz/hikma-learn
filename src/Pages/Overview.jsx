@@ -185,7 +185,7 @@ const FlightOverviewPage = () => {
             </h1>
             <p className="text-gray-300 text-lg md:text-xl flex items-center justify-center gap-2 mb-4">
               <Sparkles className="w-5 h-5 text-[#f1636f]" />
-              Live Flight Data Dashboard
+              Live Flight Data Dashboard edited
               <Sparkles className="w-5 h-5 text-[#f1636f]" />
             </p>
             
