@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { Sparkles, BookOpen, Users, Award, ArrowRight } from 'lucide-react';
-import AOS from 'aos';
-import 'aos/dist/aos.css';
 
 const AnimatedBackground = () => {
   const blobRefs = useRef([])
@@ -48,16 +46,16 @@ const AnimatedBackground = () => {
       <div className="absolute inset-0">
         <div
           ref={(ref) => (blobRefs.current[0] = ref)}
-          className="absolute top-0 -left-4 md:w-96 md:h-96 w-72 h-72 bg-indigo-500 rounded-full mix-blend-multiply filter blur-[128px] opacity-40 md:opacity-20 "></div>
+          className="absolute top-0 -left-4 md:w-96 md:h-96 w-72 h-72 bg-red-600 rounded-full mix-blend-multiply filter blur-[128px] opacity-30 md:opacity-15 "></div>
         <div
           ref={(ref) => (blobRefs.current[1] = ref)}
-          className="absolute top-0 -right-4 w-96 h-96 bg-teal-400 rounded-full mix-blend-multiply filter blur-[128px] opacity-40 md:opacity-20 hidden sm:block"></div>
+          className="absolute top-0 -right-4 w-96 h-96 bg-rose-500 rounded-full mix-blend-multiply filter blur-[128px] opacity-30 md:opacity-15 hidden sm:block"></div>
         <div
           ref={(ref) => (blobRefs.current[2] = ref)}
-          className="absolute -bottom-8 left-[-40%] md:left-20 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-[128px] opacity-40 md:opacity-20 "></div>
+          className="absolute -bottom-8 left-[-40%] md:left-20 w-96 h-96 bg-red-700 rounded-full mix-blend-multiply filter blur-[128px] opacity-30 md:opacity-15 "></div>
           <div
           ref={(ref) => (blobRefs.current[3] = ref)}
-          className="absolute -bottom-10 right-20 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-[128px] opacity-20 md:opacity-10 hidden sm:block"></div>
+          className="absolute -bottom-10 right-20 w-96 h-96 bg-gray-600 rounded-full mix-blend-multiply filter blur-[128px] opacity-20 md:opacity-10 hidden sm:block"></div>
       </div>
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f10_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f10_1px,transparent_1px)] bg-[size:24px_24px]"></div>
     </div>
@@ -92,7 +90,7 @@ const SuccessStoryCard = ({ person, delay }) => {
         <div className="bg-gray-200 border-2 border-dashed rounded-xl w-16 h-16" />
         <div>
           <h3 className="text-xl font-bold text-white">{person.name}</h3>
-          <p className="text-teal-300 text-sm">{person.challenge}</p>
+          <p className="text-red-300 text-sm">{person.challenge}</p>
         </div>
       </div>
       <div className="flex items-center gap-2 mb-3">
@@ -101,7 +99,7 @@ const SuccessStoryCard = ({ person, delay }) => {
       </div>
       <p className="text-gray-300 mb-4">{person.description}</p>
       <div className="flex justify-end">
-        <button className="flex items-center gap-1 text-indigo-300 hover:text-indigo-200 transition-colors">
+        <button className="flex items-center gap-1 text-red-300 hover:text-red-200 transition-colors">
           <span>Learn more</span>
           <ArrowRight className="w-4 h-4" />
         </button>
@@ -109,31 +107,8 @@ const SuccessStoryCard = ({ person, delay }) => {
     </div>
   );
 };
+
 const Home = () => {
-  // Optimized AOS initialization
-  useEffect(() => {
-    const initAOS = () => {
-      AOS.init({
-        once: false, 
-      });
-    };
-
-    initAOS();
-    
-    // Debounced resize handler
-    let resizeTimer;
-    const handleResize = () => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(initAOS, 250);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      clearTimeout(resizeTimer);
-    };
-  }, []);
-
   const inspiringPeople = [
     {
       name: "Stephen Hawking",
@@ -189,32 +164,26 @@ const Home = () => {
       <div className="text-center z-10 relative max-w-5xl mx-auto px-[5%] py-20">
         <div className="inline-block relative group mb-6">
           <h1 
-            className="text-4xl md:text-6xl lg:text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#5e72e4] to-[#11cdef] leading-tight"
+            className="text-4xl md:text-6xl lg:text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-red-400 via-red-500 to-red-700 leading-tight drop-shadow-2xl"
             style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
-            data-aos="zoom-in-up"
-            data-aos-duration="600"
           >
             WELCOME TO{' '}
-            <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-br from-rose-300 via-red-500 to-red-800 bg-clip-text text-transparent drop-shadow-lg">
               HIKMA LEARN
             </span>
           </h1>
         </div>
 
         <p 
-          className="mt-6 text-gray-300 max-w-3xl mx-auto text-lg md:text-xl lg:text-2xl font-light flex items-center justify-center gap-2 mb-12"
-          data-aos="zoom-in-up"
-          data-aos-duration="800"
+          className="mt-6 text-gray-100 max-w-3xl mx-auto text-lg md:text-xl lg:text-2xl font-light flex items-center justify-center gap-2 mb-12 drop-shadow-lg"
         >
-          <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-[#11cdef]" />
+          <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-red-400 drop-shadow-md" />
           Where limitations become launchpads for greatness
-          <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-[#11cdef]" />
+          <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-red-400 drop-shadow-md" />
         </p>
 
         <p 
           className="text-gray-400 max-w-4xl mx-auto text-base md:text-lg mb-12"
-          data-aos="fade-up"
-          data-aos-duration="1000"
         >
           Hikma Learn is dedicated to creating inclusive learning opportunities that empower individuals of all abilities. We believe that disability is not inability, but rather a unique perspective that can lead to extraordinary achievements. Our platform celebrates neurodiversity and provides adaptive learning tools for everyone.
         </p>
@@ -225,19 +194,17 @@ const Home = () => {
             onClick={handleExplore}
             className="
               w-full lg:w-auto px-8 py-4 md:px-12 md:py-5 text-lg md:text-xl font-semibold text-white
-              bg-gradient-to-r from-[#5e72e4] to-[#11cdef] hover:from-[#4a5bd0] hover:to-[#0fb4d9]
-              rounded-lg shadow-lg hover:shadow-xl transform transition-all duration-300 hover:scale-105
+              bg-gradient-to-br from-red-500 via-red-600 to-red-800 hover:from-red-600 hover:via-red-700 hover:to-red-900
+              rounded-lg shadow-xl hover:shadow-2xl transform transition-all duration-300 hover:scale-105
               relative overflow-hidden group
             "
-            data-aos="fade-up"
-            data-aos-duration="800"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-[#5e72e4] to-[#11cdef] rounded-lg blur-lg opacity-50 group-hover:opacity-75 transition-opacity duration-300"></div>
-            <span className="relative z-10 flex items-center justify-center gap-2">
+            <div className="absolute inset-0 bg-gradient-to-br from-red-500 via-red-600 to-red-800 rounded-lg blur-lg opacity-60 group-hover:opacity-80 transition-opacity duration-300"></div>
+            <span className="relative z-10 flex items-center justify-center gap-2 drop-shadow-lg">
               <BookOpen className="w-5 h-5 md:w-6 md:h-6" />
               Explore Courses
             </span>
-            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12"></div>
+            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12"></div>
           </button>
 
           <button 
@@ -245,16 +212,15 @@ const Home = () => {
             type="button"
             className="
               w-full lg:w-auto px-8 py-4 md:px-12 md:py-5 text-lg md:text-xl font-medium 
-              rounded-lg border-2 border-gray-200 bg-transparent text-white shadow-sm 
-              hover:bg-white/10 focus:outline-none focus:bg-white/10 
+              rounded-lg border-2 border-gray-400 bg-gradient-to-br from-gray-800/50 to-gray-900/50 text-gray-100 shadow-lg 
+              hover:bg-gradient-to-br hover:from-gray-700/60 hover:to-gray-800/60 hover:border-gray-300 
+              focus:outline-none focus:ring-2 focus:ring-gray-400/50
               disabled:opacity-50 disabled:pointer-events-none
-              transition-all duration-300 hover:scale-105
+              transition-all duration-300 hover:scale-105 backdrop-blur-sm
             "
-            data-aos="fade-up"
-            data-aos-duration="1000"
           >
-            <Users className="w-5 h-5 md:w-6 md:h-6 inline mr-2" />
-            Join Community
+            <Users className="w-5 h-5 md:w-6 md:h-6 inline mr-2 drop-shadow-sm" />
+            <span className="drop-shadow-sm">Join Community</span>
           </button>
         </div>
       </div>
@@ -264,16 +230,13 @@ const Home = () => {
         <div className="text-center mb-16">
           <h2 
             className="text-3xl md:text-4xl font-bold text-white mb-4"
-            data-aos="fade-up"
           >
-            <span className="bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-br from-red-300 via-red-500 to-red-700 bg-clip-text text-transparent drop-shadow-lg">
               Inspiring Success Stories
             </span>
           </h2>
           <p 
             className="text-gray-400 max-w-2xl mx-auto text-lg"
-            data-aos="fade-up"
-            data-aos-delay="100"
           >
             These remarkable individuals overcame significant challenges to achieve greatness. Their stories remind us that true potential knows no boundaries.
           </p>
@@ -291,20 +254,18 @@ const Home = () => {
 
         <div className="text-center mt-16">
           <button 
-            className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors duration-300"
-            data-aos="fade-up"
+            className="px-6 py-3 bg-gradient-to-br from-red-600 via-red-700 to-red-800 hover:from-red-700 hover:via-red-800 hover:to-red-900 text-white font-medium rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 border border-red-500/30"
           >
-            Discover More Inspiring Stories
+            <span className="drop-shadow-sm">Discover More Inspiring Stories</span>
           </button>
         </div>
       </div>
 
       {/* Testimonials Section */}
       <div className="z-10 relative max-w-4xl mx-auto px-4 w-full pb-24">
-        <div className="bg-indigo-900/30 backdrop-blur-sm rounded-3xl p-8 md:p-12 border border-indigo-500/30">
+        <div className="bg-gray-800/40 backdrop-blur-sm rounded-3xl p-8 md:p-12 border border-gray-600/30">
           <h3 
             className="text-2xl md:text-3xl font-bold text-center text-white mb-8"
-            data-aos="fade-up"
           >
             What Our Learners Say
           </h3>
@@ -312,13 +273,12 @@ const Home = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div 
               className="bg-white/5 p-6 rounded-xl border border-white/10"
-              data-aos="fade-right"
             >
               <div className="flex items-center gap-4 mb-4">
-                <div className="bg-gray-200 border-2 border-dashed rounded-xl w-12 h-12" />
+                <div className="bg-gray-300 border-2 border-dashed rounded-xl w-12 h-12" />
                 <div>
                   <h4 className="font-bold text-white">Sarah Johnson</h4>
-                  <p className="text-indigo-300 text-sm">Visual Impairment</p>
+                  <p className="text-red-300 text-sm">Visual Impairment</p>
                 </div>
               </div>
               <p className="text-gray-300 italic">"Hikma Learn's audio-based courses have transformed how I access education. I've gained skills I never thought possible with my visual impairment."</p>
@@ -326,13 +286,12 @@ const Home = () => {
             
             <div 
               className="bg-white/5 p-6 rounded-xl border border-white/10"
-              data-aos="fade-left"
             >
               <div className="flex items-center gap-4 mb-4">
-                <div className="bg-gray-200 border-2 border-dashed rounded-xl w-12 h-12" />
+                <div className="bg-gray-300 border-2 border-dashed rounded-xl w-12 h-12" />
                 <div>
                   <h4 className="font-bold text-white">Michael Torres</h4>
-                  <p className="text-indigo-300 text-sm">Dyslexia</p>
+                  <p className="text-red-300 text-sm">Dyslexia</p>
                 </div>
               </div>
               <p className="text-gray-300 italic">"The multi-sensory approach at Hikma Learn helped me overcome my reading challenges. I'm now pursuing a degree in graphic design!"</p>
@@ -353,8 +312,8 @@ const Home = () => {
           position: relative;
           border: double 3px transparent;
           border-radius: 20px;
-          background-image: linear-gradient(#0f172a, #0f172a), 
-                            linear-gradient(to right, #6366f1, #06b6d4);
+          background-image: linear-gradient(#1f2937, #1f2937), 
+                            linear-gradient(to right, #dc2626, #ef4444);
           background-origin: border-box;
           background-clip: content-box, border-box;
         }
