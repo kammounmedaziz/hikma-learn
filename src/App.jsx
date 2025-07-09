@@ -3,6 +3,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useState } from 'react';
 import "./index.css";
 import Navbar from "./Components/Navbar";
+import StephenHawkingCard from "./Components/StephenHawkingCard";
+import GhanimAlMuftahCard from "./Components/Ghanim Al Muftah"
+import Home from "./Pages/Home";
 import About from "./Pages/About"
 import WelcomeScreen from "./Pages/WelcomeScreen";
 import AnimatedBackground from "./Components/Background";
@@ -11,7 +14,6 @@ import PropTypes from "prop-types";
 import Signup from './Pages/signup';
 import login from './Pages/signin';
 import Signin from './Pages/signin';
-
 
 
 
@@ -34,11 +36,9 @@ const LandingPage = ({ showWelcome, setShowWelcome }) => {
           
           {/* Content with higher z-index */}
           <div className="relative z-10">
-            <Navbar/>
-            <About/>
-            
-  
-            
+            <Navbar />
+            <Home />
+            <About />
           </div>
         </div>
       )}
