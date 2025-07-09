@@ -13,7 +13,7 @@ const Navbar = () => {
         { href: "#About", label: "About" },
         { href: "#Courses", label: "Courses" },
         { href: "#Exams", label: "Exams" },
-        { href: "#Dashboard", label: "Dashboard" }, // Fixed typo here
+        { href: "#Dashboard", label: "Dashboard" },
     ];
 
     useEffect(() => {
@@ -103,10 +103,11 @@ const Navbar = () => {
                             className="flex items-center"
                         >
                             <img 
-                                src="../assets/media/side logo.png" 
+                                src="src\assets\media\side logo.png" 
                                 alt="Hikma Learn Logo"
-                                className="h-10 w-auto" 
-                            />
+                                className="h-10 w-auto"
+                                loading="lazy"
+                                />
                         </a>
                     </div>
     

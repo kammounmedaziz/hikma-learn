@@ -121,9 +121,13 @@ const WelcomeScreen = ({ onLoadingComplete }) => {
                     </span>{' '}
                   </div>
                   <div>
-                    <span data-aos="fade-up" data-aos-delay="800" className="inline-block px-2 bg-gradient-to-r from-indigo-600 to-red-600 bg-clip-text text-transparent">
-                      HIKMA LEARN
-                    </span>{' '}
+                    <img data-aos="fade-up" 
+                      data-aos-delay="800" 
+                      className="inline-block px-2 bg-gradient-to-r from-indigo-600 to-red-600 bg-clip-text text-transparent"
+                      src="src\assets\media\side logo.png" 
+                      alt="Hikma Learn Logo"
+                      loading="lazy"
+                      />
 
                   </div>
                 </h1>
