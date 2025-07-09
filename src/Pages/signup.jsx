@@ -65,7 +65,7 @@ export default function Signup() {
           </div>
 
           <div className="mb-3">
-            <label className="form-label text-white">Phone Number</label>
+            <label className="form-label text-white">Phone Numbers</label>
             <input
               type="tel"
               className="form-control bg-transparent border-white text-white"
