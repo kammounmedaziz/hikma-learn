@@ -13,7 +13,7 @@ const Navbar = () => {
         { href: "#About", label: "About" },
         { href: "#Courses", label: "Courses" },
         { href: "#Exams", label: "Exams" },
-        { href: "#Dhashboard", label: "Dhashboard" },
+        { href: "#Dashboard", label: "Dashboard" }, // Fixed typo here
     ];
 
     useEffect(() => {
@@ -95,14 +95,18 @@ const Navbar = () => {
         }`}>
             <div className="mx-auto px-4 sm:px-6 lg:px-[10%]">
                 <div className="flex items-center justify-between h-16">
-                    {/* Logo */}
+                    {/* Logo with image */}
                     <div className="flex-shrink-0">
                         <a
                             href="#Home"
                             onClick={(e) => scrollToSection(e, "#Home")}
-                            className="text-xl font-bold bg-gradient-to-r from-[#f75555] to-[#203bb3] bg-clip-text text-transparent"
+                            className="flex items-center"
                         >
-                            HIKMA LEARN
+                            <img 
+                                src="../assets/media/side logo.png" 
+                                alt="Hikma Learn Logo"
+                                className="h-10 w-auto" 
+                            />
                         </a>
                     </div>
     
