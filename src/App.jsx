@@ -8,6 +8,9 @@ import WelcomeScreen from "./Pages/WelcomeScreen";
 import AnimatedBackground from "./Components/Background";
 import { AnimatePresence } from "framer-motion";
 import PropTypes from "prop-types";
+import Signup from './Pages/signup';
+import login from './Pages/signin';
+import Signin from './Pages/signin';
 
 
 
@@ -55,6 +58,11 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<LandingPage showWelcome={showWelcome} setShowWelcome={setShowWelcome} />} />
+         <Route path="/signup" element={<Signup />} />
+          <Route path="/signin" element={<Signup />} />
+
+
+
       </Routes>
     </BrowserRouter>
   );
