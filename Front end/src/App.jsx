@@ -3,8 +3,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useState } from 'react';
 import "./index.css";
 import Navbar from "./Components/Navbar";
-import StephenHawkingCard from "./Components/StephenHawkingCard";
-import GhanimAlMuftahCard from "./Components/Ghanim Al Muftah"
 import Home from "./Pages/Home";
 import About from "./Pages/About"
 import WelcomeScreen from "./Pages/WelcomeScreen";

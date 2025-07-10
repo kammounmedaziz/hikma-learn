@@ -1,5 +1,8 @@
 import { useEffect, useRef } from 'react';
-import { Sparkles, Users, Award, ArrowRight, Home } from 'lucide-react';
+import { Sparkles, Users, Home } from 'lucide-react';
+
+
+import BeethovenCard from '../Components/BeethovenCard'; 
 
 const AnimatedBackground = () => {
   const blobRefs = useRef([])
@@ -62,92 +65,7 @@ const AnimatedBackground = () => {
   )
 }
 
-const SuccessStoryCard = ({ person, delay }) => {
-  const synthRef = useRef(window.speechSynthesis);
-
-  const handleSpeak = () => {
-    if (synthRef.current.speaking) synthRef.current.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(person.description);
-    utterance.lang = "en-US";
-    utterance.rate = 1;
-    synthRef.current.speak(utterance);
-  };
-
-  const handleStop = () => {
-    synthRef.current.cancel();
-  };
-
-  return (
-    <div 
-      className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] overflow-hidden"
-      data-aos="fade-up"
-      data-aos-delay={delay}
-      onMouseEnter={handleSpeak}
-      onMouseLeave={handleStop}
-    >
-      <div className="flex items-start gap-4 mb-4">
-        <div className="bg-gray-200 border-2 border-dashed rounded-xl w-16 h-16" />
-        <div>
-          <h3 className="text-xl font-bold text-white">{person.name}</h3>
-          <p className="text-red-300 text-sm">{person.challenge}</p>
-        </div>
-      </div>
-      <div className="flex items-center gap-2 mb-3">
-        <Award className="w-5 h-5 text-yellow-400" />
-        <p className="text-yellow-300 font-medium">{person.achievement}</p>
-      </div>
-      <p className="text-gray-300 mb-4">{person.description}</p>
-      <div className="flex justify-end">
-        <button className="flex items-center gap-1 text-red-300 hover:text-red-200 transition-colors">
-          <span>Learn more</span>
-          <ArrowRight className="w-4 h-4" />
-        </button>
-      </div>
-    </div>
-  );
-};
-
 const Inspiration = () => {
-  const inspiringPeople = [
-    {
-      name: "Stephen Hawking",
-      challenge: "Motor Neuron Disease",
-      achievement: "Renowned Theoretical Physicist",
-      description: "Despite being diagnosed with ALS at 21 and given just a few years to live, Hawking became one of the most influential scientists of our time, authoring groundbreaking theories on black holes and cosmology."
-    },
-    {
-      name: "Helen Keller",
-      challenge: "Deaf-blind",
-      achievement: "Author, Activist & Lecturer",
-      description: "The first deaf-blind person to earn a Bachelor of Arts degree, Keller became a world-famous speaker and author, advocating for people with disabilities."
-    },
-    {
-      name: "Frida Kahlo",
-      challenge: "Polio & Spinal Injury",
-      achievement: "Iconic Mexican Artist",
-      description: "After a bus accident left her with lifelong pain and medical problems, Kahlo channeled her experiences into powerful, surrealist paintings that made her an art world legend."
-    },
-    {
-      name: "Nick Vujicic",
-      challenge: "Tetra-amelia syndrome",
-      achievement: "Motivational Speaker & Evangelist",
-      description: "Born without limbs, Vujicic has become a world-renowned motivational speaker, inspiring millions with his message of hope and resilience."
-    },
-    {
-      name: "Temple Grandin",
-      challenge: "Autism Spectrum",
-      achievement: "Animal Scientist & Autism Advocate",
-      description: "Grandin revolutionized livestock handling designs and became a leading voice in autism advocacy, showing how neurodiversity can be a strength."
-    },
-    {
-      name: "Andrea Bocelli",
-      challenge: "Blindness",
-      achievement: "World-Famous Tenor",
-      description: "Blinded at age 12, Bocelli has sold over 90 million records worldwide, becoming one of the most successful classical crossover artists in history."
-    }
-  ];
-
   const handleHome = () => {
     window.location.href = '/';
   };
@@ -194,31 +112,15 @@ const Inspiration = () => {
         </p>
       </div>
 
-      {/* Inspiring Individuals Section */}
-      <div className="z-10 relative max-w-6xl mx-auto px-4 w-full pb-20">
-        <div className="text-center mb-16">
-          <h2 
-            className="text-3xl md:text-4xl font-bold text-white mb-4"
-          >
-            <span className="bg-gradient-to-br from-red-300 via-red-500 to-red-700 bg-clip-text text-transparent drop-shadow-lg">
-              Remarkable Individuals
-            </span>
-          </h2>
-          <p 
-            className="text-gray-400 max-w-2xl mx-auto text-lg"
-          >
-            These remarkable individuals overcame significant challenges to achieve greatness. Their stories remind us that true potential knows no boundaries.
-          </p>
-        </div>
+     
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {inspiringPeople.map((person, index) => (
-            <SuccessStoryCard 
-              key={index} 
-              person={person} 
-              delay={100 + (index * 100)}
-            />
-          ))}
+          <BeethovenCard />
+          {/* <HelenKellerCard /> */}
+          {/* <FridaKahloCard /> */}
+          {/* <NickVujicicCard /> */}
+          {/* <TempleGrandinCard /> */}
+          {/* <AndreaBocellCard /> */}
         </div>
 
         <div className="text-center mt-16">
