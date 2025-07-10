@@ -14,6 +14,7 @@ import PropTypes from "prop-types";
 import Signup from './Components/signup';
 import login from './Components/signin';
 import Signin from './Components/signin';
+import Inspiration from './Pages/Inspirations';
 
 
 
@@ -38,6 +39,7 @@ const LandingPage = ({ showWelcome, setShowWelcome }) => {
           <div className="relative z-10">
             <Navbar />
             <Home />
+            <Inspiration/>
             <About />
           </div>
         </div>

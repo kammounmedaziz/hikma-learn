@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { Sparkles, BookOpen, Users, Award, ArrowRight } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+import { Sparkles, BookOpen, Users } from 'lucide-react';
 
 const AnimatedBackground = () => {
   const blobRefs = useRef([])
@@ -62,98 +62,17 @@ const AnimatedBackground = () => {
   )
 }
 
-const SuccessStoryCard = ({ person, delay }) => {
-  const synthRef = useRef(window.speechSynthesis);
-
-  const handleSpeak = () => {
-    if (synthRef.current.speaking) synthRef.current.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(person.description);
-    utterance.lang = "en-US"; // Change to "fr-FR" if using French
-    utterance.rate = 1; // Adjust speed if needed
-    synthRef.current.speak(utterance);
-  };
-
-  const handleStop = () => {
-    synthRef.current.cancel();
-  };
-
-  return (
-    <div 
-      className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] overflow-hidden"
-      data-aos="fade-up"
-      data-aos-delay={delay}
-      onMouseEnter={handleSpeak}
-      onMouseLeave={handleStop}
-    >
-      <div className="flex items-start gap-4 mb-4">
-        <div className="bg-gray-200 border-2 border-dashed rounded-xl w-16 h-16" />
-        <div>
-          <h3 className="text-xl font-bold text-white">{person.name}</h3>
-          <p className="text-red-300 text-sm">{person.challenge}</p>
-        </div>
-      </div>
-      <div className="flex items-center gap-2 mb-3">
-        <Award className="w-5 h-5 text-yellow-400" />
-        <p className="text-yellow-300 font-medium">{person.achievement}</p>
-      </div>
-      <p className="text-gray-300 mb-4">{person.description}</p>
-      <div className="flex justify-end">
-        <button className="flex items-center gap-1 text-red-300 hover:text-red-200 transition-colors">
-          <span>Learn more</span>
-          <ArrowRight className="w-4 h-4" />
-        </button>
-      </div>
-    </div>
-  );
-};
-
 const Home = () => {
-  const inspiringPeople = [
-    {
-      name: "Stephen Hawking",
-      challenge: "Motor Neuron Disease",
-      achievement: "Renowned Theoretical Physicist",
-      description: "Despite being diagnosed with ALS at 21 and given just a few years to live, Hawking became one of the most influential scientists of our time, authoring groundbreaking theories on black holes and cosmology."
-    },
-    {
-      name: "Helen Keller",
-      challenge: "Deaf-blind",
-      achievement: "Author, Activist & Lecturer",
-      description: "The first deaf-blind person to earn a Bachelor of Arts degree, Keller became a world-famous speaker and author, advocating for people with disabilities."
-    },
-    {
-      name: "Frida Kahlo",
-      challenge: "Polio & Spinal Injury",
-      achievement: "Iconic Mexican Artist",
-      description: "After a bus accident left her with lifelong pain and medical problems, Kahlo channeled her experiences into powerful, surrealist paintings that made her an art world legend."
-    },
-    {
-      name: "Nick Vujicic",
-      challenge: "Tetra-amelia syndrome",
-      achievement: "Motivational Speaker & Evangelist",
-      description: "Born without limbs, Vujicic has become a world-renowned motivational speaker, inspiring millions with his message of hope and resilience."
-    },
-    {
-      name: "Temple Grandin",
-      challenge: "Autism Spectrum",
-      achievement: "Animal Scientist & Autism Advocate",
-      description: "Grandin revolutionized livestock handling designs and became a leading voice in autism advocacy, showing how neurodiversity can be a strength."
-    },
-    {
-      name: "Andrea Bocelli",
-      challenge: "Blindness",
-      achievement: "World-Famous Tenor",
-      description: "Blinded at age 12, Bocelli has sold over 90 million records worldwide, becoming one of the most successful classical crossover artists in history."
-    }
-  ];
-
   const handleExplore = () => {
     window.location.href = '/courses';
   };
 
   const handleCommunity = () => {
     window.location.href = '/community';
+  };
+
+  const handleInspiration = () => {
+    window.location.href = '/inspiration';
   };
 
   return (
@@ -220,83 +139,18 @@ const Home = () => {
             "
           >
             <Users className="w-5 h-5 md:w-6 md:h-6 inline mr-2 drop-shadow-sm" />
-            <span className="drop-shadow-sm">Join Community</span>
+            <span className="drop-shadow-sm">Sign In</span>
           </button>
         </div>
-      </div>
 
-      {/* Inspiring Individuals Section */}
-      <div className="z-10 relative max-w-6xl mx-auto px-4 w-full pb-20">
-        <div className="text-center mb-16">
-          <h2 
-            className="text-3xl md:text-4xl font-bold text-white mb-4"
-          >
-            <span className="bg-gradient-to-br from-red-300 via-red-500 to-red-700 bg-clip-text text-transparent drop-shadow-lg">
-              Inspiring Success Stories
-            </span>
-          </h2>
-          <p 
-            className="text-gray-400 max-w-2xl mx-auto text-lg"
-          >
-            These remarkable individuals overcame significant challenges to achieve greatness. Their stories remind us that true potential knows no boundaries.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {inspiringPeople.map((person, index) => (
-            <SuccessStoryCard 
-              key={index} 
-              person={person} 
-              delay={100 + (index * 100)}
-            />
-          ))}
-        </div>
-
-        <div className="text-center mt-16">
+        {/* Additional CTA for Inspiration Page */}
+        <div className="text-center mt-12">
           <button 
+            onClick={handleInspiration}
             className="px-6 py-3 bg-gradient-to-br from-red-600 via-red-700 to-red-800 hover:from-red-700 hover:via-red-800 hover:to-red-900 text-white font-medium rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 border border-red-500/30"
           >
-            <span className="drop-shadow-sm">Discover More Inspiring Stories</span>
+            <span className="drop-shadow-sm">Discover Inspiring Stories</span>
           </button>
-        </div>
-      </div>
-
-      {/* Testimonials Section */}
-      <div className="z-10 relative max-w-4xl mx-auto px-4 w-full pb-24">
-        <div className="bg-gray-800/40 backdrop-blur-sm rounded-3xl p-8 md:p-12 border border-gray-600/30">
-          <h3 
-            className="text-2xl md:text-3xl font-bold text-center text-white mb-8"
-          >
-            What Our Learners Say
-          </h3>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div 
-              className="bg-white/5 p-6 rounded-xl border border-white/10"
-            >
-              <div className="flex items-center gap-4 mb-4">
-                <div className="bg-gray-300 border-2 border-dashed rounded-xl w-12 h-12" />
-                <div>
-                  <h4 className="font-bold text-white">Sarah Johnson</h4>
-                  <p className="text-red-300 text-sm">Visual Impairment</p>
-                </div>
-              </div>
-              <p className="text-gray-300 italic">"Hikma Learn's audio-based courses have transformed how I access education. I've gained skills I never thought possible with my visual impairment."</p>
-            </div>
-            
-            <div 
-              className="bg-white/5 p-6 rounded-xl border border-white/10"
-            >
-              <div className="flex items-center gap-4 mb-4">
-                <div className="bg-gray-300 border-2 border-dashed rounded-xl w-12 h-12" />
-                <div>
-                  <h4 className="font-bold text-white">Michael Torres</h4>
-                  <p className="text-red-300 text-sm">Dyslexia</p>
-                </div>
-              </div>
-              <p className="text-gray-300 italic">"The multi-sensory approach at Hikma Learn helped me overcome my reading challenges. I'm now pursuing a degree in graphic design!"</p>
-            </div>
-          </div>
         </div>
       </div>
 
