@@ -42,7 +42,7 @@ const AnimatedBackground = () => {
   }, [])
 
   return (
-    <div className="fixed inset-0 animated-bg">
+    <div className="fixed inset-0 animated-bg" id="Home">
       <div className="absolute inset-0">
         <div
           ref={(ref) => (blobRefs.current[0] = ref)}

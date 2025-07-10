@@ -1,7 +1,5 @@
 import React from "react";
 import { GlobeIcon } from "@radix-ui/react-icons";
-import { TwitterLogoIcon } from "@radix-ui/react-icons";
-import { InstagramLogoIcon } from "@radix-ui/react-icons";
 import { BsFacebook, BsGithub, BsInstagram, BsLinkedin } from "react-icons/bs";
 
 const Footer = () => {

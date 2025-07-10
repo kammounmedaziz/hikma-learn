@@ -13,6 +13,7 @@ import Signup from './Components/signup';
 import login from './Components/signin';
 import Signin from './Components/signin';
 import Inspiration from './Pages/Inspirations';
+import Team from './Pages/Team'
 
 
 
@@ -39,6 +40,7 @@ const LandingPage = ({ showWelcome, setShowWelcome }) => {
             <Home />
             <Inspiration/>
             <About />
+            <Team/>
           </div>
         </div>
       )}

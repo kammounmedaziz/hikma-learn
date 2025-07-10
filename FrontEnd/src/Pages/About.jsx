@@ -64,7 +64,7 @@ ProfileImage.displayName = "ProfileImage";
 
 const AboutPage = () => {
 
-  // Optimized AOS initialization
+
   useEffect(() => {
     const initAOS = () => {
       AOS.init({
@@ -74,7 +74,7 @@ const AboutPage = () => {
 
     initAOS();
     
-    // Debounced resize handler
+
     let resizeTimer;
     const handleResize = () => {
       clearTimeout(resizeTimer);

@@ -1,20 +1,17 @@
 import { useRef } from 'react';
 import { Award, ArrowRight, Sparkles } from 'lucide-react';
 import PropTypes from 'prop-types';
-import munibaImage from '../assets/media/muniba'; // Make sure this image exists
+import ghanimImage from '../assets/media/Ghanem.png'; 
 
-const MunibaMazariCard = ({
-  learnMoreUrl = "https://en.wikipedia.org/wiki/Muniba_Mazari",
-  avatarImage = munibaImage
-}) => {
+const GhanimAlMuftahCard = ({ learnMoreUrl = "https://en.wikipedia.org/wiki/Ghanim_Al-Muftah", avatarImage = ghanimImage }) => {
   const synthRef = useRef(window.speechSynthesis);
 
   const person = {
-    name: "Muniba Mazari",
-    challenge: "Spinal Cord Injury",
-    achievement: "Pakistani Artist, Activist & Motivational Speaker",
+    name: "Ghanim Al Muftah",
+    challenge: "Caudal Regression Syndrome",
+    achievement: "World Cup 2022 Ambassador",
     description:
-      "After a car accident left her paralyzed at age 21, Muniba Mazari refused to let disability define her. She became Pakistan’s first wheelchair-bound model, a UN Women Ambassador, and continues to inspire millions worldwide through her art and speeches."
+      "Born with a rare condition, Ghanim defied all odds and became a symbol of courage and hope. His inspiring speech at the 2022 FIFA World Cup opening ceremony moved the world and redefined how we see ability."
   };
 
   const handleSpeak = () => {
@@ -44,7 +41,7 @@ const MunibaMazariCard = ({
       >
         {/* Glowing border effect */}
         <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 via-blue-500/20 to-cyan-500/20 rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-        
+
         {/* Sparkle effect on hover */}
         <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <Sparkles className="w-6 h-6 text-yellow-400 animate-bounce" />
@@ -52,14 +49,16 @@ const MunibaMazariCard = ({
 
         <div className="relative z-10">
           <div className="flex items-start gap-6 mb-6">
+            {/* Avatar image */}
             <div className="relative">
               <div className="bg-gradient-to-br from-purple-400/30 to-blue-400/30 border-2 border-dashed border-white/40 rounded-2xl w-20 h-20 flex items-center justify-center group-hover:border-yellow-400/60 transition-colors duration-300 overflow-hidden">
-                <img 
-                  src={avatarImage} 
+                <img
+                  src={avatarImage}
                   alt={person.name}
                   className="w-full h-full object-cover rounded-xl"
                 />
               </div>
+              {/* Halo effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-blue-400/20 rounded-2xl blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             </div>
 
@@ -84,11 +83,11 @@ const MunibaMazariCard = ({
 
           {/* Inspirational quote */}
           <div className="relative mb-6">
-            <div className="absolute -left-2 -top-2 text-6xl text-purple-400/20 font-serif">"</div>
+            <div className="absolute -left-2 -top-2 text-6xl text-purple-400/20 font-serif">&quot;</div>
             <p className="text-gray-200 leading-relaxed text-lg font-medium pl-6 pr-4 italic">
               {person.description}
             </p>
-            <div className="absolute -right-2 -bottom-2 text-6xl text-purple-400/20 font-serif">"</div>
+            <div className="absolute -right-2 -bottom-2 text-6xl text-purple-400/20 font-serif">&quot;</div>
           </div>
 
           {/* Call to action */}
@@ -102,7 +101,7 @@ const MunibaMazariCard = ({
           </div>
         </div>
 
-        {/* Floating glow */}
+        {/* Floating elements */}
         <div className="absolute top-8 left-8 opacity-10 group-hover:opacity-20 transition-opacity duration-500">
           <div className="w-32 h-32 bg-gradient-to-br from-purple-400 to-blue-400 rounded-full blur-2xl" />
         </div>
@@ -114,9 +113,9 @@ const MunibaMazariCard = ({
   );
 };
 
-MunibaMazariCard.propTypes = {
+GhanimAlMuftahCard.propTypes = {
   learnMoreUrl: PropTypes.string,
   avatarImage: PropTypes.string,
 };
 
-export default MunibaMazariCard;
+export default GhanimAlMuftahCard;

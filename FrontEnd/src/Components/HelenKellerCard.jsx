@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { Award, ArrowRight, Sparkles } from 'lucide-react';
 import PropTypes from 'prop-types';
-import helenImage from '../assets/media/helen,'; // Replace with your actual path
+import helenImage from '../assets/media/helen,.png'; // Replace with your actual path
 
 const HelenKellerCard = ({
   learnMoreUrl = "https://en.wikipedia.org/wiki/Helen_Keller",

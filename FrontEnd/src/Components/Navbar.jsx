@@ -10,7 +10,9 @@ const Navbar = () => {
     
     const navItems = [
         { href: "#Home", label: "Home" },
+        { href: "#Inspiration", label: "Inspiration" },
         { href: "#About", label: "About" },
+        { href: "#Team", label: "Team" },
         { href: "#Courses", label: "Courses" },
         { href: "#Exams", label: "Exams" },
         { href: "#Dashboard", label: "Dashboard" },

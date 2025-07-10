@@ -1,8 +1,21 @@
 import { useEffect, useRef } from 'react';
-import { Sparkles, Users, Home } from 'lucide-react';
+import { Sparkles, Users } from 'lucide-react';
 
-
+// Import card components
 import BeethovenCard from '../Components/BeethovenCard'; 
+import StephenHawking from '../Components/StephenHawkingCard';
+import GhanimAlMuftah from '../Components/Ghanim Al Muftah';
+import HelenKeller from '../Components/HelenKellerCard';
+import MunibaMazri from '../Components/MunibaMazariCard';
+
+// Card container wrapper to ensure consistent sizing
+const CardContainer = ({ children }) => (
+  <div className="h-full">
+    <div className="flex flex-col h-full bg-gray-900/60 backdrop-blur-sm rounded-2xl overflow-hidden border border-gray-700/50 shadow-lg transition-all duration-300 hover:border-red-400/30 hover:shadow-red-900/10">
+      {children}
+    </div>
+  </div>
+);
 
 const AnimatedBackground = () => {
   const blobRefs = useRef([])
@@ -45,7 +58,7 @@ const AnimatedBackground = () => {
   }, [])
 
   return (
-    <div className="fixed inset-0 animated-bg">
+    <div className="fixed inset-0 animated-bg" id="Inspiration">
       <div className="absolute inset-0">
         <div
           ref={(ref) => (blobRefs.current[0] = ref)}
@@ -75,19 +88,10 @@ const Inspiration = () => {
   };
 
   return (
-    <div id="inspiration" className="min-h-screen px-4 relative overflow-hidden">
+    <div id="Inspiration" className="min-h-screen px-4 relative overflow-hidden">
       <AnimatedBackground />
 
-      {/* Navigation */}
-      <div className="z-10 relative max-w-6xl mx-auto pt-8 pb-4">
-        <button 
-          onClick={handleHome}
-          className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8"
-        >
-          <Home className="w-5 h-5" />
-          <span>Back to Home</span>
-        </button>
-      </div>
+      
 
       {/* Page Header */}
       <div className="text-center z-10 relative max-w-5xl mx-auto px-4 py-12">
@@ -112,28 +116,31 @@ const Inspiration = () => {
         </p>
       </div>
 
-     
-
+      {/* Cards Section */}
+      <div className="z-10 relative max-w-6xl mx-auto px-4 pb-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <BeethovenCard />
-          {/* <HelenKellerCard /> */}
-          {/* <FridaKahloCard /> */}
-          {/* <NickVujicicCard /> */}
-          {/* <TempleGrandinCard /> */}
-          {/* <AndreaBocellCard /> */}
+          <CardContainer>
+            <BeethovenCard />
+          </CardContainer>
+          <CardContainer>
+            <GhanimAlMuftah />
+          </CardContainer>
+          <CardContainer>
+            <HelenKeller />
+          </CardContainer>
+          <CardContainer>
+            <MunibaMazri />
+          </CardContainer>
+          <CardContainer>
+            <StephenHawking />
+          </CardContainer>
         </div>
 
-        <div className="text-center mt-16">
-          <button 
-            className="px-6 py-3 bg-gradient-to-br from-red-600 via-red-700 to-red-800 hover:from-red-700 hover:via-red-800 hover:to-red-900 text-white font-medium rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 border border-red-500/30"
-          >
-            <span className="drop-shadow-sm">Discover More Inspiring Stories</span>
-          </button>
-        </div>
+       
       </div>
 
-      {/* Testimonials Section */}
-      <div className="z-10 relative max-w-4xl mx-auto px-4 w-full pb-24">
+      {/* Testimonials Section with top spacing */}
+      <div className="z-10 relative max-w-4xl mx-auto px-4 w-full pb-24 mt-20">
         <div className="bg-gray-800/40 backdrop-blur-sm rounded-3xl p-8 md:p-12 border border-gray-600/30">
           <h3 
             className="text-2xl md:text-3xl font-bold text-center text-white mb-8"
