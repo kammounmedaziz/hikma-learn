@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Sparkles, Users } from 'lucide-react';
+import PropTypes from 'prop-types';
 
 // Import card components
 import BeethovenCard from '../Components/BeethovenCard'; 
@@ -7,8 +8,8 @@ import StephenHawking from '../Components/StephenHawkingCard';
 import GhanimAlMuftah from '../Components/Ghanim Al Muftah';
 import HelenKeller from '../Components/HelenKellerCard';
 import MunibaMazri from '../Components/MunibaMazariCard';
+import TahaHusseinCard from '../Components/TahaHusseinCard';
 
-// Card container wrapper to ensure consistent sizing
 const CardContainer = ({ children }) => (
   <div className="h-full">
     <div className="flex flex-col h-full bg-gray-900/60 backdrop-blur-sm rounded-2xl overflow-hidden border border-gray-700/50 shadow-lg transition-all duration-300 hover:border-red-400/30 hover:shadow-red-900/10">
@@ -17,16 +18,19 @@ const CardContainer = ({ children }) => (
   </div>
 );
 
+CardContainer.propTypes = {
+  children: PropTypes.node.isRequired,
+};
+
 const AnimatedBackground = () => {
   const blobRefs = useRef([])
-  const initialPositions = [
-    { x: -4, y: 0 },
-    { x: -4, y: 0 },
-    { x: 20, y: -8 },
-    { x: 20, y: -8 },
-  ]
-
   useEffect(() => {
+    const initialPositions = [
+      { x: -4, y: 0 },
+      { x: -4, y: 0 },
+      { x: 20, y: -8 },
+      { x: 20, y: -8 },
+    ];
     let requestId
 
     const handleScroll = () => {
@@ -79,11 +83,9 @@ const AnimatedBackground = () => {
 }
 
 const Inspiration = () => {
-  const handleHome = () => {
-    window.location.href = '/';
-  };
 
   const handleCommunity = () => {
+    // Example: redirect to a community page or show a modal
     window.location.href = '/community';
   };
 
@@ -134,6 +136,9 @@ const Inspiration = () => {
           <CardContainer>
             <StephenHawking />
           </CardContainer>
+          <CardContainer>
+            <TahaHusseinCard/>
+          </CardContainer>
         </div>
 
        
@@ -159,7 +164,7 @@ const Inspiration = () => {
                   <p className="text-red-300 text-sm">Visual Impairment</p>
                 </div>
               </div>
-              <p className="text-gray-300 italic">"Hikma Learn's audio-based courses have transformed how I access education. I've gained skills I never thought possible with my visual impairment."</p>
+              <p className="text-gray-300 italic">&quot;Hikma Learn&apos;s audio-based courses have transformed how I access education. I&apos;ve gained skills I never thought possible with my visual impairment.&quot;</p>
             </div>
             
             <div 
@@ -172,7 +177,7 @@ const Inspiration = () => {
                   <p className="text-red-300 text-sm">Dyslexia</p>
                 </div>
               </div>
-              <p className="text-gray-300 italic">"The multi-sensory approach at Hikma Learn helped me overcome my reading challenges. I'm now pursuing a degree in graphic design!"</p>
+              <p className="text-gray-300 italic">&quot;The multi-sensory approach at Hikma Learn helped me overcome my reading challenges. I&apos;m now pursuing a degree in graphic design!&quot;</p>
             </div>
           </div>
         </div>
@@ -189,7 +194,7 @@ const Inspiration = () => {
           <p 
             className="text-gray-300 max-w-2xl mx-auto text-lg mb-8"
           >
-            Join thousands of learners who have discovered their potential through Hikma Learn's inclusive education platform.
+            Join thousands of learners who have discovered their potential through Hikma Learn&#39;s inclusive education platform.
           </p>
           <button 
             onClick={handleCommunity}
@@ -201,7 +206,7 @@ const Inspiration = () => {
         </div>
       </div>
 
-      <style jsx global>{`
+      <style>{`
         @keyframes float {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-10px); }

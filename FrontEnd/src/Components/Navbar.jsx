@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Menu, X } from "lucide-react";
 import { useLocation } from "react-router-dom";
 
@@ -8,15 +8,15 @@ const Navbar = () => {
     const [activeSection, setActiveSection] = useState("Home");
     const location = useLocation();
     
-    const navItems = [
+    
+    const navItems = useMemo(() => [
         { href: "#Home", label: "Home" },
         { href: "#Inspiration", label: "Inspiration" },
         { href: "#About", label: "About" },
         { href: "#Team", label: "Team" },
         { href: "#Courses", label: "Courses" },
-        { href: "#Exams", label: "Exams" },
-        { href: "#Dashboard", label: "Dashboard" },
-    ];
+        { href: "#Signin", label: "Sign In" },
+    ], []);
 
     useEffect(() => {
         const handleScroll = () => {

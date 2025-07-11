@@ -64,7 +64,7 @@ const AnimatedBackground = () => {
 
 const Home = () => {
   const handleExplore = () => {
-    window.location.href = '/courses';
+    window.location.href = '/Courses';
   };
 
   const handleCommunity = () => {
@@ -72,7 +72,7 @@ const Home = () => {
   };
 
   const handleInspiration = () => {
-    window.location.href = '/inspiration';
+    window.location.href = '#Inspiration';
   };
 
   return (
@@ -82,15 +82,26 @@ const Home = () => {
       {/* Hero Section */}
       <div className="text-center z-10 relative max-w-5xl mx-auto px-[5%] py-20">
         <div className="inline-block relative group mb-6">
-          <h1 
-            className="text-4xl md:text-6xl lg:text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-red-400 via-red-500 to-red-700 leading-tight drop-shadow-2xl"
-            style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
-          >
-            WELCOME TO{' '}
-            <span className="bg-gradient-to-br from-rose-300 via-red-500 to-red-800 bg-clip-text text-transparent drop-shadow-lg">
-              HIKMA LEARN
-            </span>
-          </h1>
+          <div>
+                    <img data-aos="fade-in" 
+                      data-aos-delay="800" 
+                      className="inline-block px-2 bg-gradient-to-r from-indigo-600 to-red-600 bg-clip-text text-transparent"
+                      src="src\assets\media\Welcome to.png" 
+                      alt="Welcome to"
+                      loading="lazy"
+                      />
+
+                  </div>
+          <div>
+                    <img data-aos="fade-up" 
+                      data-aos-delay="800" 
+                      className="inline-block px-2 bg-gradient-to-r from-indigo-600 to-red-600 bg-clip-text text-transparent"
+                      src="src\assets\media\side logo.png" 
+                      alt="Hikma Learn Logo"
+                      loading="lazy"
+                      />
+
+                  </div>
         </div>
 
         <p 
