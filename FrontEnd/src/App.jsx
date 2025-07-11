@@ -13,7 +13,8 @@ import Signup from './Components/signup';
 import login from './Components/signin';
 import Signin from './Components/signin';
 import Inspiration from './Pages/Inspirations';
-import Team from './Pages/Team'
+import Team from './Pages/Team';
+import StudyDashboard from './Pages/StudyDashboard';
 
 
 
@@ -34,13 +35,19 @@ const LandingPage = ({ showWelcome, setShowWelcome }) => {
             <AnimatedBackground />
           </div>
           
-          {/* Content with higher z-index */}
+
           <div className="relative z-10">
             <Navbar />
             <Home />
             <Inspiration/>
             <About />
             <Team/>
+             {/*<Navbar />
+            <StudyDashboard />
+            <Home />
+            <Inspiration/>
+            <About />
+            <Team/>*/}
           </div>
         </div>
       )}

@@ -6,15 +6,16 @@ import 'aos/dist/aos.css'
 
 const Header = memo(() => (
   <div className="text-center lg:mb-8 mb-2 px-[5%]">
-    <div className="inline-block relative group">
-      <h2 
-        className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#f1636f] to-[#a855f7]" 
-        data-aos="zoom-in-up"
-        data-aos-duration="600"
-      >
-        About The Project
-      </h2>
-    </div>
+    <div>
+                    <img data-aos="fade-out" 
+                      data-aos-delay="800" 
+                      className="inline-block px-2 bg-gradient-to-r from-indigo-600 to-red-600 bg-clip-text text-transparent"
+                      src="src\assets\media\about the project.png" 
+                      alt="Welcome to"
+                      loading="lazy"
+                      />
+
+                  </div>
     
   </div>
 ));
@@ -98,16 +99,16 @@ const AboutPage = () => {
       <div className="w-full mx-auto pt-8 sm:pt-12 relative">
         <div className="flex flex-col-reverse lg:grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
           <div className="space-y-6 text-center lg:text-left">
-            <h2 
-              className="text-3xl sm:text-4xl lg:text-5xl font-bold"
-              data-aos="fade-right"
-              data-aos-duration="1000"
-            >
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#f1636f] to-[#a855f7]">
-                HIKMA LEARN
-              </span>
-              
-            </h2>
+           <div>
+                    <img data-aos="fade-in" 
+                      data-aos-delay="800" 
+                      className="inline-block px-2 bg-gradient-to-r from-indigo-600 to-red-600 bg-clip-text text-transparent"
+                      src="src\assets\media\text.png" 
+                      alt="Welcome to"
+                      loading="lazy"
+                      />
+
+                  </div>
             <p 
       className="mt-2 text-gray-400 max-w-2xl mx-auto text-base sm:text-lg flex items-center justify-center gap-2"
       data-aos="zoom-in-up"
