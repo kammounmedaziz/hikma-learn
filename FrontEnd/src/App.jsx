@@ -15,6 +15,7 @@ import Signin from './Components/signin';
 import Inspiration from './Pages/Inspirations';
 import Team from './Pages/Team';
 import StudyDashboard from './Pages/StudyDashboard';
+import CommunityDashboard from './Pages/CommunityDashboard'
 
 
 
@@ -37,11 +38,7 @@ const LandingPage = ({ showWelcome, setShowWelcome }) => {
           
 
           <div className="relative z-10">
-            <Navbar />
-            <Home />
-            <Inspiration/>
-            <About />
-            <Team/>
+            <CommunityDashboard/>
              {/*<Navbar />
             <StudyDashboard />
             <Home />
