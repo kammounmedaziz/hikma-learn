@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.contrib.auth import authenticate
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -55,3 +56,17 @@ class RegisterView(APIView):
             "refresh": str(refresh),
             "access": str(refresh.access_token),
         }, status=status.HTTP_201_CREATED)
+        
+        
+        
+        
+
+@api_view(['POST'])
+def login_view(request):
+    data = request.data
+    user = authenticate(username=data.get('username'), password=data.get('password'))
+    
+    if user is not None:
+        return Response({"message": "Login successful", "username": user.username}, status=status.HTTP_200_OK)
+    else:
+        return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
