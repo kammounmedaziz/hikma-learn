@@ -15,22 +15,23 @@ const Navbar = () => {
         { href: "#About", label: "About" },
         { href: "#Team", label: "Team" },
         { href: "#Courses", label: "Courses" },
-        { href: "#Signin", label: "Sign In" },
+        { href: "/auth", label: "Sign In", isAuth: true },
     ], []);
 
     useEffect(() => {
         const handleScroll = () => {
             setScrolled(window.scrollY > 20);
             
-            // Get all sections and their positions
-            const sectionPositions = navItems.map(item => {
+            const sectionPositions = navItems
+            .filter(item => item.href.startsWith('#')) // Only hash links
+            .map(item => {
                 const section = document.querySelector(item.href);
                 if (section) {
-                    return {
-                        id: item.href.slice(1), // Remove '#' for comparison
-                        top: section.offsetTop,
-                        bottom: section.offsetTop + section.offsetHeight
-                    };
+                return {
+                    id: item.href.slice(1),
+                    top: section.offsetTop,
+                    bottom: section.offsetTop + section.offsetHeight
+                };
                 }
                 return null;
             }).filter(Boolean);
@@ -59,27 +60,28 @@ const Navbar = () => {
         }
     }, [isOpen]);
 
-    const scrollToSection = (e, href) => {
+    const scrollToSection = (e, href, isAuth = false) => {
         e.preventDefault();
-        
+        if (isAuth) {
+            window.location.href = '/auth';
+            setIsOpen(false);
+            return;
+        }
         // Handle home navigation specially
         if (href === "#Home") {
-            // If we're not on the home page, navigate there first
             if (location.pathname !== '/') {
                 window.location.href = '/';
                 return;
             }
-            // If we're already on home page, scroll to top
             window.scrollTo({
                 top: 0,
                 behavior: "smooth"
             });
         } else {
-            // Handle other sections
             const section = document.querySelector(href);
             if (section) {
                 window.scrollTo({
-                    top: section.offsetTop - 80, // Adjusted offset for better positioning
+                    top: section.offsetTop - 80,
                     behavior: "smooth"
                 });
             }
@@ -120,7 +122,7 @@ const Navbar = () => {
                                 <a
                                     key={item.label}
                                     href={item.href}
-                                    onClick={(e) => scrollToSection(e, item.href)}
+                                    onClick={(e) => scrollToSection(e, item.href, item.isAuth)}
                                     className="group relative px-1 py-2 text-sm font-medium"
                                 >
                                     <span
@@ -173,7 +175,7 @@ const Navbar = () => {
                             <a
                                 key={item.label}
                                 href={item.href}
-                                onClick={(e) => scrollToSection(e, item.href)}
+                                onClick={(e) => scrollToSection(e, item.href, item.isAuth)}
                                 className={`block px-4 py-3 text-lg font-medium ${
                                     activeSection === item.href.slice(1)
                                         ? "bg-gradient-to-r from-[#4648d1] to-[#f75555] bg-clip-text text-transparent font-semibold"

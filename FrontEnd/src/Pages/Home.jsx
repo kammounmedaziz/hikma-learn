@@ -3,14 +3,13 @@ import { Sparkles, BookOpen, Users } from 'lucide-react';
 
 const AnimatedBackground = () => {
   const blobRefs = useRef([])
-  const initialPositions = [
-    { x: -4, y: 0 },
-    { x: -4, y: 0 },
-    { x: 20, y: -8 },
-    { x: 20, y: -8 },
-  ]
-
   useEffect(() => {
+    const initialPositions = [
+      { x: -4, y: 0 },
+      { x: -4, y: 0 },
+      { x: 20, y: -8 },
+      { x: 20, y: -8 },
+    ];
     let requestId
 
     const handleScroll = () => {
@@ -67,8 +66,8 @@ const Home = () => {
     window.location.href = '/Courses';
   };
 
-  const handleCommunity = () => {
-    window.location.href = '/community';
+  const handleAuth = () => {
+    window.location.href = '/auth';
   };
 
   const handleInspiration = () => {
@@ -138,7 +137,7 @@ const Home = () => {
           </button>
 
           <button 
-            onClick={handleCommunity}
+            onClick={handleAuth}
             type="button"
             className="
               w-full lg:w-auto px-8 py-4 md:px-12 md:py-5 text-lg md:text-xl font-medium 
@@ -165,7 +164,7 @@ const Home = () => {
         </div>
       </div>
 
-      <style jsx global>{`
+      <style>{`
         @keyframes float {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(-10px); }

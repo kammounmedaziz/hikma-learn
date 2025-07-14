@@ -9,14 +9,12 @@ import WelcomeScreen from "./Pages/WelcomeScreen";
 import AnimatedBackground from "./Components/Background";
 import { AnimatePresence } from "framer-motion";
 import PropTypes from "prop-types";
-import Signup from './Components/signup';
-//import login from './Components/signin';
-import Signin from './Components/signin';
+import AuthPage from './Components/Auth';
+import StudyDashboard from './Pages/StudyDashboard';
 import Inspiration from './Pages/Inspirations';
 import Team from './Pages/Team';
-import StudyDashboard from './Pages/StudyDashboard';
-import CommunityDashboard from './Pages/CommunityDashboard'
-import AuthPage from './Components/Auth';
+
+
 
 
 
@@ -40,7 +38,11 @@ const LandingPage = ({ showWelcome, setShowWelcome }) => {
           
 
           <div className="relative z-10">
-            <AuthPage />
+            <Navbar />
+            <Home />
+            <Inspiration/>
+            <About />
+            <Team/>
             
              {/*<Navbar />
             <StudyDashboard />
@@ -67,11 +69,8 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<LandingPage showWelcome={showWelcome} setShowWelcome={setShowWelcome} />} />
-         <Route path="/signup" element={<Signup />} />
-          <Route path="/signin" element={<Signin />} />
-
-
-
+        <Route path="/auth" element={<AuthPage />} />
+        <Route path="/study-dashboard" element={<StudyDashboard />} />
       </Routes>
     </BrowserRouter>
   );

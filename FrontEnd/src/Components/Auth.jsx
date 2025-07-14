@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   User, Mail, Lock, Phone, GraduationCap, MapPin, CreditCard,
   Eye, EyeOff, Sparkles, ArrowRight, UserPlus, LogIn, School, Users
@@ -236,22 +237,32 @@ const SignUpComponent = ({ onSubmit }) => {
 // Main Auth Page Container
 const AuthPage = () => {
   const [isSignUp, setIsSignUp] = useState(false);
+  const navigate = useNavigate();
 
   const handleToggle = () => setIsSignUp(!isSignUp);
-  const handleSignInSubmit = data => alert(`Signed in: ${JSON.stringify(data)}`);
-  const handleSignUpSubmit = data => alert(`Signed up: ${JSON.stringify(data)}`);
+  const handleSignInSubmit = data => {
+    navigate('/study-dashboard');
+  };
+  const handleSignUpSubmit = data => {
+    navigate('/study-dashboard');
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
       <AnimatedBackground />
       <div className="z-10 relative w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-red-400 to-red-700">HIKMA <span className="bg-clip-text text-transparent">LEARN</span></h1>
-          <p className="text-gray-300 text-lg flex justify-center items-center gap-2">
-            <Sparkles className="text-red-400" />
-            {isSignUp ? 'Create your account' : 'Welcome back'}
-            <Sparkles className="text-red-400" />
-          </p>
+          <div>
+                    <img data-aos="fade-in" 
+                      data-aos-delay="100" 
+                      className="inline-block px-2 bg-gradient-to-r from-indigo-600 to-red-600 bg-clip-text text-transparent"
+                      src="src\assets\media\text.png" 
+                      alt="Welcome to"
+                      loading="lazy"
+                      />
+
+                  </div>
+          
         </div>
         <div className="bg-gray-900/60 backdrop-blur-sm rounded-2xl border border-gray-700/50 shadow-lg">
           <div className="flex bg-gray-800/50 rounded-t-2xl overflow-hidden">
