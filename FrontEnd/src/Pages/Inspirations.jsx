@@ -85,7 +85,7 @@ const AnimatedBackground = () => {
 const Inspiration = () => {
 
   const handleCommunity = () => {
-    // Example: redirect to a community page or show a modal
+    
     window.location.href = '/community';
   };
 

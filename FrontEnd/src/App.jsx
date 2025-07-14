@@ -13,6 +13,7 @@ import AuthPage from './Components/Auth';
 import StudyDashboard from './Pages/StudyDashboard';
 import Inspiration from './Pages/Inspirations';
 import Team from './Pages/Team';
+import CommunityDashboard from './Pages/CommunityDashboard'
 
 
 
@@ -71,6 +72,7 @@ function App() {
         <Route path="/" element={<LandingPage showWelcome={showWelcome} setShowWelcome={setShowWelcome} />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/study-dashboard" element={<StudyDashboard />} />
+        <Route path="/community" element={<CommunityDashboard />} />
       </Routes>
     </BrowserRouter>
   );
