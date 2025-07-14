@@ -14,7 +14,7 @@ import StudyDashboard from './Pages/StudyDashboard';
 import Inspiration from './Pages/Inspirations';
 import Team from './Pages/Team';
 import CommunityDashboard from './Pages/CommunityDashboard'
-
+import Footer from './Components/Footer'
 
 
 
@@ -44,13 +44,7 @@ const LandingPage = ({ showWelcome, setShowWelcome }) => {
             <Inspiration/>
             <About />
             <Team/>
-            
-             {/*<Navbar />
-            <StudyDashboard />
-            <Home />
-            <Inspiration/>
-            <About />
-            <Team/>*/}
+            <Footer/>
           </div>
         </div>
       )}
