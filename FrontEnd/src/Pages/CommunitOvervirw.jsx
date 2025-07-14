@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Users, Clock, Heart, MapPin, ChevronLeft, ChevronRight, Quote, GraduationCap } from 'lucide-react';
+import  { useState, useEffect, useRef } from 'react';
+import { Users, Clock, Heart, Quote, GraduationCap } from 'lucide-react';
+import { useSpeechSynthesis } from 'react-speech-kit';
+
 
 // Animated Background Component (same as StudyDashboard)
 const AnimatedBackground = () => {
@@ -66,7 +68,7 @@ const AnimatedBackground = () => {
 }
 
 const CommunityOverview = () => {
-  const [currentQuote, setCurrentQuote] = useState(0);
+  const [quote, setQuote] = useState({ text: '', author: '' });
   const [isVisible, setIsVisible] = useState({});
   const counterRefs = useRef({});
 
@@ -93,6 +95,9 @@ const CommunityOverview = () => {
       author: "From our community"
     }
   ];
+
+  // State for current quote index (for navigation dots)
+  const [currentQuote, setCurrentQuote] = useState(0);
 
   // Tunisia cities with coordinates (approximate)
   const communityLocations = [
@@ -160,12 +165,31 @@ const CommunityOverview = () => {
   }, []);
 
   // Auto-rotate quotes
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentQuote((prev) => (prev + 1) % quotes.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [quotes.length]);
+useEffect(() => {
+  const fallbackQuotes = [
+    { text: "Education is the key to unlocking the world, a passport to freedom.", author: "Oprah Winfrey" },
+    { text: "Success is the sum of small efforts, repeated day in and day out.", author: "Robert Collier" },
+    { text: "An investment in knowledge pays the best interest.", author: "Benjamin Franklin" },
+  ];
+
+  const fetchQuote = async () => {
+    try {
+      const response = await fetch('https://api.quotable.io/random?tags=education|success|inspirational');
+      const data = await response.json();
+      setQuote({ text: data.content, author: data.author });
+    } catch (error) {
+      console.error('Failed to fetch quote, using fallback.', error);
+      const random = Math.floor(Math.random() * fallbackQuotes.length);
+      setQuote(fallbackQuotes[random]);
+    }
+  };
+
+  fetchQuote(); // load on mount
+  const interval = setInterval(fetchQuote, 7000); // auto-update
+
+  return () => clearInterval(interval); // cleanup
+}, []);
+
 
   // Counter components
   const [learnersCount, triggerLearners] = useCounter(12847);
@@ -317,31 +341,20 @@ const CommunityOverview = () => {
             <div className="relative h-32 md:h-24 flex items-center justify-center">
               <div className="absolute inset-0 flex items-center justify-center">
                 <blockquote className="text-lg md:text-xl text-gray-200 italic font-medium leading-relaxed px-4">
-                  "{quotes[currentQuote].text}"
+                    &quot;{quote.text}&quot;
                 </blockquote>
+
               </div>
             </div>
             
             <div className="mt-6">
               <p className="text-gray-400 font-medium">
-                — {quotes[currentQuote].author}
-              </p>
+                — {quote.author}
+                </p>
             </div>
 
-            {/* Quote Navigation Dots */}
-            <div className="flex justify-center mt-8 space-x-2">
-              {quotes.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentQuote(index)}
-                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                    index === currentQuote
-                      ? 'bg-gradient-to-r from-red-500 to-gray-500 scale-110'
-                      : 'bg-gray-600 hover:bg-gray-500'
-                  }`}
-                />
-              ))}
-            </div>
+            
+           
           </div>
         </div>
       </div>
@@ -352,7 +365,7 @@ const CommunityOverview = () => {
           <div className="bg-gradient-to-r from-red-600 to-gray-600 rounded-2xl p-8 md:p-12 shadow-xl text-white">
             <h3 className="text-3xl md:text-4xl font-bold mb-4">
               Ready to Join Our Community?
-            </h3>
+            </h3>{/* Quote Navigation Dots */}
             <p className="text-xl text-red-100 mb-8 max-w-2xl mx-auto">
               Be part of a supportive learning environment where every achievement matters and every learner is valued.
             </p>

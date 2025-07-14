@@ -1,24 +1,50 @@
 import { useState, useEffect, useRef } from 'react';
 import { 
-  Home, 
-  BookOpen, 
-  FileText,
+  Users, 
   MessageSquare,
-  HelpCircle,
   Calendar,
-  Award,
-  TrendingUp,
-  Users,
-  Settings,
-  Bell,
-  Library,
   ChevronLeft,
   ChevronRight,
-  GraduationCap,
-  Target,
-  
+  BarChart3,
+  Megaphone,
+  Star,
+  Handshake,
+  Newspaper,
+  Mail,
+
 } from 'lucide-react';
-import CommunityOverview from './CommunitOvervirw';
+
+import CommunityOverview from '../Pages/CommunitOvervirw';
+
+
+// Placeholder component for demonstration
+const PlaceholderPage = ({ title, description }) => (
+  <div className="space-y-8">
+    <div className="text-center mb-8">
+      <h2 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-gray-400 mb-4">
+        {title}
+      </h2>
+      <p className="text-gray-300 text-lg max-w-2xl mx-auto">
+        {description}
+      </p>
+    </div>
+    
+    <div className="backdrop-blur-md bg-white/10 rounded-xl p-8 border border-white/20 text-center">
+      <div className="mb-4">
+        <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+          <Star className="w-8 h-8 text-white" />
+        </div>
+        <h3 className="text-xl font-bold text-white mb-2">Page Component</h3>
+        <p className="text-gray-300 mb-4">
+          This page would be imported from: <code className="bg-gray-800 px-2 py-1 rounded text-red-400">./pages/{title.replace(/\s+/g, '')}</code>
+        </p>
+        <p className="text-sm text-gray-400">
+          Create a separate component file and import it at the top of this dashboard
+        </p>
+      </div>
+    </div>
+  </div>
+);
 
 // Animated Background Component
 const AnimatedBackground = () => {
@@ -39,14 +65,12 @@ const AnimatedBackground = () => {
       blobRefs.current.forEach((blob, index) => {
         const initialPos = localInitialPositions[index];
 
-        // Calculating movement in both X and Y direction
-        const xOffset = Math.sin(newScroll / 100 + index * 0.5) * 340 // Horizontal movement
-        const yOffset = Math.cos(newScroll / 100 + index * 0.5) * 40 // Vertical movement
+        const xOffset = Math.sin(newScroll / 100 + index * 0.5) * 340
+        const yOffset = Math.cos(newScroll / 100 + index * 0.5) * 40
 
         const x = initialPos.x + xOffset
         const y = initialPos.y + yOffset
 
-        // Apply transformation with smooth transition
         if (blob) {
           blob.style.transform = `translate(${x}px, ${y}px)`
           blob.style.transition = "transform 1.4s ease-out"
@@ -84,45 +108,56 @@ const AnimatedBackground = () => {
   )
 }
 
-const StudyDashboard = () => {
+const CommunityDashboard = () => {
   const [currentPage, setCurrentPage] = useState('overview');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  // Define your study platform menu items
+  // Menu items configuration
   const menuItems = [
-    { id: 'overview', label: 'Overview', icon: Users },
-    { id: 'courses', label: 'My Courses', icon: BookOpen },
-    { id: 'exams', label: 'Exams & Quizzes', icon: FileText },
-    { id: 'assignments', label: 'Assignments', icon: Target },
-    { id: 'schedule', label: 'Schedule', icon: Calendar },
-    { id: 'progress', label: 'Progress & Analytics', icon: TrendingUp },
-    { id: 'achievements', label: 'Achievements', icon: Award },
-    { id: 'library', label: 'Resource Library', icon: Library },
-    { id: 'forum', label: 'Discussion Forum', icon: MessageSquare },
-    { id: 'study_groups', label: 'Study Groups', icon: Users },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'support', label: 'Support Center', icon: HelpCircle },
-    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'overview', label: 'Overview', icon: BarChart3, description: 'Community statistics and quick actions' },
+    { id: 'meet_learners', label: 'Meet Our Learners', icon: Users, description: 'Inspiring stories from our community members' },
+    { id: 'sharing_feedbacks', label: 'Sharing Feedbacks', icon: MessageSquare, description: 'Help us improve by sharing your thoughts' },
+    { id: 'events', label: 'Events', icon: Calendar, description: 'Join workshops, webinars, and gatherings' },
+    { id: 'partners_supporters', label: 'Partners and Supporters', icon: Handshake, description: 'Organizations supporting our mission' },
+    { id: 'voices_community', label: 'Voices of the Community', icon: Megaphone, description: 'Hear from community members and advocates' },
+    { id: 'actualite', label: 'Actualité', icon: Newspaper, description: 'Latest news and updates from our community' },
+    { id: 'contact', label: 'Contact', icon: Mail, description: 'Get in touch with our support team' },
   ];
 
+  // Page rendering logic - replace with actual imports
   const renderPage = () => {
+    const currentMenuItem = menuItems.find(item => item.id === currentPage);
+    
+
     switch (currentPage) {
       case 'overview':
-        return (
-          <div className="text-center">
-            <CommunityOverview/>
-          </div>
-        );
+        return <CommunityOverview />;
+      case 'meet_learners':
+        return <MeetOurLearners />;
+      case 'sharing_feedbacks':
+        return <SharingFeedbacks />;
+      case 'events':
+        return <Events />;
+      case 'partners_supporters':
+        return <PartnersAndSupporters />;
+      case 'voices_community':
+        return <VoicesOfCommunity />;
+      case 'actualite':
+        return <Actualite />;
+      case 'contact':
+        return <Contact />;
       default:
-        return (
-          <div className="text-center">
-            <h2 className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-gray-400 mb-4">
-              {menuItems.find(item => item.id === currentPage)?.label || 'Page'}
-            </h2>
-            <p className="text-gray-300 text-lg">This section will be implemented soon</p>
-          </div>
-        );
+        return <PlaceholderPage title="Page Not Found" description="This page doesn't exist" />;
     }
+
+    
+    // For demonstration, showing placeholder
+    return (
+      <PlaceholderPage 
+        title={currentMenuItem?.label || 'Page'} 
+        description={currentMenuItem?.description || 'This section is under development'}
+      />
+    );
   };
 
   return (
@@ -137,9 +172,9 @@ const StudyDashboard = () => {
             <div className="flex items-center justify-between">
               {!sidebarCollapsed && (
                 <div className="flex items-center">
-                  <GraduationCap className="w-8 h-8 text-red-400 mr-2" />
+                  <Star className="w-8 h-8 text-red-400 mr-2" />
                   <h1 className="text-xl font-bold text-white bg-gradient-to-r from-red-400 to-gray-400 bg-clip-text text-transparent">
-                    StudyHub
+                    Community Dashboard
                   </h1>
                 </div>
               )}
@@ -165,6 +200,7 @@ const StudyDashboard = () => {
                       ? 'bg-gradient-to-r from-red-500/20 to-gray-500/20 border-r-2 border-red-400 text-white shadow-lg' 
                       : 'text-gray-300 hover:bg-white/10 hover:text-white'
                   }`}
+                  title={!sidebarCollapsed ? item.description : item.label}
                 >
                   <Icon size={20} className="flex-shrink-0" />
                   {!sidebarCollapsed && (
@@ -204,9 +240,24 @@ const StudyDashboard = () => {
         .animate-spin-slower {
           animation: spin-slower 8s linear infinite;
         }
+        
+        /* Custom scrollbar for sidebar */
+        nav::-webkit-scrollbar {
+          width: 4px;
+        }
+        nav::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        nav::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.2);
+          border-radius: 2px;
+        }
+        nav::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.3);
+        }
       `}</style>
     </div>
   );
 };
 
-export default StudyDashboard;
+export default CommunityDashboard;

@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
-import { 
-  Home, 
-  BookOpen, 
+
+import { useState } from 'react';
+import {
+  Home,
+  BookOpen,
   FileText,
   MessageSquare,
   HelpCircle,
@@ -15,130 +16,89 @@ import {
   ChevronLeft,
   ChevronRight,
   GraduationCap,
-  Target
+  Target,
+  Star
 } from 'lucide-react';
 
-// Animated Background Component
-const AnimatedBackground = () => {
-  const blobRefs = useRef([])
+import StudyOverview from './StudyOverview';
+//import MeetOurLearners from './MeetOurLearners';
+//import SharingFeedbacks from './SharingFeedbacks';
+//import Events from './Events';
+//import PartnersAndSupporters from './PartnersAndSupporters';
+//import VoicesOfCommunity from './VoicesOfCommunity';
+//import Actualite from './Actualite';
+//import Contact from './Contact';
 
-  useEffect(() => {
-    let requestId;
-    const localInitialPositions = [
-      { x: -4, y: 0 },
-      { x: -4, y: 0 },
-      { x: 20, y: -8 },
-      { x: 20, y: -8 },
-    ];
-
-    const handleScroll = () => {
-      const newScroll = window.pageYOffset;
-
-      blobRefs.current.forEach((blob, index) => {
-        const initialPos = localInitialPositions[index];
-
-        // Calculating movement in both X and Y direction
-        const xOffset = Math.sin(newScroll / 100 + index * 0.5) * 340 // Horizontal movement
-        const yOffset = Math.cos(newScroll / 100 + index * 0.5) * 40 // Vertical movement
-
-        const x = initialPos.x + xOffset
-        const y = initialPos.y + yOffset
-
-        // Apply transformation with smooth transition
-        if (blob) {
-          blob.style.transform = `translate(${x}px, ${y}px)`
-          blob.style.transition = "transform 1.4s ease-out"
-        }
-      })
-
-      requestId = requestAnimationFrame(handleScroll)
-    }
-
-    window.addEventListener("scroll", handleScroll)
-    return () => {
-      window.removeEventListener("scroll", handleScroll)
-      if (requestId) cancelAnimationFrame(requestId)
-    }
-  }, [])
-
-  return (
-    <div className="fixed inset-0 animated-bg">
-      <div className="absolute inset-0">
-        <div
-          ref={(ref) => (blobRefs.current[0] = ref)}
-          className="absolute top-0 -left-4 md:w-96 md:h-96 w-72 h-72 bg-red-500 rounded-full mix-blend-multiply filter blur-[128px] opacity-40 md:opacity-20 "></div>
-        <div
-          ref={(ref) => (blobRefs.current[1] = ref)}
-          className="absolute top-0 -right-4 w-96 h-96 bg-red-400 rounded-full mix-blend-multiply filter blur-[128px] opacity-40 md:opacity-20 hidden sm:block"></div>
-        <div
-          ref={(ref) => (blobRefs.current[2] = ref)}
-          className="absolute -bottom-8 left-[-40%] md:left-20 w-96 h-96 bg-red-500 rounded-full mix-blend-multiply filter blur-[128px] opacity-40 md:opacity-20 "></div>
-          <div
-          ref={(ref) => (blobRefs.current[3] = ref)}
-          className="absolute -bottom-10 right-20 w-96 h-96 bg-red-500 rounded-full mix-blend-multiply filter blur-[128px] opacity-20 md:opacity-10 hidden sm:block"></div>
-      </div>
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f10_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f10_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+const PlaceholderPage = ({ title, description }) => (
+  <div className="space-y-8">
+    <div className="text-center mb-8">
+      <h2 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-gray-400 mb-4">
+        {title}
+      </h2>
+      <p className="text-gray-300 text-lg max-w-2xl mx-auto">
+        {description}
+      </p>
     </div>
-  )
-}
+
+    <div className="backdrop-blur-md bg-white/10 rounded-xl p-8 border border-white/20 text-center">
+      <div className="mb-4">
+        <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+          <Star className="w-8 h-8 text-white" />
+        </div>
+        <h3 className="text-xl font-bold text-white mb-2">Page Component</h3>
+        <p className="text-gray-300 mb-4">
+          This page would be imported from: <code className="bg-gray-800 px-2 py-1 rounded text-red-400">./pages/{title.replace(/\s+/g, '')}</code>
+        </p>
+        <p className="text-sm text-gray-400">
+          Create a separate component file and import it at the top of this dashboard
+        </p>
+      </div>
+    </div>
+  </div>
+);
+
+const AnimatedBackground = () => null; // Placeholder or implement as needed
 
 const StudyDashboard = () => {
   const [currentPage, setCurrentPage] = useState('overview');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  // Define your study platform menu items
   const menuItems = [
-    { id: 'overview', label: 'Overview', icon: Home },
-    { id: 'courses', label: 'My Courses', icon: BookOpen },
-    { id: 'exams', label: 'Exams & Quizzes', icon: FileText },
-    { id: 'assignments', label: 'Assignments', icon: Target },
-    { id: 'schedule', label: 'Schedule', icon: Calendar },
-    { id: 'progress', label: 'Progress & Analytics', icon: TrendingUp },
-    { id: 'achievements', label: 'Achievements', icon: Award },
-    { id: 'library', label: 'Resource Library', icon: Library },
-    { id: 'forum', label: 'Discussion Forum', icon: MessageSquare },
-    { id: 'study_groups', label: 'Study Groups', icon: Users },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'support', label: 'Support Center', icon: HelpCircle },
-    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'overview', label: 'Overview', icon: Home, description: 'Study summary and quick insights' },
+    { id: 'courses', label: 'My Courses', icon: BookOpen, description: 'Explore your enrolled courses' },
+    { id: 'exams', label: 'Exams & Quizzes', icon: FileText, description: 'Upcoming tests and past results' },
+    { id: 'assignments', label: 'Assignments', icon: Target, description: 'Track and submit assignments' },
+    { id: 'schedule', label: 'Schedule', icon: Calendar, description: 'Daily and weekly learning schedule' },
+    { id: 'progress', label: 'Progress & Analytics', icon: TrendingUp, description: 'Your learning analytics and goals' },
+    { id: 'achievements', label: 'Achievements', icon: Award, description: 'Your badges and certificates' },
+    { id: 'library', label: 'Resource Library', icon: Library, description: 'Extra resources and materials' },
+    { id: 'forum', label: 'Discussion Forum', icon: MessageSquare, description: 'Ask and answer questions' },
+    { id: 'study_groups', label: 'Study Groups', icon: Users, description: 'Join or create study circles' },
+    { id: 'notifications', label: 'Notifications', icon: Bell, description: 'Alerts and important messages' },
+    { id: 'support', label: 'Support Center', icon: HelpCircle, description: 'Ask for help or report issues' },
+    { id: 'settings', label: 'Settings', icon: Settings, description: 'Manage your profile and preferences' },
   ];
 
   const renderPage = () => {
+    const currentMenuItem = menuItems.find((item) => item.id === currentPage);
     switch (currentPage) {
-      case 'overview':
-        return (
-          <div className="text-center">
-            <div className="flex items-center justify-center mb-6">
-              <GraduationCap className="w-16 h-16 text-red-400 mr-4" />
-              <h2 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-gray-400">
-                Study Platform
-              </h2>
-            </div>
-            <p className="text-gray-300 text-lg mb-8">Welcome to your personalized learning dashboard</p>
-            <div className="text-gray-400 text-sm">
-              Select a section from the sidebar to get started with your studies
-            </div>
-          </div>
-        );
+      case 'overview': return <StudyOverview />;
+    //  case 'meet_learners': return <MeetOurLearners />;
+    //  case 'sharing_feedbacks': return <SharingFeedbacks />;
+      //case 'events': return <Events />;
+      //case 'partners_supporters': return <PartnersAndSupporters />;
+      //case 'voices_community': return <VoicesOfCommunity />;
+      //case 'actualite': return <Actualite />;
+      //case 'contact': return <Contact />;
       default:
-        return (
-          <div className="text-center">
-            <h2 className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-gray-400 mb-4">
-              {menuItems.find(item => item.id === currentPage)?.label || 'Page'}
-            </h2>
-            <p className="text-gray-300 text-lg">This section will be implemented soon</p>
-          </div>
-        );
+        return <PlaceholderPage title={currentMenuItem?.label || 'Page Not Found'} description={currentMenuItem?.description || "This section is under development"} />;
     }
   };
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Animated Background */}
       <AnimatedBackground />
-      
       <div className="flex h-screen relative z-10">
-        {/* Sidebar */}
         <div className={`backdrop-blur-md bg-black/20 border-r border-white/10 shadow-2xl transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-64'}`}>
           <div className="p-4 border-b border-white/10">
             <div className="flex items-center justify-between">
@@ -158,8 +118,7 @@ const StudyDashboard = () => {
               </button>
             </div>
           </div>
-          
-          {/* Navigation Menu */}
+
           <nav className="mt-4 overflow-y-auto max-h-[calc(100vh-120px)]">
             {menuItems.map((item) => {
               const Icon = item.icon;
@@ -168,22 +127,20 @@ const StudyDashboard = () => {
                   key={item.id}
                   onClick={() => setCurrentPage(item.id)}
                   className={`w-full flex items-center px-4 py-3 text-left transition-all duration-300 hover:scale-105 ${
-                    currentPage === item.id 
-                      ? 'bg-gradient-to-r from-red-500/20 to-gray-500/20 border-r-2 border-red-400 text-white shadow-lg' 
+                    currentPage === item.id
+                      ? 'bg-gradient-to-r from-red-500/20 to-gray-500/20 border-r-2 border-red-400 text-white shadow-lg'
                       : 'text-gray-300 hover:bg-white/10 hover:text-white'
                   }`}
+                  title={!sidebarCollapsed ? item.description : item.label}
                 >
                   <Icon size={20} className="flex-shrink-0" />
-                  {!sidebarCollapsed && (
-                    <span className="ml-3 font-medium">{item.label}</span>
-                  )}
+                  {!sidebarCollapsed && <span className="ml-3 font-medium">{item.label}</span>}
                 </button>
               );
             })}
           </nav>
         </div>
 
-        {/* Main Content Area */}
         <div className="flex-1 overflow-auto">
           <div className="p-4 md:p-8 relative z-10">
             <div className="backdrop-blur-lg bg-gray-900/30 rounded-2xl border border-gray-700 shadow-xl min-h-[calc(100vh-4rem)] p-4 md:p-8">
@@ -193,24 +150,16 @@ const StudyDashboard = () => {
         </div>
       </div>
 
-      {/* Custom Styles */}
       <style>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-20px); }
-        }
-        @keyframes spin-slower {
-          to { transform: rotate(360deg); }
-        }
-        .animate-bounce-slow {
-          animation: bounce 3s infinite;
-        }
-        .animate-pulse-slow {
-          animation: pulse 3s infinite;
-        }
-        .animate-spin-slower {
-          animation: spin-slower 8s linear infinite;
-        }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+        @keyframes spin-slower { to { transform: rotate(360deg); } }
+        .animate-bounce-slow { animation: bounce 3s infinite; }
+        .animate-pulse-slow { animation: pulse 3s infinite; }
+        .animate-spin-slower { animation: spin-slower 8s linear infinite; }
+        nav::-webkit-scrollbar { width: 4px; }
+        nav::-webkit-scrollbar-track { background: transparent; }
+        nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+        nav::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
       `}</style>
     </div>
   );

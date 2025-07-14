@@ -2,7 +2,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useState } from 'react';
 import "./index.css";
-import Navbar from "./Components/Navbar";
+import Navbar from "./Components/MainNavbar";
 import Home from "./Pages/Home";
 import About from "./Pages/About"
 import WelcomeScreen from "./Pages/WelcomeScreen";
@@ -10,12 +10,14 @@ import AnimatedBackground from "./Components/Background";
 import { AnimatePresence } from "framer-motion";
 import PropTypes from "prop-types";
 import Signup from './Components/signup';
-import login from './Components/signin';
+//import login from './Components/signin';
 import Signin from './Components/signin';
 import Inspiration from './Pages/Inspirations';
 import Team from './Pages/Team';
 import StudyDashboard from './Pages/StudyDashboard';
 import CommunityDashboard from './Pages/CommunityDashboard'
+import AuthPage from './Components/Auth';
+
 
 
 
@@ -38,7 +40,8 @@ const LandingPage = ({ showWelcome, setShowWelcome }) => {
           
 
           <div className="relative z-10">
-            <CommunityDashboard/>
+            <StudyDashboard />
+            
              {/*<Navbar />
             <StudyDashboard />
             <Home />
