@@ -1,5 +1,5 @@
 import {  useEffect,  } from 'react';
-import { CalendarDays, Video,  } from 'lucide-react';
+import { CalendarDays,   } from 'lucide-react';
 
 import AnimatedBackground from '../Components/Background'; 
 const StudyOverview = () => {

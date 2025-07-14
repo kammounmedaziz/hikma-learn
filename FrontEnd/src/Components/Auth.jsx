@@ -1,19 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { 
-  User, 
-  Mail, 
-  Lock, 
-  Phone, 
-  GraduationCap, 
-  MapPin, 
-  CreditCard, 
-  Eye, 
-  EyeOff, 
-  Sparkles, 
-  ArrowRight,
-  UserPlus,
-  LogIn,
-  School
+import {
+  User, Mail, Lock, Phone, GraduationCap, MapPin, CreditCard,
+  Eye, EyeOff, Sparkles, ArrowRight, UserPlus, LogIn, School, Users
 } from 'lucide-react';
 
 const AnimatedBackground = () => {
@@ -148,7 +136,7 @@ const InputField = ({ icon: Icon, type, placeholder, value, onChange, required =
 // Sign In Component
 const SignInComponent = ({ onSubmit }) => {
   const [formData, setFormData] = useState({
-    email: '',
+    username: '',
     password: ''
   });
 
@@ -156,233 +144,90 @@ const SignInComponent = ({ onSubmit }) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit(formData);
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/login/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.detail || 'Login failed');
+      onSubmit(data);
+    } catch (error) {
+      alert(error.message);
+    }
   };
 
   return (
     <div className="space-y-6">
-      <InputField
-        icon={Mail}
-        type="email"
-        placeholder="Email address"
-        value={formData.email}
-        onChange={(e) => handleInputChange('email', e.target.value)}
-        required
-      />
-      
-      <InputField
-        icon={Lock}
-        type="password"
-        placeholder="Password"
-        value={formData.password}
-        onChange={(e) => handleInputChange('password', e.target.value)}
-        required
-      />
-
-      <div className="flex items-center justify-between text-sm">
-        <label className="flex items-center text-gray-300">
-          <input type="checkbox" className="mr-2 rounded" />
-          Remember me
-        </label>
-        <a href="#" className="text-red-400 hover:text-red-300 transition-colors">
-          Forgot password?
-        </a>
-      </div>
-
-      <button
-        type="button"
-        onClick={handleSubmit}
-        className="w-full py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center gap-2"
-      >
-        Sign In
-        <ArrowRight className="w-4 h-4" />
+      <InputField icon={User} type="text" placeholder="Username" value={formData.username} onChange={e => handleInputChange('username', e.target.value)} required />
+      <InputField icon={Lock} type="password" placeholder="Password" value={formData.password} onChange={e => handleInputChange('password', e.target.value)} required />
+      <button onClick={handleSubmit} className="w-full py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg flex items-center justify-center gap-2">
+        Sign In <ArrowRight className="w-4 h-4" />
       </button>
     </div>
   );
 };
 
+
+
 // Sign Up Component
 const SignUpComponent = ({ onSubmit }) => {
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    username: '',
+    user_type: '',
+    first_name: '',
+    last_name: '',
     cin: '',
     email: '',
-    phone: '',
-    school: '',
-    grade: '',
-    region: '',
+    phone_num: '',
+    birth_date: '',
     password: '',
-    confirmPassword: ''
+    confirm_password: ''
   });
 
-  const regions = [
-    { value: 'tunis', label: 'Tunis' },
-    { value: 'ariana', label: 'Ariana' },
-    { value: 'ben_arous', label: 'Ben Arous' },
-    { value: 'manouba', label: 'Manouba' },
-    { value: 'nabeul', label: 'Nabeul' },
-    { value: 'zaghouan', label: 'Zaghouan' },
-    { value: 'bizerte', label: 'Bizerte' },
-    { value: 'beja', label: 'Béja' },
-    { value: 'jendouba', label: 'Jendouba' },
-    { value: 'kef', label: 'Le Kef' },
-    { value: 'siliana', label: 'Siliana' },
-    { value: 'kairouan', label: 'Kairouan' },
-    { value: 'kasserine', label: 'Kasserine' },
-    { value: 'sidi_bouzid', label: 'Sidi Bouzid' },
-    { value: 'sousse', label: 'Sousse' },
-    { value: 'monastir', label: 'Monastir' },
-    { value: 'mahdia', label: 'Mahdia' },
-    { value: 'sfax', label: 'Sfax' },
-    { value: 'gafsa', label: 'Gafsa' },
-    { value: 'tozeur', label: 'Tozeur' },
-    { value: 'kebili', label: 'Kebili' },
-    { value: 'gabes', label: 'Gabès' },
-    { value: 'medenine', label: 'Médenine' },
-    { value: 'tataouine', label: 'Tataouine' }
-  ];
-
-  const grades = [
-    { value: '1', label: '1st Grade' },
-    { value: '2', label: '2nd Grade' },
-    { value: '3', label: '3rd Grade' },
-    { value: '4', label: '4th Grade' },
-    { value: '5', label: '5th Grade' },
-  ];
-
-  const handleInputChange = (field, value) => {
+  const handleInputChange = (field, value) =>
     setFormData(prev => ({ ...prev, [field]: value }));
-  };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match!');
-      return;
+    if (formData.password !== formData.confirm_password) return alert('Passwords do not match');
+    
+    const payload = { ...formData };
+    delete payload.confirm_password;
+
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/register/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(JSON.stringify(data));
+      onSubmit(data);
+    } catch (error) {
+      alert("Registration failed:\n" + error.message);
     }
-    onSubmit(formData);
   };
 
   return (
     <div className="space-y-4">
+      <InputField icon={User} type="text" placeholder="Username" value={formData.username} onChange={e => handleInputChange('username', e.target.value)} required />
+      <InputField icon={Users} type="select" placeholder="Select User Type" value={formData.user_type} onChange={e => handleInputChange('user_type', e.target.value)} options={[{ value: 'student', label: 'Student' }, { value: 'teacher', label: 'Teacher' }, { value: 'admin', label: 'Admin' }]} required />
       <div className="grid grid-cols-2 gap-4">
-        <InputField
-          icon={User}
-          type="text"
-          placeholder="First Name"
-          value={formData.firstName}
-          onChange={(e) => handleInputChange('firstName', e.target.value)}
-          required
-        />
-        <InputField
-          icon={User}
-          type="text"
-          placeholder="Last Name"
-          value={formData.lastName}
-          onChange={(e) => handleInputChange('lastName', e.target.value)}
-          required
-        />
+        <InputField icon={User} type="text" placeholder="First Name" value={formData.first_name} onChange={e => handleInputChange('first_name', e.target.value)} required />
+        <InputField icon={User} type="text" placeholder="Last Name" value={formData.last_name} onChange={e => handleInputChange('last_name', e.target.value)} required />
       </div>
-
-      <InputField
-        icon={CreditCard}
-        type="text"
-        placeholder="CIN (National ID)"
-        value={formData.cin}
-        onChange={(e) => handleInputChange('cin', e.target.value)}
-        required
-      />
-
-      <InputField
-        icon={Mail}
-        type="email"
-        placeholder="Email address"
-        value={formData.email}
-        onChange={(e) => handleInputChange('email', e.target.value)}
-        required
-      />
-
-      <InputField
-        icon={Phone}
-        type="tel"
-        placeholder="Phone number"
-        value={formData.phone}
-        onChange={(e) => handleInputChange('phone', e.target.value)}
-        required
-      />
-
-      <InputField
-        icon={School}
-        type="text"
-        placeholder="School/Institution"
-        value={formData.school}
-        onChange={(e) => handleInputChange('school', e.target.value)}
-        required
-      />
-
-      <div className="grid grid-cols-2 gap-4">
-        <InputField
-          icon={GraduationCap}
-          type="select"
-          placeholder="Select Grade"
-          value={formData.grade}
-          onChange={(e) => handleInputChange('grade', e.target.value)}
-          options={grades}
-          required
-        />
-        <InputField
-          icon={MapPin}
-          type="select"
-          placeholder="Select Region"
-          value={formData.region}
-          onChange={(e) => handleInputChange('region', e.target.value)}
-          options={regions}
-          required
-        />
-      </div>
-
-      <InputField
-        icon={Lock}
-        type="password"
-        placeholder="Password"
-        value={formData.password}
-        onChange={(e) => handleInputChange('password', e.target.value)}
-        required
-      />
-
-      <InputField
-        icon={Lock}
-        type="password"
-        placeholder="Confirm Password"
-        value={formData.confirmPassword}
-        onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-        required
-      />
-
-      <div className="flex items-center text-sm text-gray-300">
-        <input type="checkbox" className="mr-2 rounded" required />
-        <span>
-          I agree to the{' '}
-          <a href="#" className="text-red-400 hover:text-red-300 transition-colors">
-            Terms & Conditions
-          </a>{' '}
-          and{' '}
-          <a href="#" className="text-red-400 hover:text-red-300 transition-colors">
-            Privacy Policy
-          </a>
-        </span>
-      </div>
-
-      <button
-        type="button"
-        onClick={handleSubmit}
-        className="w-full py-3 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-semibold rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center justify-center gap-2"
-      >
-        Create Account
-        <ArrowRight className="w-4 h-4" />
+      <InputField icon={CreditCard} type="text" placeholder="CIN" value={formData.cin} onChange={e => handleInputChange('cin', e.target.value)} required />
+      <InputField icon={Mail} type="email" placeholder="Email" value={formData.email} onChange={e => handleInputChange('email', e.target.value)} required />
+      <InputField icon={Phone} type="tel" placeholder="Phone" value={formData.phone_num} onChange={e => handleInputChange('phone_num', e.target.value)} required />
+      <InputField icon={MapPin} type="date" placeholder="Birth Date" value={formData.birth_date} onChange={e => handleInputChange('birth_date', e.target.value)} required />
+      <InputField icon={Lock} type="password" placeholder="Password" value={formData.password} onChange={e => handleInputChange('password', e.target.value)} required />
+      <InputField icon={Lock} type="password" placeholder="Confirm Password" value={formData.confirm_password} onChange={e => handleInputChange('confirm_password', e.target.value)} required />
+      <button onClick={handleSubmit} className="w-full py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg flex items-center justify-center gap-2">
+        Create Account <ArrowRight className="w-4 h-4" />
       </button>
     </div>
   );
@@ -391,106 +236,40 @@ const SignUpComponent = ({ onSubmit }) => {
 // Main Auth Page Container
 const AuthPage = () => {
   const [isSignUp, setIsSignUp] = useState(false);
-  const [isTransitioning, setIsTransitioning] = useState(false);
 
-  const handleToggle = () => {
-    setIsTransitioning(true);
-    setTimeout(() => {
-      setIsSignUp(!isSignUp);
-      setIsTransitioning(false);
-    }, 300);
-  };
-
-  const handleSignInSubmit = (data) => {
-    console.log('Sign In Data:', data);
-    // Handle sign in logic here
-    alert('Sign in successful! Check console for data.');
-  };
-
-  const handleSignUpSubmit = (data) => {
-    console.log('Sign Up Data:', data);
-    // Handle sign up logic here
-    alert('Sign up successful! Check console for data.');
-  };
+  const handleToggle = () => setIsSignUp(!isSignUp);
+  const handleSignInSubmit = data => alert(`Signed in: ${JSON.stringify(data)}`);
+  const handleSignUpSubmit = data => alert(`Signed up: ${JSON.stringify(data)}`);
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
       <AnimatedBackground />
-      
-      {/* Main Container */}
       <div className="z-10 relative w-full max-w-md">
-        {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-block relative group mb-6">
-            <h1 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-red-400 via-red-500 to-red-700 leading-tight drop-shadow-2xl">
-              HIKMA{' '}
-              <span className="bg-gradient-to-br from-rose-300 via-red-500 to-red-800 bg-clip-text text-transparent drop-shadow-lg">
-                LEARN
-              </span>
-            </h1>
-          </div>
-          <p className="text-gray-300 flex items-center justify-center gap-2 text-lg">
-            <Sparkles className="w-5 h-5 text-red-400" />
+          <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-red-400 to-red-700">HIKMA <span className="bg-clip-text text-transparent">LEARN</span></h1>
+          <p className="text-gray-300 text-lg flex justify-center items-center gap-2">
+            <Sparkles className="text-red-400" />
             {isSignUp ? 'Create your account' : 'Welcome back'}
-            <Sparkles className="w-5 h-5 text-red-400" />
+            <Sparkles className="text-red-400" />
           </p>
         </div>
-
-        {/* Form Container */}
-        <div className={`bg-gray-900/60 backdrop-blur-sm rounded-2xl border border-gray-700/50 shadow-lg transition-all duration-500 transform ${
-          isTransitioning ? 'scale-95 opacity-50' : 'scale-100 opacity-100'
-        }`}>
-          {/* Toggle Buttons */}
+        <div className="bg-gray-900/60 backdrop-blur-sm rounded-2xl border border-gray-700/50 shadow-lg">
           <div className="flex bg-gray-800/50 rounded-t-2xl overflow-hidden">
-            <button
-              onClick={() => !isSignUp && handleToggle()}
-              className={`flex-1 py-4 px-6 font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
-                !isSignUp
-                  ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
-              }`}
-            >
-              <LogIn className="w-4 h-4" />
-              Sign In
-            </button>
-            <button
-              onClick={() => isSignUp && handleToggle()}
-              className={`flex-1 py-4 px-6 font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
-                isSignUp
-                  ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
-              }`}
-            >
-              <UserPlus className="w-4 h-4" />
-              Sign Up
-            </button>
+            <button onClick={() => !isSignUp && handleToggle()} className={`flex-1 py-4 px-6 ${!isSignUp ? 'bg-gradient-to-r from-red-500 to-red-600 text-white' : 'text-gray-400'}`}> <LogIn className="w-4 h-4" /> Sign In </button>
+            <button onClick={() => isSignUp && handleToggle()} className={`flex-1 py-4 px-6 ${isSignUp ? 'bg-gradient-to-r from-red-500 to-red-600 text-white' : 'text-gray-400'}`}> <UserPlus className="w-4 h-4" /> Sign Up </button>
           </div>
-
-          {/* Form Content */}
           <div className="p-8">
-            {!isSignUp ? (
-              <SignInComponent onSubmit={handleSignInSubmit} />
-            ) : (
-              <SignUpComponent onSubmit={handleSignUpSubmit} />
-            )}
+            {isSignUp ? <SignUpComponent onSubmit={handleSignUpSubmit} /> : <SignInComponent onSubmit={handleSignInSubmit} />}
           </div>
         </div>
-
-        {/* Footer */}
         <div className="text-center mt-8 text-gray-400">
           <p>
             {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
-            <button
-              onClick={handleToggle}
-              className="text-red-400 hover:text-red-300 transition-colors font-semibold"
-            >
-              {isSignUp ? 'Sign In' : 'Sign Up'}
-            </button>
+            <button onClick={handleToggle} className="text-red-400 font-semibold">{isSignUp ? 'Sign In' : 'Sign Up'}</button>
           </p>
         </div>
       </div>
     </div>
   );
 };
-
 export default AuthPage;

@@ -11,6 +11,7 @@ class UserType(models.TextChoices):
 
 # Single User model with discriminator and optional fields
 class User(AbstractUser):
+    cin = models.CharField(max_length=20, unique=True, null=True, blank=True)
     user_type = models.CharField(max_length=10, choices=UserType.choices)
     photo = models.ImageField(upload_to='profile_photos/', blank=True, null=True)  # Use ImageField for profile photos
     phone_num = models.CharField(max_length=20, blank=True, null=True)
