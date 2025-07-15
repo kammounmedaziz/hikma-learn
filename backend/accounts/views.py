@@ -12,6 +12,50 @@ from rest_framework.response import Response
 from rest_framework import status
 from .serializers import RegisterSerializer
 
+import random
+import string
+
+@api_view(['POST'])
+def create_teacher_user(request):
+    try:
+        data = request.data
+        required_fields = ['first_name', 'last_name', 'email', 'fields', 'cin', 'user_type']
+
+        for field in required_fields:
+            if field not in data:
+                return Response({field: 'This information is missing.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Generate random username and password
+        username = f"teacher_{''.join(random.choices(string.ascii_lowercase + string.digits, k=6))}"
+        password = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+
+        user = User(
+            username=username,
+            first_name=data['first_name'],
+            last_name=data['last_name'],
+            email=data['email'],
+            user_type=data['user_type'],
+            fields=data.get('fields', []),
+            cin=data.get('cin'),
+            phone_num=data.get('phone_num'),
+            birth_date=data.get('birth_date'),
+            photo=data.get('photo')
+        )
+        user.set_password(password) # Hash the password
+        user.full_clean()
+        user.save()
+
+        return Response({
+            "message": "Teacher user created",
+            "username": username,
+            "password": password
+        }, status=status.HTTP_201_CREATED)
+
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+
+
+
 @api_view(['POST'])
 def register_user(request):
     serializer = RegisterSerializer(data=request.data)
@@ -23,20 +67,25 @@ def register_user(request):
 
 User = get_user_model()
 
+import random
+import string
+
 class RegisterView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
         data = request.data
-        required_fields = ['username', 'password', 'first_name', 'last_name', 'user_type']
+        required_fields = ['password', 'first_name', 'last_name', 'user_type']
 
         for field in required_fields:
             if field not in data:
                 return Response({field: 'This field is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Create the user
+        # Generate username like in your create_teacher_user
+        username = f"teacher_{''.join(random.choices(string.ascii_lowercase + string.digits, k=6))}"
+
         user = User.objects.create_user(
-            username=data['username'],
+            username=username,
             password=data['password'],
             first_name=data.get('first_name', ''),
             last_name=data.get('last_name', ''),
@@ -48,18 +97,15 @@ class RegisterView(APIView):
             fields=data.get('fields', []),
         )
 
-        # JWT Token (optional)
         refresh = RefreshToken.for_user(user)
 
         return Response({
             "message": "User registered successfully.",
+            "username": username,
             "refresh": str(refresh),
             "access": str(refresh.access_token),
         }, status=status.HTTP_201_CREATED)
-        
-        
-        
-        
+ 
 
 @api_view(['POST'])
 def login_view(request):
