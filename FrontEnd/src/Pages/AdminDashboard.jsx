@@ -24,7 +24,7 @@ import {
   AlertTriangle,
   CheckCircle
 } from 'lucide-react';
-
+import AdminManageTeachers from './AdminManageTeachers'
 const PlaceholderPage = ({ title, description }) => (
   <div className="space-y-8">
     <div className="text-center mb-8">
@@ -231,7 +231,7 @@ const AdminDashboard = () => {
   const menuItems = [
     { id: 'overview', label: 'Dashboard', icon: Home, description: 'System overview and key metrics' },
     { id: 'user_management', label: 'User Management', icon: Users, description: 'Manage students and teachers' },
-    { id: 'teacher_approval', label: 'Teacher Approval', icon: UserCheck, description: 'Approve new teacher registrations' },
+    { id: 'AdminManageTeachers', label: 'Teacher Approval', icon: UserCheck, description: 'Approve new teacher registrations' },
     { id: 'course_management', label: 'Course Management', icon: BookOpen, description: 'Oversee all courses and content' },
     { id: 'institution_settings', label: 'Institution Settings', icon: Building, description: 'Configure institutional parameters' },
     { id: 'analytics', label: 'Analytics & Reports', icon: BarChart3, description: 'Platform analytics and reporting' },
@@ -251,6 +251,8 @@ const AdminDashboard = () => {
     switch (currentPage) {
       case 'overview': 
         return <AdminOverview />;
+      case 'AdminManageTeachers':
+        return <AdminManageTeachers/>
       default:
         return <PlaceholderPage title={currentMenuItem?.label || 'Page Not Found'} description={currentMenuItem?.description || "This section is under development"} />;
     }

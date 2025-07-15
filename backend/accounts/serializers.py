@@ -8,23 +8,38 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id',
-            'username',  # ✅ keep this to show in response
+            'username', 
             'email',
             'password',
             'first_name',
             'last_name',
             'cin',
-            'user_type',
             'phone_num',
             'birth_date',
         ]
         extra_kwargs = {
             'password': {'write_only': True},
             'id': {'read_only': True},
-            'username': {'read_only': True},  # ✅ this line fixes the error
+            'username': {'read_only': True},  
         }
 
     def create(self, validated_data):
-        validated_data['username'] = ''.join(random.choices(string.ascii_lowercase + string.digits, k=8))
-        user = User.objects.create_user(**validated_data)
-        return user
+        
+        first_name = validated_data.get('first_name', 'XX').upper()
+
+        
+        prefix = ''.join(random.choices(string.digits, k=3))
+        middle = first_name
+        suffix = ''.join(random.choices(string.digits, k=4))
+
+        
+        username = prefix + middle + suffix
+
+        
+        while User.objects.filter(username=username).exists():
+            prefix = ''.join(random.choices(string.digits, k=3))
+            suffix = ''.join(random.choices(string.digits, k=4))
+            username = prefix + middle + suffix
+
+        validated_data['username'] = username
+        return User.objects.create_user(**validated_data)

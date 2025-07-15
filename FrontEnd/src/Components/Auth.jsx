@@ -177,7 +177,7 @@ const SignInComponent = ({ onSubmit }) => {
 // Sign Up Component
 const SignUpComponent = ({ onSubmit }) => {
   const [formData, setFormData] = useState({
-    username: '',
+
     user_type: '',
     first_name: '',
     last_name: '',
@@ -215,8 +215,6 @@ const SignUpComponent = ({ onSubmit }) => {
 
   return (
     <div className="space-y-4">
-      <InputField icon={User} type="text" placeholder="Username" value={formData.username} onChange={e => handleInputChange('username', e.target.value)} required />
-      <InputField icon={Users} type="select" placeholder="Select User Type" value={formData.user_type} onChange={e => handleInputChange('user_type', e.target.value)} options={[{ value: 'student', label: 'Student' }, { value: 'teacher', label: 'Teacher' }, { value: 'admin', label: 'Admin' }]} required />
       <div className="grid grid-cols-2 gap-4">
         <InputField icon={User} type="text" placeholder="First Name" value={formData.first_name} onChange={e => handleInputChange('first_name', e.target.value)} required />
         <InputField icon={User} type="text" placeholder="Last Name" value={formData.last_name} onChange={e => handleInputChange('last_name', e.target.value)} required />

@@ -15,6 +15,8 @@ import Inspiration from './Pages/Inspirations';
 import Team from './Pages/Team';
 import CommunityDashboard from './Pages/CommunityDashboard'
 import Footer from './Components/Footer'
+import AdminManageTeachers from './Pages/AdminManageTeachers';
+import AdminDashboard from './Pages/AdminDashboard'
 
 
 
@@ -39,12 +41,7 @@ const LandingPage = ({ showWelcome, setShowWelcome }) => {
           
 
           <div className="relative z-10">
-            <Navbar />
-            <Home />
-            <Inspiration/>
-            <About />
-            <Team/>
-            <Footer/>
+            <AuthPage/>
           </div>
         </div>
       )}
