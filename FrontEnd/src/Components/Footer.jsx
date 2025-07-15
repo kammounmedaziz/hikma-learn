@@ -91,16 +91,7 @@ const Footer = () => {
           </a>
         </div>
 
-        {/* Language / Currency / Socials */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-6 gap-4">
-          <div className="flex items-center space-x-2 hover:text-white transition-colors cursor-pointer">
-            <GlobeIcon className="w-4 h-4" />
-            <span>English (US)</span>
-          </div>
-          <div className="hover:text-white transition-colors cursor-pointer">
-            <span>USD</span>
-          </div>
-        </div>
+      
       </div>
     </footer>
   );

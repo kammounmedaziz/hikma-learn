@@ -57,7 +57,7 @@ const PlaceholderPage = ({ title, description }) => (
   </div>
 );
 
-const AnimatedBackground = () => null; // Placeholder or implement as needed
+const AnimatedBackground = () => null;
 
 const StudyDashboard = () => {
   const [currentPage, setCurrentPage] = useState('overview');
