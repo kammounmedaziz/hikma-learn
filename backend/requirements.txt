@@ -8,8 +8,10 @@ curtsies==0.4.3
 cwcwidth==0.1.10
 decorator==5.2.1
 Django==5.2.4
+django-cors-headers==4.7.0
 django-environ==0.12.0
 djangorestframework==3.16.0
+djangorestframework_simplejwt==5.5.0
 executing==2.2.0
 greenlet==3.2.3
 idna==3.10
@@ -25,6 +27,7 @@ prompt_toolkit==3.0.51
 ptyprocess==0.7.0
 pure_eval==0.2.3
 Pygments==2.19.2
+PyJWT==2.9.0
 pyxdg==0.28
 requests==2.32.4
 sqlparse==0.5.3
