@@ -41,7 +41,7 @@ const LandingPage = ({ showWelcome, setShowWelcome }) => {
           
 
           <div className="relative z-10">
-            <AuthPage/>
+            <AdminDashboard/>
           </div>
         </div>
       )}
@@ -64,6 +64,7 @@ function App() {
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/study-dashboard" element={<StudyDashboard />} />
         <Route path="/community" element={<CommunityDashboard />} />
+        <Route path="/AdminDashboard" element={<AdminDashboard />} />
       </Routes>
     </BrowserRouter>
   );

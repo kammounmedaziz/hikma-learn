@@ -15,7 +15,7 @@ from .serializers import RegisterSerializer
 import random
 import string
 
-@api_view(['POST'])
+@api_view([ 'POST'])
 def create_teacher_user(request):
     try:
         data = request.data
@@ -116,3 +116,24 @@ def login_view(request):
         return Response({"message": "Login successful", "username": user.username}, status=status.HTTP_200_OK)
     else:
         return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
+    
+
+
+@api_view(['GET'])
+def list_teachers(request):
+    teachers = User.objects.filter(user_type='teacher')
+    serialized = [
+        {
+            "id": user.id,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "email": user.email,
+            "cin": user.cin,
+            "phone_num": user.phone_num,
+            "birth_date": user.birth_date,
+            "fields": user.fields,
+        }
+        for user in teachers
+    ]
+    return Response(serialized)
+
