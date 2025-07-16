@@ -24,3 +24,10 @@ class IsTeacherOrReadOnly(BasePermission):
 class IsTeacherOnly(BasePermission):
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.user_type == UserType.TEACHER
+
+class IsStudentOnly(BasePermission):
+    """
+    Allows access only to authenticated students.
+    """
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.user_type == UserType.STUDENT
