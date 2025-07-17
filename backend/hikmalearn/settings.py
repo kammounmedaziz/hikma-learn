@@ -24,7 +24,7 @@ env = environ.Env(
     DB_USER=(str, "root"),
     DB_PASSWORD=(str, ""),
     DB_HOST=(str, "127.0.0.1"),
-    DB_PORT=(int, 3307),
+    DB_PORT=(int, 3306),
 )
 
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
@@ -69,6 +69,16 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "hikmalearn.urls"
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+}
+
+SIMPLE_JWT = {
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
+
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -98,7 +108,7 @@ DATABASES = {
         'USER': 'root',
         'PASSWORD': '',
         'HOST': '127.0.0.1',
-        'PORT': '3307',
+        'PORT': '3306',
     }
 }
 

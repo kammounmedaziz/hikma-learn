@@ -16,7 +16,8 @@ import Team from './Pages/Team';
 import CommunityDashboard from './Pages/CommunityDashboard'
 import Footer from './Components/Footer'
 import AdminManageTeachers from './Pages/AdminManageTeachers';
-import AdminDashboard from './Pages/AdminDashboard'
+import AdminDashboard from './Pages/AdminDashboard';
+import TeacherDashboard from './Pages/TeacherDhasboard'
 
 
 
@@ -41,7 +42,7 @@ const LandingPage = ({ showWelcome, setShowWelcome }) => {
           
 
           <div className="relative z-10">
-            <AdminDashboard/>
+            <AuthPage/>
           </div>
         </div>
       )}

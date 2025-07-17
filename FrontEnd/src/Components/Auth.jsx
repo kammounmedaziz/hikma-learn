@@ -153,19 +153,58 @@ const SignInComponent = ({ onSubmit }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
+      
       const data = await response.json();
-      if (!response.ok) throw new Error(data.detail || 'Login failed');
+      
+      if (!response.ok) {
+        throw new Error(data.detail || data.error || 'Login failed');
+      }
+
+      // Store the tokens and user data in localStorage
+      localStorage.setItem('token', data.access);
+      localStorage.setItem('refreshToken', data.refresh);
+      localStorage.setItem('username', data.username);
+      
+      // If your backend provides user ID, store that too
+      if (data.user_id) {
+        localStorage.setItem('userId', data.user_id);
+      }
+
+      console.log('Login successful, tokens stored:', {
+        token: data.access,
+        refreshToken: data.refresh,
+        username: data.username
+      });
+
       onSubmit(data);
     } catch (error) {
+      console.error('Login error:', error);
       alert(error.message);
     }
   };
 
   return (
     <div className="space-y-6">
-      <InputField icon={User} type="text" placeholder="Username" value={formData.username} onChange={e => handleInputChange('username', e.target.value)} required />
-      <InputField icon={Lock} type="password" placeholder="Password" value={formData.password} onChange={e => handleInputChange('password', e.target.value)} required />
-      <button onClick={handleSubmit} className="w-full py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg flex items-center justify-center gap-2">
+      <InputField 
+        icon={User} 
+        type="text" 
+        placeholder="Username" 
+        value={formData.username} 
+        onChange={e => handleInputChange('username', e.target.value)} 
+        required 
+      />
+      <InputField 
+        icon={Lock} 
+        type="password" 
+        placeholder="Password" 
+        value={formData.password} 
+        onChange={e => handleInputChange('password', e.target.value)} 
+        required 
+      />
+      <button 
+        onClick={handleSubmit} 
+        className="w-full py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg flex items-center justify-center gap-2"
+      >
         Sign In <ArrowRight className="w-4 h-4" />
       </button>
     </div>

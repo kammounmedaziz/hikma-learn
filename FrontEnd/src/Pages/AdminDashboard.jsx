@@ -231,8 +231,8 @@ const AdminDashboard = () => {
 
   const menuItems = [
     { id: 'overview', label: 'Dashboard', icon: Home, description: 'System overview and key metrics' },
-    { id: 'user_management', label: 'User Management', icon: Users, description: 'Manage students and teachers' },
-    { id: 'AdminManageTeachers', label: 'Teacher Approval', icon: UserCheck, description: 'Approve new teacher registrations' },
+    { id: 'AdminManagingStudents', label: 'Student Management', icon: Users, description: 'Manage students and teachers' },
+    { id: 'AdminManageTeachers', label: 'Teacher Management', icon: UserCheck, description: 'Approve new teacher registrations' },
     { id: 'course_management', label: 'Course Management', icon: BookOpen, description: 'Oversee all courses and content' },
     { id: 'institution_settings', label: 'Institution Settings', icon: Building, description: 'Configure institutional parameters' },
     { id: 'analytics', label: 'Analytics & Reports', icon: BarChart3, description: 'Platform analytics and reporting' },

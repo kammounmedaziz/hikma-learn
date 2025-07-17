@@ -11,10 +11,30 @@ from .serializers import RegisterSerializer
 from rest_framework import status
 from .models import User
 from .serializers import TeacherSerializer
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.permissions import IsAuthenticated
+
+
+
 
 
 import random
 import string
+
+
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth import get_user_model
+from django.utils import timezone
+import logging
+
+logger = logging.getLogger(__name__)
+User = get_user_model()
+
+
 
 @api_view([ 'POST'])
 def create_teacher_user(request):
@@ -114,12 +134,20 @@ def login_view(request):
     user = authenticate(username=data.get('username'), password=data.get('password'))
     
     if user is not None:
-        return Response({"message": "Login successful", "username": user.username}, status=status.HTTP_200_OK)
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            "message": "Login successful",
+            "username": user.username,
+            "user_id": user.id,
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
+        }, status=status.HTTP_200_OK)
     else:
         return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
     
-
-
+    
+    
+    
 @api_view(['GET'])
 def list_teachers(request):
     teachers = User.objects.filter(user_type='teacher')
@@ -166,33 +194,78 @@ def delete_teacher(request, pk):
     
 
 @api_view(['PUT'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 def change_password(request, pk):
     try:
-        user = User.objects.get(pk=pk)
+        # Debugging logs
+        logger.info(f"Password change request from user {request.user.id} for user {pk}")
+        
+        # Get target user
+        target_user = User.objects.get(pk=pk)
+        
+        # Verify requesting user matches target user
+        if request.user.id != target_user.id:
+            logger.warning(f"User {request.user.id} attempted to change password for user {pk}")
+            return Response(
+                {"error": "You can only change your own password."},
+                status=status.HTTP_403_FORBIDDEN
+            )
 
+        # Get password data
         old_password = request.data.get('old_password')
         new_password = request.data.get('new_password')
         confirm_password = request.data.get('confirm_password')
 
-        if not old_password or not new_password or not confirm_password:
-            return Response({"error": "Old password, new password, and confirmation are required."}, status=status.HTTP_400_BAD_REQUEST)
+        # Validate required fields
+        if not all([old_password, new_password, confirm_password]):
+            return Response(
+                {"error": "All password fields are required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
+        # Validate password match
         if new_password != confirm_password:
-            return Response({"error": "New password and confirmation do not match."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"error": "New passwords don't match."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        if not user.check_password(old_password):
-            return Response({"error": "Old password is incorrect."}, status=status.HTTP_400_BAD_REQUEST)
+        # Verify old password
+        if not target_user.check_password(old_password):
+            return Response(
+                {"error": "Old password is incorrect."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        if len(new_password) < 8 or not any(c.isalpha() for c in new_password) or not any(c.isdigit() for c in new_password):
-            return Response({"error": "Password must be at least 8 characters long and contain both letters and numbers."}, status=status.HTTP_400_BAD_REQUEST)
+        # Validate password strength
+        if len(new_password) < 8:
+            return Response(
+                {"error": "Password must be at least 8 characters."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        user.set_password(new_password)
-        user.save()
+        # Change password
+        target_user.set_password(new_password)
+        target_user.save()
 
-        return Response({"message": "Password updated successfully."}, status=status.HTTP_200_OK)
+        logger.info(f"Password changed successfully for user {pk}")
+        return Response(
+            {"message": "Password updated successfully."},
+            status=status.HTTP_200_OK
+        )
 
     except User.DoesNotExist:
-        return Response({"error": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"error": "User not found."},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        logger.error(f"Password change error: {str(e)}")
+        return Response(
+            {"error": "An error occurred during password change."},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 @api_view(['GET'])
 def get_password_change_time(request, pk):
