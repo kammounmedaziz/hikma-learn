@@ -101,6 +101,8 @@ class ContentSeen(models.Model):
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from django.core.exceptions import ValidationError
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 
 @receiver(pre_save, sender=Chapter)
 def auto_set_chapter_order(sender, instance, *args, **kwargs):
@@ -113,3 +115,11 @@ def auto_set_content_order(sender, instance, *args, **kwargs):
     if instance.pk is None:
         max_order = sender.objects.filter(chapter=instance.chapter).aggregate(models.Max('order'))['order__max']
         instance.order = (max_order or 0) + 1
+
+@receiver(post_delete, sender=Chapter)
+def reorder_chapters_after_delete(sender, instance, **kwargs):
+    chapters = Chapter.objects.filter(course=instance.course).order_by('order')
+    for idx, chapter in enumerate(chapters, start=1):
+        if chapter.order != idx:
+            chapter.order = idx
+            chapter.save(update_fields=["order"])

@@ -1,6 +1,7 @@
 
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 from accounts.models import UserType
+from .models import Course
 
 
 class IsTeacherOrReadOnly(BasePermission):
@@ -20,6 +21,43 @@ class IsTeacherOrReadOnly(BasePermission):
         # Only the owner (teacher) can modify their course
         return obj.teacher == request.user
 
+class IsTeacherOfCourse(BasePermission):
+    def has_permission(self, request, view):
+        course_id = view.kwargs.get('course_pk')
+        if course_id is None:
+            return False
+        try:
+            course = Course.objects.get(id=course_id)
+            return course.teacher == request.user
+        except Course.DoesNotExist:
+            return False
+
+    def has_object_permission(self, request, view, obj):
+        return obj.course.teacher == request.user
+
+class IsTeacherOfCourseOrReadOnly(BasePermission):
+    """
+    Allow any authenticated user to view chapters.
+    Only the course's teacher can modify.
+    """
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return request.user.is_authenticated
+
+        course_id = view.kwargs.get('course_pk')
+        if not course_id or not request.user.is_authenticated:
+            return False
+
+        try:
+            course = Course.objects.get(id=course_id)
+            return course.teacher == request.user
+        except Course.DoesNotExist:
+            return False
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in SAFE_METHODS:
+            return request.user.is_authenticated
+        return obj.course.teacher == request.user
 
 class IsTeacherOnly(BasePermission):
     def has_permission(self, request, view):

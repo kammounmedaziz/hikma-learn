@@ -1,18 +1,15 @@
 from django.shortcuts import render
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, serializers
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 from accounts.models import UserType
-from .models import Course
-from .serializers import CourseSerializer
+from .models import Course, Chapter, CourseFollow
+from .serializers import CourseSerializer, CourseFollowSerializer, ChapterSerializer
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 
-from .permissions import IsTeacherOrReadOnly, IsTeacherOnly, IsStudentOnly
-from .serializers import CourseFollowSerializer
-from .models import CourseFollow
-from rest_framework import serializers
+from .permissions import IsTeacherOrReadOnly, IsTeacherOfCourse, IsTeacherOfCourseOrReadOnly, IsTeacherOnly, IsStudentOnly
 
 class EmptySerializer(serializers.Serializer):
     pass
@@ -69,3 +66,42 @@ class CourseViewSet(viewsets.ModelViewSet):
             if deleted:
                 return Response(status=status.HTTP_204_NO_CONTENT)
             return Response({"detail": "You are not following this course."}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ChapterViewSet(viewsets.ModelViewSet):
+    serializer_class = ChapterSerializer
+    permission_classes = [IsTeacherOfCourseOrReadOnly]
+
+    def get_queryset(self):
+        # Filter chapters by the course from the URL and order by 'order'
+        course_id = self.kwargs['course_pk']
+        return Chapter.objects.filter(course_id=course_id).order_by('order')
+
+    def perform_create(self, serializer):
+        # Set the course when creating a new chapter
+        course_id = self.kwargs['course_pk']
+        serializer.save(course_id=course_id)
+
+    def get_serializer_class(self):
+        if self.action == 'reorder':
+            from .serializers import ReorderSerializer
+            return ReorderSerializer
+        return super().get_serializer_class()
+
+
+    @action(detail=False, methods=['post'], permission_classes=[IsTeacherOfCourse])
+    def reorder(self, request, course_pk=None):
+        # Custom action to reorder chapters
+        from .serializers import ReorderSerializer
+        serializer = ReorderSerializer(data=request.data)
+        if serializer.is_valid():
+            chapter_ids = serializer.validated_data['chapter_ids']
+            # Validate that all chapters belong to the course
+            chapters = Chapter.objects.filter(id__in=chapter_ids, course_id=course_pk)
+            if len(chapters) != len(chapter_ids):
+                return Response({"detail": "Some chapters do not belong to this course."}, status=status.HTTP_400_BAD_REQUEST)
+            # Update the order of chapters
+            for order, chapter_id in enumerate(chapter_ids, start=1):
+                Chapter.objects.filter(id=chapter_id).update(order=order)
+            return Response({"detail": "Chapters reordered successfully."}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
