@@ -32,6 +32,12 @@ class CourseViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(courses, many=True)
         return Response(serializer.data)
 
+    @action(detail=False, methods=['get'], url_path='followed-courses', permission_classes=[IsStudentOnly])
+    def student_courses(self, request):
+        courses = Course.objects.filter(coursefollow__student=request.user)
+        serializer = self.get_serializer(courses, many=True)
+        return Response(serializer.data)
+
     @action(
         detail=True,
         methods=["get", "post", "delete"],
