@@ -6,7 +6,7 @@ import {
   Edit, Trash2, Plus, UserPlus, Save, X
 } from 'lucide-react';
 import TeacherForm from '../Components/TeacherForm';
-// 🔴 Animated background
+
 const AnimatedBackground = () => (
   <div className="fixed inset-0 animated-bg">
     <div className="absolute inset-0">
@@ -19,27 +19,50 @@ const AnimatedBackground = () => (
   </div>
 );
 
-
 const TeacherManagement = () => {
   const [teachers, setTeachers] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    axios.get('http://127.0.0.1:8000/api/teachers/')
-      .then(response => setTeachers(response.data))
-      .catch(error => console.error("Error fetching teachers:", error));
-  }, []);
-  const navigate = useNavigate();
+    const fetchTeachers = async () => {
+    try {
+      console.log("Fetching teachers...");
+      const response = await axios.get('http://127.0.0.1:8000/api/teachers/');
+      console.log("Response:", response.data);
+      setTeachers(response.data);
+    } catch (error) {
+      console.error("Error details:", error);
+    }
+  };
+  fetchTeachers();
+}, []);
+
   const handleSubmit = async (teacherData) => {
     try {
       const response = await axios.post('http://127.0.0.1:8000/api/register-teacher/', teacherData);
-      const newTeacher = { ...response.data };
-      setTeachers(prev => [...prev, newTeacher]);
+      setTeachers(prev => [...prev, response.data]);
       setShowForm(false);
       navigate('/AdminDashboard');
     } catch (error) {
       console.error("Error creating teacher:", error.response?.data || error.message);
-      alert("Failed to add teacher.");
+      alert("Failed to add teacher. Please try again.");
+    }
+  };
+
+  const handleDelete = async (teacherId) => {
+    if (!window.confirm("Are you sure you want to delete this teacher?")) return;
+    
+    setIsDeleting(true);
+    try {
+      await axios.delete(`http://127.0.0.1:8000/api/teachers/${teacherId}/delete/`);
+      setTeachers(prev => prev.filter(teacher => teacher.id !== teacherId));
+    } catch (error) {
+      console.error("Error deleting teacher:", error.response?.data || error.message);
+      alert("Failed to delete teacher. Please try again.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -68,9 +91,9 @@ const TeacherManagement = () => {
           <div className="mb-8 text-center">
             <button
               onClick={() => setShowForm(true)}
-              className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium"
+              className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium flex items-center justify-center mx-auto transition-transform hover:scale-105"
             >
-              <Plus className="w-5 h-5 inline mr-2" />
+              <Plus className="w-5 h-5 mr-2" />
               Add New Teacher
             </button>
           </div>
@@ -82,43 +105,81 @@ const TeacherManagement = () => {
 
         {/* Teacher cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {teachers.map((teacher) => (
-            <div key={teacher.id} className="backdrop-blur-lg bg-gray-900/30 rounded-2xl p-6 shadow-xl border border-gray-700">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center">
-                  <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-gray-500 rounded-full flex items-center justify-center shadow-lg">
-                    <User className="w-6 h-6 text-white" />
+          {teachers.length > 0 ? (
+            teachers.map((teacher) => (
+              <div key={teacher.id} className="backdrop-blur-lg bg-gray-900/30 rounded-2xl p-6 shadow-xl border border-gray-700 transition-all hover:shadow-2xl hover:border-red-400/50">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center">
+                    <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-gray-500 rounded-full flex items-center justify-center shadow-lg">
+                      <User className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-lg font-semibold text-gray-200">
+                        {teacher.first_name} {teacher.last_name}
+                      </h3>
+                      <p className="text-gray-400 text-sm">Teacher</p>
+                    </div>
                   </div>
-                  <div className="ml-3">
-                    <h3 className="text-lg font-semibold text-gray-200">
-                      {teacher.first_name} {teacher.last_name}
-                    </h3>
-                    <p className="text-gray-400 text-sm">Teacher</p>
+                  <button
+                    onClick={() => handleDelete(teacher.id)}
+                    disabled={isDeleting}
+                    className="text-red-400 hover:text-red-300 transition-colors disabled:opacity-50"
+                    title="Delete teacher"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-2 text-sm text-gray-300">
+                  <div className="flex items-center">
+                    <Mail className="w-4 h-4 mr-2 text-red-400" />
+                    <span className="truncate">{teacher.email}</span>
+                  </div>
+                  <div className="flex items-center">
+                    <FileText className="w-4 h-4 mr-2 text-red-400" />
+                    <span>CIN: {teacher.cin}</span>
+                  </div>
+                  {teacher.phone_num && (
+                    <div className="flex items-center">
+                      <Phone className="w-4 h-4 mr-2 text-red-400" />
+                      <span>{teacher.phone_num}</span>
+                    </div>
+                  )}
+                  {teacher.birth_date && (
+                    <div className="flex items-center">
+                      <Calendar className="w-4 h-4 mr-2 text-red-400" />
+                      <span>{new Date(teacher.birth_date).toLocaleDateString()}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-4">
+                  <p className="text-gray-400 text-sm mb-2 flex items-center">
+                    <GraduationCap className="w-4 h-4 mr-2 text-red-400" />
+                    Subjects:
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {Array.isArray(teacher.fields) && teacher.fields.length > 0 ? (
+                      teacher.fields.map((field, idx) => (
+                        <span 
+                          key={idx} 
+                          className="px-2 py-1 bg-red-600/20 text-red-300 rounded-full text-xs"
+                        >
+                          {field}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-gray-400 text-xs">No subjects assigned</span>
+                    )}
                   </div>
                 </div>
               </div>
-
-              <div className="space-y-2 text-sm text-gray-300">
-                <div className="flex items-center"><Mail className="w-4 h-4 mr-2" /> {teacher.email}</div>
-                <div className="flex items-center"><FileText className="w-4 h-4 mr-2" /> CIN: {teacher.cin}</div>
-                {teacher.phone_num && (
-                  <div className="flex items-center"><Phone className="w-4 h-4 mr-2" /> {teacher.phone_num}</div>
-                )}
-              </div>
-
-              <div className="mt-4">
-                <p className="text-gray-400 text-sm mb-2">Subjects:</p>
-                <div className="flex flex-wrap gap-2">
-                  {Array.isArray(teacher.fields) &&
-                    teacher.fields.map((field, idx) => (
-                      <span key={idx} className="px-2 py-1 bg-red-600/20 text-red-300 rounded-full text-xs">
-                        {field}
-                      </span>
-                    ))}
-                </div>
-              </div>
+            ))
+          ) : (
+            <div className="col-span-full text-center py-12">
+              <p className="text-gray-400 text-lg">No teachers found</p>
             </div>
-          ))}
+          )}
         </div>
       </div>
     </div>
