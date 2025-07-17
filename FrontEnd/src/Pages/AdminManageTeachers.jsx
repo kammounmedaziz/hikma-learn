@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import {
   User, Mail, Phone, Calendar, FileText, GraduationCap,
-  Edit, Trash2, Plus, UserPlus, Save, X
+  Edit, Trash2, Plus
 } from 'lucide-react';
 import TeacherForm from '../Components/TeacherForm';
 
@@ -23,37 +23,48 @@ const TeacherManagement = () => {
   const [teachers, setTeachers] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [currentTeacher, setCurrentTeacher] = useState(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchTeachers = async () => {
+  const fetchTeachers = async () => {
     try {
-      console.log("Fetching teachers...");
       const response = await axios.get('http://127.0.0.1:8000/api/teachers/');
-      console.log("Response:", response.data);
       setTeachers(response.data);
     } catch (error) {
-      console.error("Error details:", error);
+      console.error("Error fetching teachers:", error);
     }
   };
-  fetchTeachers();
-}, []);
+
+  useEffect(() => {
+    fetchTeachers();
+  }, []);
 
   const handleSubmit = async (teacherData) => {
     try {
-      const response = await axios.post('http://127.0.0.1:8000/api/register-teacher/', teacherData);
-      setTeachers(prev => [...prev, response.data]);
+      if (currentTeacher) {
+        const response = await axios.put(
+          `http://127.0.0.1:8000/api/teachers/${currentTeacher.id}/`,
+          teacherData
+        );
+        setTeachers(teachers.map(t =>
+          t.id === currentTeacher.id ? response.data : t
+        ));
+      } else {
+        const response = await axios.post('http://127.0.0.1:8000/api/register-teacher/', teacherData);
+        setTeachers(prev => [...prev, response.data]);
+        navigate('/AdminDashboard');
+      }
       setShowForm(false);
-      navigate('/AdminDashboard');
+      setCurrentTeacher(null);
     } catch (error) {
-      console.error("Error creating teacher:", error.response?.data || error.message);
-      alert("Failed to add teacher. Please try again.");
+      console.error("Error saving teacher:", error.response?.data || error.message);
+      alert(`Failed to ${currentTeacher ? 'update' : 'create'} teacher.`);
     }
   };
 
   const handleDelete = async (teacherId) => {
     if (!window.confirm("Are you sure you want to delete this teacher?")) return;
-    
+
     setIsDeleting(true);
     try {
       await axios.delete(`http://127.0.0.1:8000/api/teachers/${teacherId}/delete/`);
@@ -66,8 +77,14 @@ const TeacherManagement = () => {
     }
   };
 
+  const handleEdit = (teacher) => {
+    setCurrentTeacher(teacher);
+    setShowForm(true);
+  };
+
   const handleCancel = () => {
     setShowForm(false);
+    setCurrentTeacher(null);
   };
 
   return (
@@ -100,7 +117,12 @@ const TeacherManagement = () => {
         )}
 
         {showForm && (
-          <TeacherForm onSubmit={handleSubmit} onCancel={handleCancel} />
+          <TeacherForm
+            onSubmit={handleSubmit}
+            onCancel={handleCancel}
+            mode={currentTeacher ? 'edit' : 'add'}
+            initialData={currentTeacher}
+          />
         )}
 
         {/* Teacher cards */}
@@ -120,14 +142,23 @@ const TeacherManagement = () => {
                       <p className="text-gray-400 text-sm">Teacher</p>
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleDelete(teacher.id)}
-                    disabled={isDeleting}
-                    className="text-red-400 hover:text-red-300 transition-colors disabled:opacity-50"
-                    title="Delete teacher"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => handleEdit(teacher)}
+                      className="text-blue-400 hover:text-blue-300"
+                      title="Edit teacher"
+                    >
+                      <Edit className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(teacher.id)}
+                      disabled={isDeleting}
+                      className="text-red-400 hover:text-red-300 transition-colors disabled:opacity-50"
+                      title="Delete teacher"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="space-y-2 text-sm text-gray-300">
@@ -161,8 +192,8 @@ const TeacherManagement = () => {
                   <div className="flex flex-wrap gap-2">
                     {Array.isArray(teacher.fields) && teacher.fields.length > 0 ? (
                       teacher.fields.map((field, idx) => (
-                        <span 
-                          key={idx} 
+                        <span
+                          key={idx}
                           className="px-2 py-1 bg-red-600/20 text-red-300 rounded-full text-xs"
                         >
                           {field}

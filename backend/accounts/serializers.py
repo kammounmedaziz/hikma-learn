@@ -43,3 +43,23 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         validated_data['username'] = username
         return User.objects.create_user(**validated_data)
+    
+    
+    
+class TeacherSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            'id',
+            'first_name',
+            'last_name',
+            'email',
+            'cin',
+            'phone_num',
+            'birth_date',
+            'fields',
+            'user_type'
+        ]
+        extra_kwargs = {
+            'user_type': {'read_only': True},
+        }

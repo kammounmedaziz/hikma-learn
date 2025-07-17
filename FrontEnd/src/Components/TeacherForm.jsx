@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   User, Mail, Phone, Calendar, FileText, GraduationCap,
   Edit, UserPlus, Save, X
 } from 'lucide-react';
 
-const TeacherForm = ({ onSubmit, onCancel, mode = 'add' }) => {
+const TeacherForm = ({ onSubmit, onCancel, mode = 'add', initialData = {} }) => {
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -14,9 +14,27 @@ const TeacherForm = ({ onSubmit, onCancel, mode = 'add' }) => {
     birth_date: '',
     fields: [],
     user_type: 'teacher',
+    ...initialData
   });
 
   const [errors, setErrors] = useState({});
+
+  // ✅ Preload initial data when in edit mode
+  useEffect(() => {
+    console.log("Initial data received:", initialData);
+    if (mode === 'edit' && initialData) {
+      setFormData({
+        first_name: initialData.first_name || '',
+        last_name: initialData.last_name || '',
+        email: initialData.email || '',
+        cin: initialData.cin || '',
+        phone_num: initialData.phone_num || '',
+        birth_date: initialData.birth_date || '',
+        fields: initialData.fields || [],
+        user_type: 'teacher'
+      });
+    }
+  }, [initialData, mode]);
 
   const availableFields = [
     'Mathematics', 'Physics', 'Chemistry', 'Biology', 'French', 'English',
@@ -59,13 +77,12 @@ const TeacherForm = ({ onSubmit, onCancel, mode = 'add' }) => {
     e.preventDefault();
     if (validateForm()) {
       try {
-        await onSubmit(formData); // Ensure async call completes before React re-renders
+        await onSubmit(formData);
       } catch (error) {
         console.error("Error submitting form:", error);
       }
     }
   };
-
 
   const config = {
     title: mode === 'edit' ? 'Edit Teacher' : 'Add New Teacher',
@@ -97,7 +114,7 @@ const TeacherForm = ({ onSubmit, onCancel, mode = 'add' }) => {
         )}
       </div>
 
-      {/* Name */}
+      {/* First/Last Name */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {['first_name', 'last_name'].map((field, i) => (
           <div key={i}>
@@ -190,7 +207,7 @@ const TeacherForm = ({ onSubmit, onCancel, mode = 'add' }) => {
         </div>
       </div>
 
-      {/* Fields */}
+      {/* Teaching Subjects */}
       <div>
         <label className="block text-gray-300 text-sm font-medium mb-4">
           <GraduationCap className="w-4 h-4 inline mr-2" />
@@ -219,7 +236,7 @@ const TeacherForm = ({ onSubmit, onCancel, mode = 'add' }) => {
         {errors.fields && <p className="text-red-400 text-sm mt-2">{errors.fields}</p>}
       </div>
 
-      {/* Buttons */}
+      {/* Submit/Cancel Buttons */}
       <div className="flex justify-end space-x-4 pt-6">
         {onCancel && (
           <button

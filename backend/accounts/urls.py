@@ -6,7 +6,7 @@ urlpatterns = [
     path('login/', login_view, name='login_user'),
     path('register-teacher/', create_teacher_user),
     path('teachers/', list_teachers, name='list_teachers'),
-    path('api/teachers/<int:pk>/', update_teacher, name='update_teacher'),
+    path('teachers/<int:pk>/', update_teacher, name='update_teacher'),
     path('teachers/<int:pk>/delete/', delete_teacher, name='delete_teacher'),  # New line
 
 ]
