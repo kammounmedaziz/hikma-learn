@@ -1,4 +1,4 @@
-import { useState, useCallback, memo ,useEffect} from 'react';
+import { useState, useCallback, memo, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import {
   Shield,
@@ -13,8 +13,17 @@ import {
   X,
   Settings,
   Save,
-  RefreshCw
+  RefreshCw,
+  GraduationCap
 } from 'lucide-react';
+
+const availableDisabilities = [
+  'Visual Impairment',
+  'Hearing Impairment',
+  'Mobility Impairment',
+  'Learning Disability',
+  'Autism Spectrum',
+];
 
 // Utility functions
 const checkPasswordStrength = (password) => {
@@ -29,8 +38,7 @@ const checkPasswordStrength = (password) => {
 
 const getPasswordStrengthColor = (strength) => {
   switch (strength) {
-    case 0:
-    case 1: return 'bg-red-500';
+    case 0: case 1: return 'bg-red-500';
     case 2: return 'bg-orange-500';
     case 3: return 'bg-yellow-500';
     case 4: return 'bg-blue-500';
@@ -41,8 +49,7 @@ const getPasswordStrengthColor = (strength) => {
 
 const getPasswordStrengthText = (strength) => {
   switch (strength) {
-    case 0:
-    case 1: return 'Very Weak';
+    case 0: case 1: return 'Very Weak';
     case 2: return 'Weak';
     case 3: return 'Fair';
     case 4: return 'Good';
@@ -51,7 +58,6 @@ const getPasswordStrengthText = (strength) => {
   }
 };
 
-// PlaceholderTab component
 const PlaceholderTab = memo(({ title, description }) => (
   <div className="backdrop-blur-md bg-white/10 rounded-xl p-8 border border-white/20 text-center">
     <div className="mb-4">
@@ -72,7 +78,92 @@ PlaceholderTab.propTypes = {
 
 PlaceholderTab.displayName = 'PlaceholderTab';
 
-// SecuritySettings component
+const DisabilitiesSettings = memo(({ 
+  disabilities, 
+  handleDisabilityToggle,
+  isUpdatingDisabilities,
+  updateMessage,
+  handleDisabilitySubmit
+}) => (
+  <div className="backdrop-blur-md bg-white/10 rounded-xl p-6 border border-white/20">
+    <h3 className="text-xl font-bold text-white mb-4 flex items-center">
+      <GraduationCap className="w-5 h-5 mr-2 text-blue-400" />
+      Disabilities Settings
+    </h3>
+    
+    <div className="space-y-6">
+      <div>
+        <label className="block text-gray-300 text-sm font-medium mb-4">
+          Select your disabilities (if any)
+        </label>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {availableDisabilities.map((disability) => (
+            <label
+              key={disability}
+              className={`flex items-center p-3 rounded-lg border cursor-pointer transition-all duration-200 ${
+                disabilities.includes(disability)
+                  ? 'bg-blue-600/20 border-blue-500 text-blue-300'
+                  : 'bg-gray-800/50 border-gray-600 text-gray-300 hover:bg-gray-700/50'
+              }`}
+            >
+              <input
+                type="checkbox"
+                className="sr-only"
+                checked={disabilities.includes(disability)}
+                onChange={() => handleDisabilityToggle(disability)}
+              />
+              <span className="text-sm font-medium">{disability}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex justify-end">
+        <button
+          onClick={handleDisabilitySubmit}
+          disabled={isUpdatingDisabilities}
+          className="flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:scale-105"
+        >
+          {isUpdatingDisabilities ? (
+            <>
+              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+              Updating...
+            </>
+          ) : (
+            <>
+              <Save className="w-4 h-4 mr-2" />
+              Save Changes
+            </>
+          )}
+        </button>
+      </div>
+
+      {updateMessage && (
+        <div className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium ${
+          updateMessage.includes('successfully') ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+        }`}>
+          {updateMessage.includes('successfully') ? (
+            <Check className="w-4 h-4 mr-2" />
+          ) : (
+            <X className="w-4 h-4 mr-2" />
+          )}
+          {updateMessage}
+        </div>
+      )}
+    </div>
+  </div>
+));
+
+DisabilitiesSettings.propTypes = {
+  disabilities: PropTypes.array.isRequired,
+  handleDisabilityToggle: PropTypes.func.isRequired,
+  handleDisabilitySubmit: PropTypes.func.isRequired,
+  isUpdatingDisabilities: PropTypes.bool.isRequired,
+  updateMessage: PropTypes.string.isRequired
+};
+
+DisabilitiesSettings.displayName = 'DisabilitiesSettings';
+
 const SecuritySettings = memo(({
   showCurrentPassword, 
   showNewPassword, 
@@ -158,34 +249,7 @@ const SecuritySettings = memo(({
                 </span>
               </div>
               <div className="text-xs text-gray-400 space-y-1">
-                <div className="flex items-center space-x-2">
-                  {passwordForm.newPassword.length >= 8 ?
-                    <Check className="w-3 h-3 text-green-400" /> :
-                    <X className="w-3 h-3 text-red-400" />
-                  }
-                  <span>At least 8 characters</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  {/[A-Z]/.test(passwordForm.newPassword) ?
-                    <Check className="w-3 h-3 text-green-400" /> :
-                    <X className="w-3 h-3 text-red-400" />
-                  }
-                  <span>Contains uppercase letter</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  {/[0-9]/.test(passwordForm.newPassword) ?
-                    <Check className="w-3 h-3 text-green-400" /> :
-                    <X className="w-3 h-3 text-red-400" />
-                  }
-                  <span>Contains number</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  {/[^A-Za-z0-9]/.test(passwordForm.newPassword) ?
-                    <Check className="w-3 h-3 text-green-400" /> :
-                    <X className="w-3 h-3 text-red-400" />
-                  }
-                  <span>Contains special character</span>
-                </div>
+                {/* Password requirements indicators */}
               </div>
             </div>
           )}
@@ -261,27 +325,7 @@ const SecuritySettings = memo(({
         Recent Security Activity
       </h3>
       <div className="space-y-3">
-        <div className="flex items-center justify-between p-3 bg-gray-800/30 rounded-lg">
-          <div>
-            <p className="text-white font-medium">Password last changed</p>
-            <p className="text-gray-400 text-sm">March 15, 2024 at 2:34 PM</p>
-          </div>
-          <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-        </div>
-        <div className="flex items-center justify-between p-3 bg-gray-800/30 rounded-lg">
-          <div>
-            <p className="text-white font-medium">Last successful login</p>
-            <p className="text-gray-400 text-sm">Today at 8:42 AM from Chrome on Windows</p>
-          </div>
-          <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-        </div>
-        <div className="flex items-center justify-between p-3 bg-gray-800/30 rounded-lg">
-          <div>
-            <p className="text-white font-medium">Failed login attempt</p>
-            <p className="text-gray-400 text-sm">Yesterday at 11:23 PM from unknown device</p>
-          </div>
-          <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-        </div>
+        {/* Activity items */}
       </div>
     </div>
   </div>
@@ -308,8 +352,10 @@ SecuritySettings.propTypes = {
 
 SecuritySettings.displayName = 'SecuritySettings';
 
-
 const StudentSettings = () => {
+  const [disabilities, setDisabilities] = useState([]);
+  const [isUpdatingDisabilities, setIsUpdatingDisabilities] = useState(false);
+  const [updateMessage, setUpdateMessage] = useState('');
   const [activeTab, setActiveTab] = useState('security');
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -323,22 +369,23 @@ const StudentSettings = () => {
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [passwordMessage, setPasswordMessage] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
-useEffect(() => {
+
+  useEffect(() => {
     const userId = localStorage.getItem('userId');
     const username = localStorage.getItem('username');
     if (userId && username) {
       setCurrentUser({ id: userId, username });
     }
   }, []);
+
   const settingsTabs = [
     { id: 'security', label: 'Security', icon: Shield, description: 'Password and security settings' },
     { id: 'profile', label: 'Profile', icon: User, description: 'Personal information and preferences' },
+    { id: 'disabilities', label: 'Disabilities', icon: GraduationCap, description: 'Manage your disability information' },
     { id: 'notifications', label: 'Notifications', icon: Bell, description: 'Notification preferences' },
     { id: 'appearance', label: 'Appearance', icon: Palette, description: 'Theme and display settings' },
     { id: 'language', label: 'Language', icon: Globe, description: 'Language and region settings' },
   ];
-
-  
 
   const handlePasswordChange = useCallback((field, value) => {
     setPasswordForm(prev => ({ ...prev, [field]: value }));
@@ -351,21 +398,19 @@ useEffect(() => {
     e.preventDefault();
     setPasswordMessage('');
 
-
-  // Validation checks
-  if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       setPasswordMessage('Passwords do not match');
       return;
     }
 
-  if (passwordStrength < 3) {
+    if (passwordStrength < 3) {
       setPasswordMessage('Password is too weak');
       return;
     }
 
-  setIsChangingPassword(true);
+    setIsChangingPassword(true);
 
-  try {
+    try {
       const token = localStorage.getItem('token');
       const userId = localStorage.getItem('userId');
 
@@ -373,8 +418,6 @@ useEffect(() => {
         throw new Error('Session expired. Please login again.');
       }
 
-      console.log('Attempting password change for user:', userId);
-      
       const response = await fetch(`http://127.0.0.1:8000/api/change_password/${userId}/`, {
         method: 'PUT',
         headers: {
@@ -396,11 +439,6 @@ useEffect(() => {
 
       setPasswordMessage('Password changed successfully!');
       setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
-      
-      // Optionally force re-login after password change
-      // localStorage.removeItem('token');
-      // localStorage.removeItem('userId');
-      
     } catch (error) {
       console.error('Password change error:', error);
       setPasswordMessage(error.message || 'Failed to change password');
@@ -408,6 +446,77 @@ useEffect(() => {
       setIsChangingPassword(false);
     }
   }, [passwordForm, passwordStrength]);
+
+  const handleDisabilityToggle = useCallback((disability) => {
+    setDisabilities(prev => 
+      prev.includes(disability)
+        ? prev.filter(d => d !== disability)
+        : [...prev, disability]
+    );
+  }, []);
+
+  const handleDisabilitySubmit = useCallback(async () => {
+    setIsUpdatingDisabilities(true);
+    setUpdateMessage('');
+    
+    try {
+      const token = localStorage.getItem('token');
+      const userId = localStorage.getItem('userId');
+
+      if (!token || !userId) {
+        throw new Error('Session expired. Please login again.');
+      }
+
+      const response = await fetch(`http://127.0.0.1:8000/api/update_disabilities/${userId}/`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ disabilities }),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update disabilities');
+      }
+
+      setUpdateMessage('Disabilities updated successfully!');
+    } catch (error) {
+      console.error('Update error:', error);
+      setUpdateMessage(error.message || 'Failed to update disabilities');
+    } finally {
+      setIsUpdatingDisabilities(false);
+    }
+  }, [disabilities]);
+
+  useEffect(() => {
+    const fetchDisabilities = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const userId = localStorage.getItem('userId');
+
+        if (!token || !userId) return;
+
+        const response = await fetch(`http://127.0.0.1:8000/api/update_disabilities/${userId}/`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setDisabilities(data.disabilities || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch disabilities:', error);
+      }
+    };
+
+    fetchDisabilities();
+  }, []);
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -428,14 +537,24 @@ useEffect(() => {
             setShowConfirmPassword={setShowConfirmPassword}
           />
         );
+      case 'disabilities':
+        return (
+          <DisabilitiesSettings
+            disabilities={disabilities}
+            handleDisabilityToggle={handleDisabilityToggle}
+            handleDisabilitySubmit={handleDisabilitySubmit}
+            isUpdatingDisabilities={isUpdatingDisabilities}
+            updateMessage={updateMessage}
+          />
+        );
       case 'profile':
-        return <PlaceholderTab title="Profile Settings" description="Manage your personal information and teaching preferences" />;
+        return <PlaceholderTab title="Profile Settings" description="Manage your personal information and preferences" />;
       case 'notifications':
-        return <PlaceholderTab title="Notification Settings" description="Configure how you receive notifications and alerts" />;
+        return <PlaceholderTab title="Notification Settings" description="Configure how you receive notifications" />;
       case 'appearance':
-        return <PlaceholderTab title="Appearance Settings" description="Customize the look and feel of your dashboard" />;
+        return <PlaceholderTab title="Appearance Settings" description="Customize the look and feel" />;
       case 'language':
-        return <PlaceholderTab title="Language Settings" description="Change your language and regional preferences" />;
+        return <PlaceholderTab title="Language Settings" description="Change language and region" />;
       default:
         return (
           <SecuritySettings 
@@ -467,7 +586,6 @@ useEffect(() => {
         </p>
       </div>
 
-      {/* Settings Tabs */}
       <div className="backdrop-blur-md bg-white/10 rounded-xl border border-white/20 p-1">
         <div className="flex flex-wrap gap-1">
           {settingsTabs.map((tab) => {
@@ -491,7 +609,6 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* Tab Content */}
       <div className="min-h-[400px]">
         {renderTabContent()}
       </div>

@@ -277,15 +277,24 @@ def get_password_change_time(request, pk):
     except User.DoesNotExist:
         return Response({"error": "User not found."}, status=404) 
     
-@api_view(['PUT'])
+@api_view(['GET', 'PUT'])
 def update_disabilities(request, pk):
     try:
         user = User.objects.get(pk=pk)
-        disabilities = request.data.get('disabilities', [])
-
-        user.disabilities = disabilities
-        user.save()
-
-        return Response({"message": "Disabilities updated.", "disabilities": user.disabilities})
+        
+        if request.method == 'GET':
+            return Response({
+                "disabilities": user.disabilities
+            })
+            
+        elif request.method == 'PUT':
+            disabilities = request.data.get('disabilities', [])
+            user.disabilities = disabilities
+            user.save()
+            return Response({
+                "message": "Disabilities updated.",
+                "disabilities": user.disabilities
+            })
+            
     except User.DoesNotExist:
         return Response({"error": "User not found."}, status=404)
