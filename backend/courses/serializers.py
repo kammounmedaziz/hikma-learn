@@ -85,8 +85,6 @@ class ContentSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({'text': 'Text field should only be filled for TEXT content type.'})
         if kind != ContentKind.LINK and get_field_value('url'):
             raise serializers.ValidationError({'url': 'URL field should only be filled for LINK content type.'})
-        if kind != ContentKind.QUIZ and getattr(self.instance, 'quiz', None):
-            raise serializers.ValidationError({'quiz': 'Quiz field should only be filled for QUIZ content type.'})
         if kind != ContentKind.FILE:
             if get_field_value('file'):
                 raise serializers.ValidationError({'file': 'File field should only be filled for FILE content type.'})
