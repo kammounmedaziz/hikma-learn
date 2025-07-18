@@ -2,6 +2,14 @@ from django.db import models
 
 from accounts.models import User, UserType
 
+from django.db.models.signals import pre_save
+from django.dispatch import receiver
+from django.core.exceptions import ValidationError
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
+import re
+
+
 class Course(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
@@ -67,18 +75,43 @@ class Content(models.Model):
         return self.title
 
     def clean(self):
-        if self.content_kind == ContentKind.LINK and not self.url:
-            raise ValidationError("URL must be provided for LINK content type.")
-        if self.content_kind == ContentKind.FILE and not self.file:
-            raise ValidationError("File must be provided for FILE content type.")
-        if self.content_kind == ContentKind.FILE and not self.file_kind:
-            raise ValidationError("File type must be specified for FILE content type.")
-        if self.content_kind == ContentKind.TEXT and not self.text:
-            raise ValidationError("Text must be provided for TEXT content type.")
-        if self.content_kind == ContentKind.QUIZ and not hasattr(self, 'quiz'):
-            raise ValidationError("Quiz must be associated with QUIZ content type.")
-        if self.content_kind == ContentKind.QUIZ and (self.file or self.url or self.text):
-            raise ValidationError("Quiz content type should not have file, URL, or text fields filled.")
+        if self.content_kind == ContentKind.FILE:
+            if not self.file:
+                raise ValidationError("File must be provided for FILE content type.")
+            elif self.file.size == 0:
+                raise ValidationError("File cannot be empty.")
+            if not self.file_kind:
+                raise ValidationError("File kind must be specified for FILE content type.")
+            if not self.file_mime_type:
+                raise ValidationError("File MIME type must be specified for FILE content type.")
+            if self.file_mime_type and not re.match(r'^\w+/\w+$', self.file_mime_type):
+                raise ValidationError("Invalid MIME type format.")
+        elif self.content_kind == ContentKind.LINK:
+            if not self.url:
+                raise ValidationError("URL must be provided for LINK content type.")
+        elif self.content_kind == ContentKind.TEXT:
+            if not self.text:
+                raise ValidationError("Text must be provided for TEXT content type.")
+        elif self.content_kind == ContentKind.QUIZ:
+            if not getattr(self, 'quiz', None):
+                raise ValidationError("Quiz must be associated with QUIZ content type.")
+        else:
+            raise ValidationError("Invalid content kind specified.")
+
+        if self.content_kind != ContentKind.TEXT and self.text:
+            raise ValidationError("Text field should only be filled for TEXT content type.")
+        if self.content_kind != ContentKind.LINK and self.url:
+            raise ValidationError("URL field should only be filled for LINK content type.")
+        if self.content_kind != ContentKind.QUIZ and getattr(self, 'quiz', None):
+            raise ValidationError("Quiz field should only be filled for QUIZ content type.")
+        if self.content_kind != ContentKind.FILE:
+            if self.file:
+                raise ValidationError("File field should only be filled for FILE content type.")
+            if self.file_kind:
+                raise ValidationError("File kind should only be filled for FILE content type.")
+            if self.file_mime_type:
+                raise ValidationError("File MIME type should only be filled for FILE content type.")
+
 
 # Incomplete Quiz model
 class Quiz(models.Model):
@@ -96,13 +129,6 @@ class ContentSeen(models.Model):
 
     class Meta:
         unique_together = ('student', 'content')
-
-# Signal to auto-increment order
-from django.db.models.signals import pre_save
-from django.dispatch import receiver
-from django.core.exceptions import ValidationError
-from django.db.models.signals import post_delete
-from django.dispatch import receiver
 
 @receiver(pre_save, sender=Chapter)
 def auto_set_chapter_order(sender, instance, *args, **kwargs):
@@ -123,3 +149,11 @@ def reorder_chapters_after_delete(sender, instance, **kwargs):
         if chapter.order != idx:
             chapter.order = idx
             chapter.save(update_fields=["order"])
+
+@receiver(post_delete, sender=Content)
+def reorder_contents_after_delete(sender, instance, **kwargs):
+    contents = Content.objects.filter(chapter=instance.chapter).order_by('order')
+    for idx, content in enumerate(contents, start=1):
+        if content.order != idx:
+            content.order = idx
+            content.save(update_fields=["order"])
