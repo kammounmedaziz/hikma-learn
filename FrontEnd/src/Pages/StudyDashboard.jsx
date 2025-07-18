@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import {
   Home,
@@ -21,13 +20,7 @@ import {
 } from 'lucide-react';
 
 import StudyOverview from './StudyOverview';
-//import MeetOurLearners from './MeetOurLearners';
-//import SharingFeedbacks from './SharingFeedbacks';
-//import Events from './Events';
-//import PartnersAndSupporters from './PartnersAndSupporters';
-//import VoicesOfCommunity from './VoicesOfCommunity';
-//import Actualite from './Actualite';
-//import Contact from './Contact';
+import MyCourses from './MyCourses';  // <-- Import your MyCourses component
 
 const PlaceholderPage = ({ title, description }) => (
   <div className="space-y-8">
@@ -57,7 +50,7 @@ const PlaceholderPage = ({ title, description }) => (
   </div>
 );
 
-const AnimatedBackground = () => null; // Placeholder or implement as needed
+const AnimatedBackground = () => null;
 
 const StudyDashboard = () => {
   const [currentPage, setCurrentPage] = useState('overview');
@@ -82,16 +75,17 @@ const StudyDashboard = () => {
   const renderPage = () => {
     const currentMenuItem = menuItems.find((item) => item.id === currentPage);
     switch (currentPage) {
-      case 'overview': return <StudyOverview />;
-    //  case 'meet_learners': return <MeetOurLearners />;
-    //  case 'sharing_feedbacks': return <SharingFeedbacks />;
-      //case 'events': return <Events />;
-      //case 'partners_supporters': return <PartnersAndSupporters />;
-      //case 'voices_community': return <VoicesOfCommunity />;
-      //case 'actualite': return <Actualite />;
-      //case 'contact': return <Contact />;
+      case 'overview': 
+        return <StudyOverview />;
+      case 'courses':
+        return <MyCourses />;  // <-- Render MyCourses here
       default:
-        return <PlaceholderPage title={currentMenuItem?.label || 'Page Not Found'} description={currentMenuItem?.description || "This section is under development"} />;
+        return (
+          <PlaceholderPage 
+            title={currentMenuItem?.label || 'Page Not Found'} 
+            description={currentMenuItem?.description || "This section is under development"} 
+          />
+        );
     }
   };
 
