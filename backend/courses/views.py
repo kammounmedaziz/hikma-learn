@@ -91,17 +91,21 @@ class ChapterViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'], permission_classes=[IsTeacherOfCourse])
     def reorder(self, request, course_pk=None):
-        # Custom action to reorder chapters
-        from .serializers import ReorderSerializer
-        serializer = ReorderSerializer(data=request.data)
-        if serializer.is_valid():
-            chapter_ids = serializer.validated_data['chapter_ids']
-            # Validate that all chapters belong to the course
-            chapters = Chapter.objects.filter(id__in=chapter_ids, course_id=course_pk)
-            if len(chapters) != len(chapter_ids):
-                return Response({"detail": "Some chapters do not belong to this course."}, status=status.HTTP_400_BAD_REQUEST)
-            # Update the order of chapters
-            for order, chapter_id in enumerate(chapter_ids, start=1):
-                Chapter.objects.filter(id=chapter_id).update(order=order)
-            return Response({"detail": "Chapters reordered successfully."}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        item_ids = serializer.validated_data['item_ids']
+        chapters = self.get_queryset().filter(id__in=item_ids)
+        if chapters.count() != len(item_ids):
+            return Response(
+                {"detail": "Some chapters do not belong to this course."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        for order, chapter_id in enumerate(item_ids, start=1):
+            Chapter.objects.filter(id=chapter_id).update(order=order)
+
+        return Response(
+            {"detail": "Chapters reordered successfully."},
+            status=status.HTTP_200_OK,
+        )

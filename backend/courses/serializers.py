@@ -28,4 +28,7 @@ class ChapterSerializer(serializers.ModelSerializer):
         return reverse('chapter-detail', kwargs={'course_pk': obj.course_id, 'pk': obj.pk}, request=request)
 
 class ReorderSerializer(serializers.Serializer):
-    chapter_ids = serializers.ListField(child=serializers.IntegerField())
+    item_ids = serializers.ListField(
+        child=serializers.IntegerField(),
+        allow_empty=False
+    )
