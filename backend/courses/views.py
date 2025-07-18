@@ -3,13 +3,13 @@ from rest_framework import viewsets, permissions, serializers
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 from accounts.models import UserType
-from .models import Course, Chapter, CourseFollow
-from .serializers import CourseSerializer, CourseFollowSerializer, ChapterSerializer
+from .models import Course, Chapter, CourseFollow, Content
+from .serializers import CourseSerializer, CourseFollowSerializer, ChapterSerializer, ContentSerializer
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 
-from .permissions import IsTeacherOrReadOnly, IsTeacherOfCourse, IsTeacherOfCourseOrReadOnly, IsTeacherOnly, IsStudentOnly
+from .permissions import IsTeacherOrReadOnly, IsTeacherOfCourse, IsTeacherOfCourseOrReadOnly, IsTeacherOnly, IsStudentOnly, IsTeacherOfChapter
 
 class EmptySerializer(serializers.Serializer):
     pass
@@ -109,3 +109,39 @@ class ChapterViewSet(viewsets.ModelViewSet):
             {"detail": "Chapters reordered successfully."},
             status=status.HTTP_200_OK,
         )
+
+class ContentViewSet(viewsets.ModelViewSet):
+    serializer_class = ContentSerializer
+    permission_classes = [IsTeacherOfChapter]
+
+    def get_queryset(self):
+        chapter_pk = self.kwargs['chapter_pk']
+        return Content.objects.filter(chapter_id=chapter_pk).order_by('order')
+
+    def perform_create(self, serializer):
+        chapter_pk = self.kwargs['chapter_pk']
+        serializer.save(chapter_id=chapter_pk)
+
+    def get_serializer_class(self):
+        if self.action == 'reorder':
+            from .serializers import ReorderSerializer
+            return ReorderSerializer
+        return super().get_serializer_class()
+
+    @action(detail=False, methods=['post'], permission_classes=[IsTeacherOfChapter])
+    def reorder(self, request, course_pk=None, chapter_pk=None):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        item_ids = serializer.validated_data['item_ids']
+        contents = self.get_queryset().filter(id__in=item_ids)
+        if contents.count() != len(item_ids):
+            return Response(
+                {"detail": "Some contents do not belong to this chapter."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        for order, content_id in enumerate(item_ids, start=1):
+            Content.objects.filter(id=content_id).update(order=order)
+
+        return Response({"detail": "Contents reordered successfully."}, status=status.HTTP_200_OK)

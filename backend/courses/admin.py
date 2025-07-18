@@ -15,7 +15,7 @@ class ChapterAdmin(admin.ModelAdmin):
 
 @admin.register(Content)
 class ContentAdmin(admin.ModelAdmin):
-    list_display = ('title', 'chapter', 'content_kind', 'order')
+    list_display = ('title', 'chapter', 'content_kind', 'file_kind', 'order')
     search_fields = ('title', 'chapter__title')
     list_filter = ('content_kind', 'chapter')
 

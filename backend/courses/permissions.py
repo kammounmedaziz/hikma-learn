@@ -1,7 +1,7 @@
 
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 from accounts.models import UserType
-from .models import Course
+from .models import Course, Chapter, Content
 
 
 class IsTeacherOrReadOnly(BasePermission):
@@ -58,6 +58,28 @@ class IsTeacherOfCourseOrReadOnly(BasePermission):
         if request.method in SAFE_METHODS:
             return request.user.is_authenticated
         return obj.course.teacher == request.user
+
+class IsTeacherOfChapter(BasePermission):
+    """
+    Grants write access **only** to the teacher that owns the course
+    to which the chapter belongs.
+    """
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return request.user.is_authenticated
+
+        chapter_pk = view.kwargs.get('chapter_pk')
+        if not chapter_pk or not request.user.is_authenticated:
+            return False
+        return Chapter.objects.filter(
+            id=chapter_pk,
+            course__teacher=request.user
+        ).exists()
+
+    def has_object_permission(self, request, view, obj):
+        if request.method in SAFE_METHODS:
+            return request.user.is_authenticated
+        return obj.chapter.course.teacher == request.user
 
 class IsTeacherOnly(BasePermission):
     def has_permission(self, request, view):

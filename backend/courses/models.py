@@ -7,7 +7,6 @@ from django.dispatch import receiver
 from django.core.exceptions import ValidationError
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
-import re
 
 
 class Course(models.Model):
@@ -58,6 +57,31 @@ class FileKind(models.TextChoices):
     SPREADSHEET = 'SPREADSHEET', 'Spreadsheet (Excel, CSV)'
     OTHER = 'OTHER', 'Other'
 
+MIME_TO_FILEKIND_MAP = {
+    'application/pdf': FileKind.PDF,
+    'image/': FileKind.IMAGE,
+    'video/': FileKind.VIDEO,
+    'audio/': FileKind.AUDIO,
+    'application/zip': FileKind.ARCHIVE,
+    'application/x-rar-compressed': FileKind.ARCHIVE,
+    'application/msword': FileKind.DOCUMENT,
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': FileKind.DOCUMENT,
+    'application/vnd.ms-powerpoint': FileKind.SLIDE,
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation': FileKind.SLIDE,
+    'application/vnd.ms-excel': FileKind.SPREADSHEET,
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': FileKind.SPREADSHEET,
+    'text/csv': FileKind.SPREADSHEET,
+}
+
+def guess_file_kind(mime_type: str) -> str:
+    if not mime_type:
+        return FileKind.OTHER
+    for pattern, kind in MIME_TO_FILEKIND_MAP.items():
+        if mime_type.startswith(pattern):
+            return kind
+    # Return OTHER if no pattern matches
+    return FileKind.OTHER
+
 class Content(models.Model):
     chapter = models.ForeignKey(Chapter, related_name='contents', on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
@@ -80,12 +104,6 @@ class Content(models.Model):
                 raise ValidationError("File must be provided for FILE content type.")
             elif self.file.size == 0:
                 raise ValidationError("File cannot be empty.")
-            if not self.file_kind:
-                raise ValidationError("File kind must be specified for FILE content type.")
-            if not self.file_mime_type:
-                raise ValidationError("File MIME type must be specified for FILE content type.")
-            if self.file_mime_type and not re.match(r'^\w+/\w+$', self.file_mime_type):
-                raise ValidationError("Invalid MIME type format.")
         elif self.content_kind == ContentKind.LINK:
             if not self.url:
                 raise ValidationError("URL must be provided for LINK content type.")
@@ -111,6 +129,18 @@ class Content(models.Model):
                 raise ValidationError("File kind should only be filled for FILE content type.")
             if self.file_mime_type:
                 raise ValidationError("File MIME type should only be filled for FILE content type.")
+
+    def save(self, *args, **kwargs):
+        is_file_content = self.content_kind == ContentKind.FILE and self.file
+
+        if is_file_content:
+            # Use untrusted browser MIME
+            self.file_mime_type = getattr(self.file.file, 'content_type', None) or 'application/octet-stream'
+
+            # Guess file kind based on MIME type
+            self.file_kind = guess_file_kind(self.file_mime_type)
+
+        super().save(*args, **kwargs)
 
 
 # Incomplete Quiz model
