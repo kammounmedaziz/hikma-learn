@@ -95,11 +95,13 @@ class ChapterViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         item_ids = serializer.validated_data['item_ids']
-        chapters = self.get_queryset().filter(id__in=item_ids)
-        if chapters.count() != len(item_ids):
+        all_ids = set(self.get_queryset().values_list('id', flat=True))
+        submitted_ids = set(item_ids)
+
+        if all_ids != submitted_ids:
             return Response(
-                {"detail": "Some chapters do not belong to this course."},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"detail": "Some chapters are missing or extra."},
+                status=status.HTTP_400_BAD_REQUEST
             )
 
         for order, chapter_id in enumerate(item_ids, start=1):
@@ -134,10 +136,11 @@ class ContentViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         item_ids = serializer.validated_data['item_ids']
-        contents = self.get_queryset().filter(id__in=item_ids)
-        if contents.count() != len(item_ids):
+        all_ids = set(self.get_queryset().values_list('id', flat=True))
+        submitted_ids = set(item_ids)
+        if all_ids != submitted_ids:
             return Response(
-                {"detail": "Some contents do not belong to this chapter."},
+                {"detail": "Some contents are missing or extra."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
