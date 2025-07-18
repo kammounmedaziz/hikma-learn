@@ -111,7 +111,7 @@ const MyCourses = () => {
                   <CardMedia
                     component="img"
                     height="140"
-                    image={`/course_photos/${course.cover_photo.split('/').pop()}`} // Use filename only
+                    image={course.cover_photo}
                     sx={{ borderTopLeftRadius: '14px', borderTopRightRadius: '14px' }}
                   />
                 )}
