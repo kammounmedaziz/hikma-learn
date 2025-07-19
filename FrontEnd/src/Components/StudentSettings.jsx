@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import {
   Shield,
   User,
-  Bell,
+
   Palette,
   Globe,
   Lock,
@@ -14,7 +14,8 @@ import {
   Settings,
   Save,
   RefreshCw,
-  GraduationCap
+  GraduationCap,
+  LogOut
 } from 'lucide-react';
 
 const availableDisabilities = [
@@ -382,7 +383,6 @@ const StudentSettings = () => {
     { id: 'security', label: 'Security', icon: Shield, description: 'Password and security settings' },
     { id: 'profile', label: 'Profile', icon: User, description: 'Personal information and preferences' },
     { id: 'disabilities', label: 'Disabilities', icon: GraduationCap, description: 'Manage your disability information' },
-    { id: 'notifications', label: 'Notifications', icon: Bell, description: 'Notification preferences' },
     { id: 'appearance', label: 'Appearance', icon: Palette, description: 'Theme and display settings' },
     { id: 'language', label: 'Language', icon: Globe, description: 'Language and region settings' },
   ];
@@ -549,8 +549,6 @@ const StudentSettings = () => {
         );
       case 'profile':
         return <PlaceholderTab title="Profile Settings" description="Manage your personal information and preferences" />;
-      case 'notifications':
-        return <PlaceholderTab title="Notification Settings" description="Configure how you receive notifications" />;
       case 'appearance':
         return <PlaceholderTab title="Appearance Settings" description="Customize the look and feel" />;
       case 'language':
@@ -585,8 +583,8 @@ const StudentSettings = () => {
           Manage your account preferences and security settings
         </p>
       </div>
-
-      <div className="backdrop-blur-md bg-white/10 rounded-xl border border-white/20 p-1">
+      <div className="w-full flex justify-center">
+      <div className=" inline-flex backdrop-blur-md bg-white/10 rounded-xl border border-white/20 p-1">
         <div className="flex flex-wrap gap-1">
           {settingsTabs.map((tab) => {
             const Icon = tab.icon;
@@ -607,6 +605,7 @@ const StudentSettings = () => {
             );
           })}
         </div>
+      </div>
       </div>
 
       <div className="min-h-[400px]">

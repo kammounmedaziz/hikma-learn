@@ -139,6 +139,7 @@ def login_view(request):
             "message": "Login successful",
             "username": user.username,
             "user_id": user.id,
+            "user_type": user.user_type,
             "refresh": str(refresh),
             "access": str(refresh.access_token),
         }, status=status.HTTP_200_OK)
@@ -298,3 +299,16 @@ def update_disabilities(request, pk):
             
     except User.DoesNotExist:
         return Response({"error": "User not found."}, status=404)
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    

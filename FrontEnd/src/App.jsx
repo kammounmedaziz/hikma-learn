@@ -63,8 +63,9 @@ function App() {
       <Routes>
         <Route path="/" element={<LandingPage showWelcome={showWelcome} setShowWelcome={setShowWelcome} />} />
         <Route path="/auth" element={<AuthPage />} />
-        <Route path="/study-dashboard" element={<StudyDashboard />} />
+        <Route path="/StudydDashboard" element={<StudyDashboard />} />
         <Route path="/community" element={<CommunityDashboard />} />
+        <Route path="/TeacherDashboard" element={<TeacherDashboard />} />
         <Route path="/AdminDashboard" element={<AdminDashboard />} />
       </Routes>
     </BrowserRouter>

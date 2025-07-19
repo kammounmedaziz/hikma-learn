@@ -217,7 +217,7 @@ const SignInComponent = ({ onSubmit }) => {
 const SignUpComponent = ({ onSubmit }) => {
   const [formData, setFormData] = useState({
 
-    user_type: '',
+    user_type: 'student',
     first_name: '',
     last_name: '',
     cin: '',
@@ -225,7 +225,7 @@ const SignUpComponent = ({ onSubmit }) => {
     phone_num: '',
     birth_date: '',
     password: '',
-    confirm_password: ''
+    confirm_password: '',
   });
 
   const handleInputChange = (field, value) =>
@@ -277,11 +277,26 @@ const AuthPage = () => {
   const navigate = useNavigate();
 
   const handleToggle = () => setIsSignUp(!isSignUp);
+
+  
   const handleSignInSubmit = data => {
-    navigate('/study-dashboard');
+    const userType = data.user_type;
+    if (userType === 'student') {
+    navigate('/StudydDashboard');
+  } else if (userType === 'teacher') {
+    navigate('/TeacherDashboard');
+  } else if (userType === 'admin') {
+    navigate('/AdminDashboard');
+  } else {
+
+    alert('Unknown user type');
+  }
   };
+
+
+
   const handleSignUpSubmit = data => {
-    navigate('/study-dashboard');
+    navigate('/auth');
   };
 
   return (
