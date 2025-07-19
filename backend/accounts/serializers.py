@@ -42,6 +42,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             username = prefix + middle + suffix
 
         validated_data['username'] = username
+        validated_data['user_type'] = 'student'
         return User.objects.create_user(**validated_data)
     
     

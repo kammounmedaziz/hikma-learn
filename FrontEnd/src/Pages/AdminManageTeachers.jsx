@@ -6,6 +6,7 @@ import {
   Edit, Trash2, Plus
 } from 'lucide-react';
 import TeacherForm from '../Components/TeacherForm';
+import SearchBar from '../Components/SearchBar';
 
 const AnimatedBackground = () => (
   <div className="fixed inset-0 animated-bg">
@@ -24,6 +25,8 @@ const TeacherManagement = () => {
   const [showForm, setShowForm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [currentTeacher, setCurrentTeacher] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+
   const navigate = useNavigate();
 
   const fetchTeachers = async () => {
@@ -38,6 +41,13 @@ const TeacherManagement = () => {
   useEffect(() => {
     fetchTeachers();
   }, []);
+
+  // Filter teachers dynamically based on search term (first + last name)
+  const filteredTeachers = teachers.filter((teacher) =>
+    `${teacher.first_name} ${teacher.last_name}`
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
+  );
 
   const handleSubmit = async (teacherData) => {
     try {
@@ -104,6 +114,13 @@ const TeacherManagement = () => {
           </p>
         </div>
 
+        {/* 🔍 Search Bar */}
+        <div className="mb-6 max-w-md mx-auto">
+          <SearchBar
+            onSearch={(term) => setSearchTerm(term)}
+          />
+        </div>
+
         {!showForm && (
           <div className="mb-8 text-center">
             <button
@@ -127,8 +144,8 @@ const TeacherManagement = () => {
 
         {/* Teacher cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {teachers.length > 0 ? (
-            teachers.map((teacher) => (
+          {filteredTeachers.length > 0 ? (
+            filteredTeachers.map((teacher) => (
               <div key={teacher.id} className="backdrop-blur-lg bg-gray-900/30 rounded-2xl p-6 shadow-xl border border-gray-700 transition-all hover:shadow-2xl hover:border-red-400/50">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center">

@@ -5,9 +5,7 @@ import StudentForm from '../Components/StudentForm';
 
 const AdminManageStudents = () => {
   const [students, setStudents] = useState([
-    // Example dummy data
-    { id: 1, name: "John Doe", email: "john@example.com" },
-    { id: 2, name: "Jane Smith", email: "jane@example.com" },
+
   ]);
   const [mode, setMode] = useState(null); // "add" | "edit" | "delete"
   const [searchTerm, setSearchTerm] = useState('');

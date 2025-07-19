@@ -6,17 +6,41 @@ class SearchBar extends React.Component {
     this.state = {
       term: ""
     };
-    this.search = this.search.bind(this);
+    this.debounceTimeout = null;
     this.handleTermChange = this.handleTermChange.bind(this);
+    this.search = this.search.bind(this);
   }
 
-  search(event) {
-    this.props.onSearch(this.state.term);
-    event.preventDefault();
-  }
-
+  // Called on input change
   handleTermChange(event) {
-    this.setState({ term: event.target.value });
+    const newTerm = event.target.value;
+    this.setState({ term: newTerm });
+
+    // Clear previous debounce timer
+    if (this.debounceTimeout) {
+      clearTimeout(this.debounceTimeout);
+    }
+
+    // Set new debounce timer: after 300ms of no typing, trigger search
+    this.debounceTimeout = setTimeout(() => {
+      this.props.onSearch(newTerm);
+    }, 300);
+  }
+
+  // Optional: keep form submit for backward compatibility
+  search(event) {
+    event.preventDefault();
+    if (this.debounceTimeout) {
+      clearTimeout(this.debounceTimeout);
+    }
+    this.props.onSearch(this.state.term);
+  }
+
+  componentWillUnmount() {
+    // Clean up timeout if unmounting
+    if (this.debounceTimeout) {
+      clearTimeout(this.debounceTimeout);
+    }
   }
 
   render() {
