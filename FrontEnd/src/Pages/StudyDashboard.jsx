@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import {
   Home,
@@ -29,6 +28,7 @@ import StudentSettings from '../Components/StudentSettings'
 //import VoicesOfCommunity from './VoicesOfCommunity';
 //import Actualite from './Actualite';
 //import Contact from './Contact';
+import MyCourses from './MyCourses';  // <-- Import your MyCourses component
 
 const PlaceholderPage = ({ title, description }) => (
   <div className="space-y-8">
@@ -92,8 +92,15 @@ const StudyDashboard = () => {
       //case 'voices_community': return <VoicesOfCommunity />;
       //case 'actualite': return <Actualite />;
       //case 'contact': return <Contact />;
+      case 'courses':
+        return <MyCourses />;  // <-- Render MyCourses here
       default:
-        return <PlaceholderPage title={currentMenuItem?.label || 'Page Not Found'} description={currentMenuItem?.description || "This section is under development"} />;
+        return (
+          <PlaceholderPage 
+            title={currentMenuItem?.label || 'Page Not Found'} 
+            description={currentMenuItem?.description || "This section is under development"} 
+          />
+        );
     }
   };
 
