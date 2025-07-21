@@ -300,7 +300,51 @@ def update_disabilities(request, pk):
     except User.DoesNotExist:
         return Response({"error": "User not found."}, status=404)
     
-    
+
+@api_view(['GET'])
+def list_students(request):
+    students = User.objects.filter(user_type='student')
+    serialized = [
+        {
+            "id": user.id,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "email": user.email,
+            "cin": user.cin,
+            "phone_num": user.phone_num,
+            "birth_date": user.birth_date,
+            "fields": user.fields,
+            "disabilities": user.disabilities
+        }
+        for user in students
+    ]
+    return Response(serialized)
+
+@api_view(['PUT'])
+def update_student(request, pk):
+    try:
+        student = User.objects.get(pk=pk, user_type='student')
+        serializer = TeacherSerializer(student, data=request.data, partial=True)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+    except User.DoesNotExist:
+        return Response({'error': 'Student not found'}, status=status.HTTP_404_NOT_FOUND)
+
+@api_view(['DELETE'])
+def delete_student(request, pk):
+    try:
+        student = User.objects.get(pk=pk, user_type='student')
+        student.delete()
+        return Response({"message": "Student deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+    except User.DoesNotExist:
+        return Response({'error': 'Student not found'}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
     
     
