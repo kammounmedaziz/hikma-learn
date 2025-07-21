@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 
 import StudyOverview from './StudyOverview';
+import StudentSettings from '../Components/StudentSettings'
 //import MeetOurLearners from './MeetOurLearners';
 //import SharingFeedbacks from './SharingFeedbacks';
 //import Events from './Events';
@@ -57,7 +58,7 @@ const PlaceholderPage = ({ title, description }) => (
   </div>
 );
 
-const AnimatedBackground = () => null; // Placeholder or implement as needed
+const AnimatedBackground = () => null;
 
 const StudyDashboard = () => {
   const [currentPage, setCurrentPage] = useState('overview');
@@ -83,6 +84,7 @@ const StudyDashboard = () => {
     const currentMenuItem = menuItems.find((item) => item.id === currentPage);
     switch (currentPage) {
       case 'overview': return <StudyOverview />;
+      case 'settings': return <StudentSettings/>
     //  case 'meet_learners': return <MeetOurLearners />;
     //  case 'sharing_feedbacks': return <SharingFeedbacks />;
       //case 'events': return <Events />;

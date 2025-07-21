@@ -15,6 +15,9 @@ import Inspiration from './Pages/Inspirations';
 import Team from './Pages/Team';
 import CommunityDashboard from './Pages/CommunityDashboard'
 import Footer from './Components/Footer'
+import AdminManageTeachers from './Pages/AdminManageTeachers';
+import AdminDashboard from './Pages/AdminDashboard';
+import TeacherDashboard from './Pages/TeacherDhasboard'
 
 
 
@@ -39,12 +42,7 @@ const LandingPage = ({ showWelcome, setShowWelcome }) => {
           
 
           <div className="relative z-10">
-            <Navbar />
-            <Home />
-            <Inspiration/>
-            <About />
-            <Team/>
-            <Footer/>
+            <AuthPage/>
           </div>
         </div>
       )}
@@ -65,8 +63,10 @@ function App() {
       <Routes>
         <Route path="/" element={<LandingPage showWelcome={showWelcome} setShowWelcome={setShowWelcome} />} />
         <Route path="/auth" element={<AuthPage />} />
-        <Route path="/study-dashboard" element={<StudyDashboard />} />
+        <Route path="/StudydDashboard" element={<StudyDashboard />} />
         <Route path="/community" element={<CommunityDashboard />} />
+        <Route path="/TeacherDashboard" element={<TeacherDashboard />} />
+        <Route path="/AdminDashboard" element={<AdminDashboard />} />
       </Routes>
     </BrowserRouter>
   );

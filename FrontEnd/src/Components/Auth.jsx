@@ -153,19 +153,58 @@ const SignInComponent = ({ onSubmit }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
+      
       const data = await response.json();
-      if (!response.ok) throw new Error(data.detail || 'Login failed');
+      
+      if (!response.ok) {
+        throw new Error(data.detail || data.error || 'Login failed');
+      }
+
+      // Store the tokens and user data in localStorage
+      localStorage.setItem('token', data.access);
+      localStorage.setItem('refreshToken', data.refresh);
+      localStorage.setItem('username', data.username);
+      
+      // If your backend provides user ID, store that too
+      if (data.user_id) {
+        localStorage.setItem('userId', data.user_id);
+      }
+
+      console.log('Login successful, tokens stored:', {
+        token: data.access,
+        refreshToken: data.refresh,
+        username: data.username
+      });
+
       onSubmit(data);
     } catch (error) {
+      console.error('Login error:', error);
       alert(error.message);
     }
   };
 
   return (
     <div className="space-y-6">
-      <InputField icon={User} type="text" placeholder="Username" value={formData.username} onChange={e => handleInputChange('username', e.target.value)} required />
-      <InputField icon={Lock} type="password" placeholder="Password" value={formData.password} onChange={e => handleInputChange('password', e.target.value)} required />
-      <button onClick={handleSubmit} className="w-full py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg flex items-center justify-center gap-2">
+      <InputField 
+        icon={User} 
+        type="text" 
+        placeholder="Username" 
+        value={formData.username} 
+        onChange={e => handleInputChange('username', e.target.value)} 
+        required 
+      />
+      <InputField 
+        icon={Lock} 
+        type="password" 
+        placeholder="Password" 
+        value={formData.password} 
+        onChange={e => handleInputChange('password', e.target.value)} 
+        required 
+      />
+      <button 
+        onClick={handleSubmit} 
+        className="w-full py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg flex items-center justify-center gap-2"
+      >
         Sign In <ArrowRight className="w-4 h-4" />
       </button>
     </div>
@@ -177,8 +216,8 @@ const SignInComponent = ({ onSubmit }) => {
 // Sign Up Component
 const SignUpComponent = ({ onSubmit }) => {
   const [formData, setFormData] = useState({
-    username: '',
-    user_type: '',
+
+    user_type: 'student',
     first_name: '',
     last_name: '',
     cin: '',
@@ -186,7 +225,7 @@ const SignUpComponent = ({ onSubmit }) => {
     phone_num: '',
     birth_date: '',
     password: '',
-    confirm_password: ''
+    confirm_password: '',
   });
 
   const handleInputChange = (field, value) =>
@@ -215,8 +254,6 @@ const SignUpComponent = ({ onSubmit }) => {
 
   return (
     <div className="space-y-4">
-      <InputField icon={User} type="text" placeholder="Username" value={formData.username} onChange={e => handleInputChange('username', e.target.value)} required />
-      <InputField icon={Users} type="select" placeholder="Select User Type" value={formData.user_type} onChange={e => handleInputChange('user_type', e.target.value)} options={[{ value: 'student', label: 'Student' }, { value: 'teacher', label: 'Teacher' }, { value: 'admin', label: 'Admin' }]} required />
       <div className="grid grid-cols-2 gap-4">
         <InputField icon={User} type="text" placeholder="First Name" value={formData.first_name} onChange={e => handleInputChange('first_name', e.target.value)} required />
         <InputField icon={User} type="text" placeholder="Last Name" value={formData.last_name} onChange={e => handleInputChange('last_name', e.target.value)} required />
@@ -240,11 +277,26 @@ const AuthPage = () => {
   const navigate = useNavigate();
 
   const handleToggle = () => setIsSignUp(!isSignUp);
+
+  
   const handleSignInSubmit = data => {
-    navigate('/study-dashboard');
+    const userType = data.user_type;
+    if (userType === 'student') {
+    navigate('/StudydDashboard');
+  } else if (userType === 'teacher') {
+    navigate('/TeacherDashboard');
+  } else if (userType === 'admin') {
+    navigate('/AdminDashboard');
+  } else {
+
+    alert('Unknown user type');
+  }
   };
+
+
+
   const handleSignUpSubmit = data => {
-    navigate('/study-dashboard');
+    navigate('/auth');
   };
 
   return (
