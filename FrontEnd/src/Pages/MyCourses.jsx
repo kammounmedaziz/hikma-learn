@@ -21,8 +21,8 @@ const MyCourses = () => {
   const fetchEnrolledCourses = async () => {
     try {
       const { data: allCourses } = await axios.get('http://localhost:8000/courses/followed-courses/', {
-       // headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
-        withCredentials: true
+       headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
+        // withCredentials: true
 
       });
 
