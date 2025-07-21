@@ -1,0 +1,32 @@
+.button-container {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 20px;
+  width: 100%; /* ✅ Force full width */
+}
+
+.add-question-button,
+.save-question-button {
+  display: inline-block;
+  padding: 10px 20px;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+}
+
+/* Add Question Button */
+.add-question-button {
+  background: linear-gradient(to right, #6466f1, #a650f7);
+}
+.add-question-button:hover {
+  background: linear-gradient(to right, #4f46e5, #9333ea);
+}
+
+/* Save Question Button */
+.save-question-button {
+  background: linear-gradient(to right, #19d4e5, #2333e5);
+}
+.save-question-button:hover {
+  background: linear-gradient(to right, #209cc6, #160c74);
+}

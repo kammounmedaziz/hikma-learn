@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Course, CourseFollow, Chapter, Content, ContentKind, Quiz
+from .models import Course, CourseFollow, Chapter, Content, ContentKind
 from rest_framework.reverse import reverse
 
 class CourseSerializer(serializers.ModelSerializer):

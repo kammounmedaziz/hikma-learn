@@ -143,15 +143,6 @@ class Content(models.Model):
         super().save(*args, **kwargs)
 
 
-# Incomplete Quiz model
-class Quiz(models.Model):
-    content = models.OneToOneField(Content, related_name='quiz', on_delete=models.CASCADE)
-    title = models.CharField(max_length=255)
-    description = models.TextField(blank=True, null=True)
-    creation_date = models.DateTimeField(auto_now_add=True)
-    updated_date = models.DateTimeField(auto_now=True)
-    # TODO: Complete quiz model
-
 class ContentSeen(models.Model):
     student = models.ForeignKey(User, limit_choices_to={'user_type': UserType.STUDENT}, on_delete=models.CASCADE)
     content = models.ForeignKey(Content, on_delete=models.CASCADE)

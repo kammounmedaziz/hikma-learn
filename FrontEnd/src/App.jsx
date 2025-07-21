@@ -4,7 +4,7 @@ import { useState } from 'react';
 import "./index.css";
 import Navbar from "./Components/MainNavbar";
 import Home from "./Pages/Home";
-import About from "./Pages/About"
+import About from "./Pages/About";
 import WelcomeScreen from "./Pages/WelcomeScreen";
 import AnimatedBackground from "./Components/Background";
 import { AnimatePresence } from "framer-motion";
@@ -26,6 +26,9 @@ import CourseDetails from './Pages/CourseDetails';
 
 
 
+import ExamsQuizzes from './Pages/ExamsQuizzes';
+import CreateQuiz from './Pages/CreateQuiz';
+import StudyOverview from './Pages/StudyOverview'; // Added to resolve undefined error
 
 const LandingPage = ({ showWelcome, setShowWelcome }) => {
   return (
@@ -66,11 +69,15 @@ function App() {
       <Routes>
         <Route path="/" element={<LandingPage showWelcome={showWelcome} setShowWelcome={setShowWelcome} />} />
         <Route path="/auth" element={<AuthPage />} />
-        <Route path="/StudydDashboard" element={<StudyDashboard />} />
         <Route path="/community" element={<CommunityDashboard />} />
         <Route path="/TeacherDashboard" element={<TeacherDashboard />} />
         <Route path="/AdminDashboard" element={<AdminDashboard />} />
         <Route path="/courses/:courseId/chapters/" element={<CourseDetails />} />
+        <Route path="/study-dashboard" element={<StudyDashboard />}>
+          <Route index element={<StudyOverview />} />
+          <Route path="ExamsQuizzes" element={<ExamsQuizzes />} />
+          <Route path="ExamsQuizzes/create" element={<CreateQuiz />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   );

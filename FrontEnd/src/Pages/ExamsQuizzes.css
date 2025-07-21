@@ -1,0 +1,50 @@
+/* ExamsQuizzes.css - Styling for the exams and quizzes page */
+.create-quiz-button {
+  display: inline-block;
+  padding: 10px 20px;
+  background: linear-gradient(to right, #6366f1, #a855f7);
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  margin-top: 20px;
+}
+.create-quiz-button:hover {
+  background: linear-gradient(to right, #4f46e5, #9333ea);
+}
+.quiz-list li {
+  transition: transform 0.3s;
+}
+.quiz-list li:hover {
+  transform: scale(1.02);
+}
+/* New: Popup styling */
+.create-quiz-button {
+  cursor: pointer;
+}
+
+/* CreateQuiz.css - Styling for the create quiz page */
+.create-quiz-button {
+  cursor: pointer;
+}
+input[type="text"] {
+  border: none;
+  outline: none;
+}
+input[type="radio"] {
+  accent-color: #f87171;
+}
+button:hover {
+  transform: scale(1.02);
+  transition: transform 0.3s;
+}
+
+.create-buttom {
+  display: inline-block;
+  padding: 10px 20px;
+  background: linear-gradient(to right, #ff609d, #a855f7);
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  ;
+
+}

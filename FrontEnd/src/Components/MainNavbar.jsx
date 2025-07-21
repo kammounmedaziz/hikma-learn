@@ -1,93 +1,92 @@
 import { useState, useEffect, useMemo } from "react";
 import { Menu, X } from "lucide-react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom"; // Added useNavigate
 
 const Navbar = () => {
-    const [isOpen, setIsOpen] = useState(false);
-    const [scrolled, setScrolled] = useState(false);
-    const [activeSection, setActiveSection] = useState("Home");
-    const location = useLocation();
-    
-    
-    const navItems = useMemo(() => [
-        { href: "#Home", label: "Home" },
-        { href: "#Inspiration", label: "Inspiration" },
-        { href: "#About", label: "About" },
-        { href: "#Team", label: "Team" },
-        { href: "#Courses", label: "Courses" },
-        { href: "/auth", label: "Sign In", isAuth: true },
-    ], []);
+  const [isOpen, setIsOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState("Home");
+  const location = useLocation();
+  const navigate = useNavigate(); // Added for navigation
 
-    useEffect(() => {
-        const handleScroll = () => {
-            setScrolled(window.scrollY > 20);
-            
-            const sectionPositions = navItems
-            .filter(item => item.href.startsWith('#')) // Only hash links
-            .map(item => {
-                const section = document.querySelector(item.href);
-                if (section) {
-                return {
-                    id: item.href.slice(1),
-                    top: section.offsetTop,
-                    bottom: section.offsetTop + section.offsetHeight
-                };
-                }
-                return null;
-            }).filter(Boolean);
+  const navItems = useMemo(() => [
+    { href: "/exams-quizzes", label: "Exams & Quizzes" },
+    { href: "#Home", label: "Home" },
+    { href: "#Inspiration", label: "Inspiration" },
+    { href: "#About", label: "About" },
+    { href: "#Team", label: "Team" },
+    { href: "#Courses", label: "Courses" },
+    { href: "/auth", label: "Sign In", isAuth: true },
+  ], []);
 
-            // Find which section is currently in view
-            const scrollPosition = window.scrollY + 100; // Adding offset for better detection
-            const currentSection = sectionPositions.find(section => 
-                scrollPosition >= section.top && scrollPosition < section.bottom
-            );
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
 
-            if (currentSection) {
-                setActiveSection(currentSection.id);
-            }
-        };
+      const sectionPositions = navItems
+        .filter(item => item.href.startsWith('#'))
+        .map(item => {
+          const section = document.querySelector(item.href);
+          if (section) {
+            return {
+              id: item.href.slice(1),
+              top: section.offsetTop,
+              bottom: section.offsetTop + section.offsetHeight
+            };
+          }
+          return null;
+        }).filter(Boolean);
 
-        window.addEventListener("scroll", handleScroll);
-        handleScroll(); // Call once to set initial state
-        return () => window.removeEventListener("scroll", handleScroll);
-    }, [navItems]);
+      const scrollPosition = window.scrollY + 100;
+      const currentSection = sectionPositions.find(section => 
+        scrollPosition >= section.top && scrollPosition < section.bottom
+      );
 
-    useEffect(() => {
-        if (isOpen) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = 'unset';
-        }
-    }, [isOpen]);
-
-    const scrollToSection = (e, href, isAuth = false) => {
-        e.preventDefault();
-        if (isAuth) {
-            window.location.href = '/auth';
-            setIsOpen(false);
-            return;
-        }
-        // Handle home navigation specially
-        if (href === "#Home") {
-            if (location.pathname !== '/') {
-                window.location.href = '/';
-                return;
-            }
-            window.scrollTo({
-                top: 0,
-                behavior: "smooth"
-            });
-        } else {
-            const section = document.querySelector(href);
-            if (section) {
-                window.scrollTo({
-                    top: section.offsetTop - 80,
-                    behavior: "smooth"
-                });
-            }
-        }
-        setIsOpen(false);
+      if (currentSection) {
+        setActiveSection(currentSection.id);
+      }
     };
+
+    window.addEventListener("scroll", handleScroll);
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [navItems]);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+  }, [isOpen]);
+
+  const scrollToSection = (e, href, isAuth = false) => {
+    e.preventDefault();
+    if (isAuth || href.startsWith('/')) {
+      navigate(href); // Use navigate for route-based links
+      setIsOpen(false);
+      return;
+    }
+    if (href === "#Home") {
+      if (location.pathname !== '/') {
+        navigate('/');
+        return;
+      }
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    } else {
+      const section = document.querySelector(href);
+      if (section) {
+        window.scrollTo({
+          top: section.offsetTop - 80,
+          behavior: "smooth"
+        });
+      }
+    }
+    setIsOpen(false);
+  };
 
     return (
         <nav className={`fixed w-full top-0 z-50 transition-all duration-500 ${

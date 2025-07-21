@@ -25,6 +25,8 @@ urlpatterns = [
     path('api/', include('accounts.urls')),
     path('api-auth/', include('rest_framework.urls',namespace='rest_framework')),
     path("", include("courses.urls")),
+    path("quizzes/", include(('quiz.urls', 'quiz'), namespace='quiz')),  # Updated line
+    path("", include(('quiz.urls', 'quiz'), namespace='quiz')),  # Updated line
 ]
 
 if settings.DEBUG:

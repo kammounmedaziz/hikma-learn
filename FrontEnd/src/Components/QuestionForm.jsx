@@ -1,0 +1,117 @@
+import React from 'react';
+import './QuestionForm.css';
+
+const QuestionForm = ({ question, questions, setQuestions, onDelete }) => {
+  const updateQuestion = (field, value) => {
+    setQuestions(questions.map(q =>
+      q.id === question.id ? { ...q, [field]: value } : q
+    ));
+  };
+
+  const updateOption = (optIndex, value) => {
+    setQuestions(questions.map(q =>
+      q.id === question.id ? {
+        ...q,
+        options: q.options.map((opt, i) => i === optIndex ? value : opt)
+      } : q
+    ));
+  };
+
+  const deleteOption = (optIndex) => {
+    const optionToDelete = question.options[optIndex];
+    setQuestions(questions.map(q =>
+      q.id === question.id ? {
+        ...q,
+        options: q.options.filter((_, i) => i !== optIndex),
+        correctAnswers: q.correctAnswers.filter(ans => ans !== optionToDelete)
+      } : q
+    ));
+  };
+
+  const addOption = () => {
+    setQuestions(questions.map(q =>
+      q.id === question.id ? {
+        ...q,
+        options: [...q.options, '']
+      } : q
+    ));
+  };
+
+  const toggleCorrectAnswer = (optIndex) => {
+    const option = question.options[optIndex];
+    const currentQuestion = { ...question };
+    const newCorrectAnswers = [...currentQuestion.correctAnswers];
+    if (newCorrectAnswers.includes(option)) {
+      newCorrectAnswers.splice(newCorrectAnswers.indexOf(option), 1);
+    } else {
+      newCorrectAnswers.push(option);
+    }
+    updateQuestion('correctAnswers', newCorrectAnswers);
+  };
+
+  const updateScore = (value) => {
+    updateQuestion('score', parseInt(value) || 0);
+  };
+
+return (
+  <div className="question-card">
+    <div className="question-header">
+      <input
+        type="text"
+        value={question.text}
+        onChange={(e) => updateQuestion('text', e.target.value)}
+        placeholder="Enter question"
+        className="question-input"
+      />
+      <div className="score-container">
+        <label>Score:</label>
+        <input
+          type="number"
+          value={question.score}
+          onChange={(e) => updateScore(e.target.value)}
+          className="score-input"
+          min="0"
+        />
+      </div>
+    </div>
+
+    {question.options.map((opt, index) => (
+      <div key={index} className="option-row">
+        <button
+          onClick={() => deleteOption(index)}
+          className="option-delete"
+        >
+          ❌
+        </button>
+        <input
+          type="text"
+          value={opt}
+          onChange={(e) => updateOption(index, e.target.value)}
+          placeholder={`Option ${index + 1}`}
+          className="option-input"
+        />
+        <input
+          type="checkbox"
+          id={`correct-${question.id}-opt-${index}`}
+          name={`correct-${question.id}`}
+          checked={question.correctAnswers.includes(opt)}
+          onChange={() => toggleCorrectAnswer(index)}
+          className="checkbox"
+        />
+      </div>
+    ))}
+
+   <div className="button-row">
+  <button onClick={addOption} className="icon-button add">
+    ➕
+  </button>
+  <button onClick={onDelete} className="icon-button delete">
+    🗑️
+  </button>
+</div>
+
+  </div>
+);
+};
+
+export default QuestionForm;

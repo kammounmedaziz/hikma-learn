@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Course, Chapter, Content, CourseFollow, Quiz, ContentSeen
+from .models import Course, Chapter, Content, CourseFollow, ContentSeen
 
 @admin.register(Course)
 class CourseAdmin(admin.ModelAdmin):
@@ -24,11 +24,6 @@ class CourseFollowAdmin(admin.ModelAdmin):
     list_display = ('student', 'course', 'follow_date')
     search_fields = ('student__username', 'course__title')
     list_filter = ('course',)
-
-@admin.register(Quiz)
-class QuizAdmin(admin.ModelAdmin):
-    list_display = ('title', 'content', 'creation_date')
-    search_fields = ('title', 'content__title')
 
 @admin.register(ContentSeen)
 class ContentSeenAdmin(admin.ModelAdmin):

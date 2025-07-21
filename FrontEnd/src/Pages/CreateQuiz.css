@@ -1,0 +1,15 @@
+/* CreateQuiz.css - Styling for the create quiz page */
+.create-quiz-button {
+  cursor: pointer;
+}
+input[type="text"] {
+  border: none;
+  outline: none;
+}
+input[type="radio"] {
+  accent-color: #f87171;
+}
+button:hover {
+  transform: scale(1.02);
+  transition: transform 0.3s;
+}
