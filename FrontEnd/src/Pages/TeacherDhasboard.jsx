@@ -1,32 +1,11 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Home,
-  BookOpen,
-  Users,
-  FileText,
-  Calendar,
-  BarChart3,
-  MessageSquare,
-  Settings,
-  Bell,
-  GraduationCap,
-  ChevronLeft,
-  ChevronRight,
-  ClipboardList,
-  Award,
-  Video,
-  Library,
-  UserCheck,
-  PieChart,
-  TrendingUp,
-  Mail,
-  HelpCircle,
-  Star,
-  Plus,
-  Edit,
-  Eye
+  Home, BookOpen, Users, FileText, Calendar, BarChart3, MessageSquare, Settings, Bell, GraduationCap, ChevronLeft, ChevronRight,
+  ClipboardList, Award, Video, Library, UserCheck, PieChart, TrendingUp, Mail, HelpCircle, Star, Plus, Edit, Eye
 } from 'lucide-react';
 import TeacherSettings from '../Components/TeacherSettings';
+import MyCoursesTeacher from './MyCoursesTeacher.jsx';
+import CourseList from '../Components/CourseList'; // Import CourseList
 
 const PlaceholderPage = ({ title, description }) => (
   <div className="space-y-8">
@@ -180,9 +159,87 @@ const AnimatedBackground = () => (
 const TeacherDashboard = () => {
   const [currentPage, setCurrentPage] = useState('overview');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [allCourses, setAllCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        setLoading(true);
+        console.log('Fetching all courses with authentication...');
+        const token = localStorage.getItem('token') || '';
+        const coursesResponse = await fetch('http://localhost:8000/courses/', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        console.log('Courses response status:', coursesResponse.status);
+        if (!coursesResponse.ok) {
+          throw new Error(`HTTP error! Status: ${coursesResponse.status}`);
+        }
+        const coursesData = await coursesResponse.json();
+        console.log('Raw courses data:', coursesData); // Log raw response for debugging
+
+        // Format all courses, ensuring teacherName uses username if available
+        const formattedCourses = coursesData.map(course => ({
+          id: course.id,
+          title: course.title,
+          description: course.description,
+          teacherName: course.teacher && typeof course.teacher === 'object' ? course.teacher.username : course.teacher || 'Unknown Teacher',
+          isFollowed: false,
+        }));
+        console.log('Formatted all courses:', formattedCourses);
+        setAllCourses(formattedCourses);
+      } catch (err) {
+        console.error('Fetch error:', err);
+        setError(`Error fetching courses: ${err.message}. 
+          - Ensure the Django server is running at http://localhost:8000/.
+          - Check CORS configuration in Django settings.
+          - Verify you are authenticated as a teacher.
+          - Check browser console for details.`);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, []);
+
+  const handleCourseAction = async (action, courseId) => {
+    console.log(`Action: ${action}, Course ID: ${courseId}`);
+    try {
+      let response;
+      if (action === 'viewOwn') {
+        response = await fetch(`http://localhost:8000/courses/${courseId}/`, {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
+        });
+      }
+
+      if (!response.ok) throw new Error(`Failed to ${action} course: ${response.status}`);
+      console.log(`${action} action succeeded`);
+
+      // Refresh course data if needed
+      const updatedCoursesResponse = await fetch('http://localhost:8000/courses/', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
+      });
+      if (!updatedCoursesResponse.ok) throw new Error(`Failed to refresh courses: ${updatedCoursesResponse.status}`);
+      const updatedCoursesData = await updatedCoursesResponse.json();
+      const formattedCourses = updatedCoursesData.map(course => ({
+        id: course.id,
+        title: course.title,
+        description: course.description,
+        teacherName: course.teacher && typeof course.teacher === 'object' ? course.teacher.username : course.teacher || 'Unknown Teacher',
+        isFollowed: false,
+      }));
+      setAllCourses(formattedCourses);
+    } catch (err) {
+      console.error(`${action} action failed:`, err);
+    }
+  };
 
   const menuItems = [
     { id: 'overview', label: 'Dashboard', icon: Home, description: 'Overview of your teaching activities' },
+    { id: 'all-courses', label: 'All Courses', icon: GraduationCap, description: 'Explore all courses on the platform' },
     { id: 'courses', label: 'My Courses', icon: BookOpen, description: 'Manage your courses and curriculum' },
     { id: 'assignments', label: 'Assignments', icon: ClipboardList, description: 'Create and manage assignments' },
     { id: 'grading', label: 'Grading Center', icon: FileText, description: 'Review and grade submissions' },
@@ -200,12 +257,41 @@ const TeacherDashboard = () => {
   const renderPage = () => {
     const currentMenuItem = menuItems.find((item) => item.id === currentPage);
     switch (currentPage) {
-      case 'overview': 
+      case 'overview':
         return <TeacherOverview />;
+      case 'courses':
+        return <MyCoursesTeacher />;
       case 'settings':
-        return <TeacherSettings/>
+        return <TeacherSettings />;
+      case 'all-courses':
+        return (
+          <div className="space-y-8">
+            <div className="text-center mb-8">
+              <h2 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-gray-400 mb-4">
+                All Courses
+              </h2>
+              <p className="text-gray-300 text-lg max-w-2xl mx-auto">
+                View all courses on the platform.
+              </p>
+            </div>
+            <div className="backdrop-blur-md bg-white/10 rounded-xl p-8 border border-white/20">
+              {loading ? (
+                <p className="text-gray-300 text-center">Loading courses...</p>
+              ) : error ? (
+                <p className="text-red-400 text-center">{error}</p>
+              ) : (
+                <CourseList
+                  role="teacher"
+                  courses={allCourses}
+                  onAction={handleCourseAction}
+                  currentTeacher={localStorage.getItem('username') || 'teacher1'} // Match your logged-in user
+                />
+              )}
+            </div>
+          </div>
+        );
       default:
-        return <PlaceholderPage title={currentMenuItem?.label || 'Page Not Found'} description={currentMenuItem?.description || "This section is under development"} />;
+        return <PlaceholderPage title={currentMenuItem?.label || 'Page Not Found'} description={currentMenuItem?.description || 'This section is under development'} />;
     }
   };
 
@@ -248,7 +334,7 @@ const TeacherDashboard = () => {
                   }`}
                   title={!sidebarCollapsed ? item.description : item.label}
                 >
-                  <Icon size={20} className="flex-shrink-0" />
+                  <Icon size={20} className="flex-shrink-0" /> {/* Fixed syntax error here */}
                   {!sidebarCollapsed && <span className="ml-3 font-medium">{item.label}</span>}
                 </button>
               );
