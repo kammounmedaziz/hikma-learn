@@ -55,7 +55,7 @@ def create_teacher_user(request):
         send_mail(
             'Your Teacher Account Credentials',
             f'Your account has been created.\nUsername: {username}\nPassword: {password}',
-            'manelfatnassi00@gmail.com',
+            'hikma.learn.edu@gmail.com',
             [data['email']],
             fail_silently=False,
         )
