@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
+import "../App.css";
 
 
 const CourseDetails = () => {
@@ -20,6 +21,144 @@ const CourseDetails = () => {
   const token = localStorage.getItem('token');
   const userType = localStorage.getItem('userType');
   const isTeacher = userType == 'teacher';
+
+  const [showContentPopup, setShowContentPopup] = useState(false);
+  const [contentType, setContentType] = useState('TEXT'); // Valeur par défaut
+  const [selectedChapterId, setSelectedChapterId] = useState(null);
+  
+  const [contentForm, setContentForm] = useState({
+  title: '',
+  text: '',
+  url: '',
+  file: null,
+  //quiz:
+  });
+
+  const [editingContentId, setEditingContentId] = useState(null);
+  const [editContentData, setEditContentData] = useState({
+    title: '',
+    content_kind: 'TEXT',
+    text: '',
+    url: '',
+    file: null,
+  });
+
+  const handleEditContent = (content) => {
+  setEditingContentId(content.id);
+  setEditContentData({
+    title: content.title,
+    content_kind: content.content_kind,
+    text: content.content_kind === 'TEXT' ? content.content : '',
+    url: content.content_kind === 'LINK' ? content.url : '',
+    file: null,  // pas prérempli pour les fichiers
+  });
+  };
+
+  const handleEditContentChange = (e) => {
+  const { name, value, files } = e.target;
+  if(name === 'file') {
+    setEditContentData(prev => ({ ...prev, file: files[0] }));
+  } else {
+    setEditContentData(prev => ({ ...prev, [name]: value }));
+  }
+ };
+
+ const submitEditContent = async (chapterId, contentId) => {
+  try {
+    const csrfToken = getCookie('csrftoken');
+    const formData = new FormData();
+    formData.append('title', editContentData.title);
+    formData.append('content_kind', editContentData.content_kind);
+
+    if (editContentData.content_kind === 'TEXT') {
+      formData.append('text', editContentData.text);
+    } else if (editContentData.content_kind === 'LINK') {
+      formData.append('url', editContentData.url);
+    } else if (editContentData.content_kind === 'FILE') {
+      if (editContentData.file) formData.append('file', editContentData.file);
+      else {
+        alert("Please select a file.");
+        return;
+      }
+    }
+
+    const res = await axios.put(
+      `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/`,
+      formData,
+      {
+        headers: {
+          'X-CSRFToken': csrfToken,
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+
+    // Met à jour la liste locale des contenus
+    setChapterContents(prev => ({
+      ...prev,
+      [chapterId]: prev[chapterId].map(c =>
+        c.id === contentId ? res.data : c
+      ),
+    }));
+
+    setEditingContentId(null);
+  } catch (err) {
+    console.error("Erreur de mise à jour du contenu :", err);
+    alert("Erreur lors de la mise à jour.");
+  }
+  };
+
+  const [chapterContents, setChapterContents] = useState({}); // { chapterId: [contents] }
+
+  const fetchContentsForChapter = async (chapterId) => {
+  try {
+    const res = await axios.get(`http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    setChapterContents(prev => ({ ...prev, [chapterId]: res.data }));
+  } catch (error) {
+    console.error("Erreur fetch contenus :", error);
+    setChapterContents(prev => ({ ...prev, [chapterId]: [] }));
+  }
+  };
+
+
+  const handleDeleteContent = async (chapterId, contentId) => {
+  console.log('handleDeleteContent called with:', { courseId, chapterId, contentId });
+
+  if (!window.confirm('Confirm deletion of this content?')) return;
+
+  try {
+    console.log(`Suppression content id=${contentId} du chapitre ${chapterId}`);
+
+    const token = localStorage.getItem('token'); // ou sessionStorage selon ton projet
+
+    await axios.delete(
+      `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    // Mise à jour du contenu local sans l'élément supprimé
+    setChapterContents(prev => {
+      const updated = prev[chapterId].filter(c => c.id !== contentId);
+      return { ...prev, [chapterId]: updated };
+    });
+
+    setDeleteError('');
+  } catch (error) {
+    console.error('Erreur lors de la suppression:', error);
+    if (error.response) {
+      console.log('Response data:', error.response.data);
+      console.log('Status:', error.response.status);
+    }
+    setDeleteError('La suppression a échoué. Veuillez réessayer.');
+  }
+  };
 
   // Fonction pour récupérer le cookie CSRF
   const getCookie = (name) => {
@@ -57,7 +196,12 @@ const CourseDetails = () => {
 
 
   const toggleChapter = (id) => {
-    setExpandedChapterId(prev => (prev === id ? null : id));
+  if (expandedChapterId === id) {
+    setExpandedChapterId(null);
+  } else {
+    setExpandedChapterId(id);
+    fetchContentsForChapter(id);
+  }
   };
 
   const handleAddChapter = () => {
@@ -116,8 +260,12 @@ const CourseDetails = () => {
   };
 
   const handleAddContent = (chapterId) => {
-    alert("Ajouter un contenu - fonction à implémenter");
+  setSelectedChapterId(chapterId);
+  setShowContentPopup(true);
+  setContentType('TEXT');
+  setContentForm({ title: '', text: '', url: '', file: null });
   };
+
 
   const submitNewChapter = async () => {
     if (!newChapterTitle || !newChapterDescription) {
@@ -149,6 +297,58 @@ const CourseDetails = () => {
     }
   };
 
+
+  const submitContent = async () => {
+  if (!contentForm.title) {
+    alert("Title is required.");
+    return;
+  }
+
+  const csrfToken = getCookie('csrftoken');
+  const formData = new FormData();
+
+  formData.append('title', contentForm.title);
+  formData.append('content_kind', contentType);
+
+  if (contentType === 'TEXT') {
+    if (!contentForm.text) return alert("Text is required.");
+    formData.append('text', contentForm.text);
+  } else if (contentType === 'LINK') {
+    if (!contentForm.url) return alert("URL is required.");
+    formData.append('url', contentForm.url);
+  } else if (contentType === 'FILE') {
+    if (!contentForm.file) return alert("File is required.");
+    formData.append('file', contentForm.file);
+  } else if (contentType === 'QUIZ') {
+    alert("Quiz support not implemented yet.");
+    return;
+  }
+
+  try {
+    const res = await axios.post(
+      `http://127.0.0.1:8000/courses/${courseId}/chapters/${selectedChapterId}/contents/`,
+      formData,
+      {
+        headers: {
+          'X-CSRFToken': csrfToken,
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+
+    // Recharge la liste des contenus du chapitre ajouté
+    await fetchContentsForChapter(selectedChapterId);
+
+    setShowContentPopup(false);
+  } catch (err) {
+    console.error("Erreur ajout content :", err);
+    alert("Erreur lors de l'ajout du contenu.");
+  }
+  };
+
+
+
   // Filtrer les chapitres selon searchTerm
   const filteredChapters = chapters.filter(chap =>
     chap.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -165,12 +365,12 @@ const CourseDetails = () => {
       </h1>
 
       <h3 className="text-xl font-semibold mb-4 text-gray-300 flex justify-between items-center">
-        <span>Course content</span>
+        <span style={{ color: '#d1d5db' }}>Course content</span>
         <div className="relative text-gray-400">
           <input
             type="text"
             placeholder="Search for a chapter..."
-            className="rounded-md bg-black/30 text-white placeholder-gray-500 pl-3 pr-9 py-1 focus:outline-none focus:ring-2 focus:ring-red-500"
+            className="rounded-md bg-black/30 text-white placeholder-gray-500 pl-3 pr-9 py-1 border border-transparent focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
           />
@@ -192,13 +392,14 @@ const CourseDetails = () => {
       <div className="flex justify-end mb-6">
         <button
           onClick={handleAddChapter}
-          className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-white font-semibold"
+          className="btn-gradient-red flex items-center space-x-2 px-4 py-2 rounded font-semibold"
         >
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#f3f4f6" strokeWidth={3} className="w-5 h-5">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
           </svg>
           <span>Add a chapter</span>
         </button>
+
       </div>
       )}
 
@@ -232,12 +433,21 @@ const CourseDetails = () => {
                         onChange={handleEditChange}
                         className="bg-white/10 rounded px-2 py-1 text-white placeholder-gray-300"
                       />
-                      <button
-                        onClick={() => handleEditSubmit(chap.id)}
-                        className="text-sm text-white bg-green-600 px-3 py-1 rounded hover:bg-green-700"
-                      >
-                        Save
-                      </button>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => handleEditSubmit(chap.id)}
+                          className="btn-gradient-green text-sm px-3 py-1 rounded"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={() => setEditingChapterId(null)} 
+                          className="btn-gradient-gray text-sm px-3 py-1 rounded"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+
                     </div>
                   ) : (
                     <div>
@@ -281,10 +491,151 @@ const CourseDetails = () => {
               </div>
 
               {expandedChapterId === chap.id && (
-                <div className="mt-4 text-center text-gray-400 italic">
-                  This folder is empty.
-                </div>
-              )}
+                  <div className="mt-4 space-y-2 text-left text-gray-300">
+                    {chapterContents[chap.id] && chapterContents[chap.id].length > 0 ? (
+                        chapterContents[chap.id].map(content => (
+                          <div key={content.id} className="border border-white/10 p-3 rounded bg-black/20 flex flex-col space-y-2">
+                            <div className="flex items-center justify-between">
+                              <div
+                                className="flex items-center space-x-2"
+                              >
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                  stroke="#3b82f6"
+                                  strokeWidth={2}
+                                  className="w-6 h-6"
+                                >
+                                  <circle cx="12" cy="12" r="10" />
+                                </svg>
+                                <h4 className="font-semibold text-white">{content.title}</h4>
+                              </div>
+
+                              <div className="flex space-x-2">
+                                {isTeacher && (
+                                  <button
+                                    onClick={() => {
+                                      setEditingContentId(content.id);
+                                      setEditContentData({
+                                        title: content.title,
+                                        text: content.text,
+                                        url: content.url,
+                                        file: null,
+                                        content_kind: content.content_kind,
+                                      });
+                                    }}
+                                    title="Edit content"
+                                    className="text-yellow-400 hover:text-yellow-300"
+                                  >
+                                    ✏️
+                                  </button>
+                                )}
+
+                                {isTeacher && (
+                                  <button
+                                    onClick={() => {
+                                      console.log('Delete button clicked');
+                                      handleDeleteContent(chap.id, content.id);
+                                    }}
+                                    title="Delete content"
+                                    className="text-red-500 hover:text-red-400"
+                                  >
+                                    🗑️
+                                  </button>
+                                )}
+
+
+                              </div>
+                            </div>
+
+                            {editingContentId === content.id ? (
+                              <div className="space-y-2">
+                                <input
+                                  name="title"
+                                  value={editContentData.title}
+                                  onChange={handleEditContentChange}
+                                  className="w-full px-2 py-1 rounded bg-gray-800 text-white"
+                                  placeholder="Title"
+                                />
+                                {editContentData.content_kind === 'TEXT' && (
+                                  <textarea
+                                    name="text"
+                                    value={editContentData.text}
+                                    onChange={handleEditContentChange}
+                                    className="w-full px-2 py-1 rounded bg-gray-800 text-white"
+                                    placeholder="Text content"
+                                  />
+                                )}
+                                {editContentData.content_kind === 'LINK' && (
+                                  <input
+                                    name="url"
+                                    type="url"
+                                    value={editContentData.url}
+                                    onChange={handleEditContentChange}
+                                    className="w-full px-2 py-1 rounded bg-gray-800 text-white"
+                                    placeholder="URL"
+                                  />
+                                )}
+                                {editContentData.content_kind === 'FILE' && (
+                                  <input
+                                    name="file"
+                                    type="file"
+                                    onChange={handleEditContentChange}
+                                    className="w-full text-white"
+                                  />
+                                )}
+                                <div className="flex space-x-2">
+                                  <button
+                                    onClick={() => submitEditContent(chap.id, content.id)}
+                                    className="btn-gradient-green text-sm px-3 py-1 rounded"
+                                  >
+                                    Save
+                                  </button>
+                                  <button
+                                    onClick={() => setEditingContentId(null)}
+                                    className="btn-gradient-gray text-sm px-3 py-1 rounded"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                               <p className="text-sm italic mt-2 whitespace-pre-line text-gray-200">
+                              {content.content_kind === 'LINK' && content.url ? (
+                                <a
+                                  href={content.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="underline text-blue-300 hover:text-blue-400"
+                                >
+                                  {content.url}
+                                </a>
+                              ) : content.content_kind === 'FILE' && content.file ? (
+                                <a
+                                  href={content.file}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="underline text-blue-300 hover:text-blue-400"
+                                >
+                                {content.file.split('/').pop()}
+                                </a>
+                              ) : content.text ? (
+                                content.text
+                              ) : (
+                                'No content available.'
+                              )}
+                            </p>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-center text-gray-400 italic">This folder is empty.</p>
+                      )}
+
+                  </div>
+                )}
+
             </div>
           ))
         ) : (
@@ -312,13 +663,14 @@ const CourseDetails = () => {
             <div className="flex justify-end space-x-2">
               <button
                 onClick={() => setShowPopup(false)}
-                className="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded"
+                className="btn-gradient-gray"
               >
                 Cancel
               </button>
+
               <button
                 onClick={submitNewChapter}
-                className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded"
+                className="btn-gradient-green"
               >
                 Add
               </button>
@@ -326,6 +678,104 @@ const CourseDetails = () => {
           </div>
         </div>
       )}
+
+      
+      {showContentPopup && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-gray-900 text-white p-6 rounded-lg shadow-lg w-full max-w-md space-y-4">
+                <h2 className="text-xl font-semibold">Add Content</h2>
+
+                {/* Type de contenu */}
+                <select
+                  className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
+                  value={contentType}
+                  onChange={(e) => setContentType(e.target.value)}
+                >
+                  <option value="TEXT">Text</option>
+                  <option value="LINK">Link</option>
+                  <option value="FILE">File</option>
+                  <option value="QUIZ">Quiz</option>
+                </select>
+
+                {/* Titre du contenu */}
+                <input
+                  type="text"
+                  placeholder="Title *"
+                  className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 text-white"
+                  value={contentForm.title}
+                  onChange={(e) => setContentForm(prev => ({ ...prev, title: e.target.value }))}
+                />
+
+                {/* Champs dynamiques */}
+                {contentType === 'TEXT' && (
+                  <textarea
+                    placeholder="Enter text"
+                    className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 text-white"
+                    value={contentForm.text}
+                    onChange={(e) => setContentForm(prev => ({ ...prev, text: e.target.value }))}
+                  />
+                )}
+
+                {contentType === 'LINK' && (
+                  <input
+                    type="url"
+                    placeholder="Enter URL"
+                    className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 text-white"
+                    value={contentForm.url}
+                    onChange={(e) => setContentForm(prev => ({ ...prev, url: e.target.value }))}
+                  />
+                )}
+
+                {contentType === 'FILE' && (
+                    <div className="mt-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Upload a file
+                      </label>
+                      <div className="relative w-full">
+                        <input
+                          type="file"
+                          id="fileUpload"
+                          className="absolute left-0 top-0 opacity-0 w-full h-full cursor-pointer"
+                          onChange={(e) =>
+                            setContentForm((prev) => ({
+                              ...prev,
+                              file: e.target.files[0],
+                            }))
+                          }
+                        />
+                        <label
+                          htmlFor="fileUpload"
+                          className="inline-block bg-red-600 text-white text-sm font-semibold px-4 py-2 rounded cursor-pointer hover:bg-red-700"
+                        >
+                          Choose file
+                        </label>
+                        {contentForm.file && (
+                          <p className="mt-1 text-sm text-gray-500">Selected: {contentForm.file.name}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+
+                {/* Boutons */}
+                <div className="flex justify-end space-x-2">
+                  <button
+                    onClick={() => setShowContentPopup(false)}
+                    className="btn-gradient-gray text-sm px-3 py-1 rounded"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={submitContent}
+                    className="btn-gradient-green"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
     </div>
   );
 };

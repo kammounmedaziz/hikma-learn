@@ -70,7 +70,7 @@ function App() {
         <Route path="/community" element={<CommunityDashboard />} />
         <Route path="/TeacherDashboard" element={<TeacherDashboard />} />
         <Route path="/AdminDashboard" element={<AdminDashboard />} />
-        <Route path="/courses/:courseId/chapters/" element={<CourseDetails />} />
+        <Route path="/courses/:courseId/" element={<CourseDetails />} />
       </Routes>
     </BrowserRouter>
   );
