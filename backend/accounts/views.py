@@ -15,6 +15,7 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 
 
+from django.core.mail import send_mail
 
 
 
@@ -50,6 +51,15 @@ def create_teacher_user(request):
         username = f"teacher_{''.join(random.choices(string.ascii_lowercase + string.digits, k=6))}"
         password = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
 
+          # Send password to email
+        send_mail(
+            'Your Teacher Account Credentials',
+            f'Your account has been created.\nUsername: {username}\nPassword: {password}',
+            'manelfatnassi00@gmail.com',
+            [data['email']],
+            fail_silently=False,
+        )
+       
         user = User(
             username=username,
             first_name=data['first_name'],
@@ -102,7 +112,7 @@ class RegisterView(APIView):
             if field not in data:
                 return Response({field: 'This field is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Generate username like in your create_teacher_user
+    
         username = f"teacher_{''.join(random.choices(string.ascii_lowercase + string.digits, k=6))}"
 
         user = User.objects.create_user(
