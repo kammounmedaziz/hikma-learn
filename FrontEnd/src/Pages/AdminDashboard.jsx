@@ -27,6 +27,7 @@ import {
 import AdminManageTeachers from './AdminManageTeachers';
 import CourseList from '../Components/CourseList'; // Import CourseList
 
+import AdminManageStudents from './AdminManageStudents'
 const PlaceholderPage = ({ title, description }) => (
   <div className="space-y-8">
     <div className="text-center mb-8">
@@ -329,6 +330,8 @@ const AdminDashboard = () => {
     switch (currentPage) {
       case 'overview':
         return <AdminOverview />;
+      case 'AdminManagingStudents':
+        return <AdminManageStudents/>;
       case 'AdminManageTeachers':
         return <AdminManageTeachers />;
       case 'course_management':
