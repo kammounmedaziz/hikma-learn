@@ -18,7 +18,6 @@ import Footer from './Components/Footer'
 import AdminManageTeachers from './Pages/AdminManageTeachers';
 import AdminDashboard from './Pages/AdminDashboard';
 import TeacherDashboard from './Pages/TeacherDhasboard'
-import MyCourses from './Pages/MyCourses';
 
 
 
@@ -43,7 +42,7 @@ const LandingPage = ({ showWelcome, setShowWelcome }) => {
           
 
           <div className="relative z-10">
-            <MyCourses/>
+            <AuthPage/>
           </div>
         </div>
       )}
