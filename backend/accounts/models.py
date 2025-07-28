@@ -29,3 +29,12 @@ class User(AbstractUser):
         # Ensure fields are reserved for teachers only
         if self.user_type != UserType.TEACHER and self.fields is not None and self.fields:
             raise ValidationError("The fields field can only be set for teachers.")
+
+    def save(self, *args, **kwargs):
+        if self.is_superuser:
+            self.user_type = UserType.ADMIN
+            self.is_staff = True
+        elif self.user_type == UserType.ADMIN:
+            self.is_superuser = True
+            self.is_staff = True
+        super().save(*args, **kwargs)
