@@ -24,7 +24,7 @@ urlpatterns = [
     path('api/', include('accounts.urls')),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('', include('courses.urls')),
-    path('quizzes/', include(('quiz.urls', 'quiz'), namespace='quiz')),  # Keep only this one
+    path('quizzes/', include("quiz.urls")),
 ]
 
 if settings.DEBUG:
