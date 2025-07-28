@@ -47,6 +47,54 @@ class QuizSubmission(models.Model):
     def __str__(self):
         return f"Submission by {self.student.username} for {self.quiz.title}"
 
+    def calculate_grade(self):
+        """
+        Calculate the normalized grade for this quiz submission.
+
+        The grade is computed by evaluating each question's chosen answers:
+        - If the set of chosen answers exactly matches the set of correct answers,
+        the student earns full points for that question.
+        - Otherwise, a penalty is applied for each incorrect chosen answer.
+        The penalty per wrong answer is defined by PENALTY_RATIO (0.5 points).
+        - The score for each question is the question's points minus penalties,
+        floored at zero (no negative scores).
+        - The final grade is the sum of earned points divided by the total possible points,
+        resulting in a value between 0.0 and 1.0.
+
+        Returns:
+            float: The normalized grade (0.0 to 1.0) for the quiz submission.
+        """
+        PENALTY_RATIO = 0.5
+        questions = self.quiz.questions.all()
+        total_points = sum(q.points for q in questions)
+        if total_points == 0:
+            return 0.0
+
+        # Group answers by question ID
+        answers_by_question = {}
+        for sa in self.answers.select_related('chosen_answer', 'question'):
+            answers_by_question.setdefault(sa.question_id, []).append(sa.chosen_answer)
+
+        earned_points = 0.0
+        for question in questions:
+            chosen_answers = answers_by_question.get(question.id, [])
+            if not chosen_answers:
+                continue
+
+            chosen_ids = {ans.id for ans in chosen_answers}
+            correct_ids = set(question.answers.filter(is_correct=True).values_list('id', flat=True))
+            wrong_count = sum(not ans.is_correct for ans in chosen_answers)
+
+            if chosen_ids == correct_ids:
+                question_score = question.points
+            else:
+                penalty = PENALTY_RATIO * wrong_count
+                question_score = max(question.points - penalty, 0)
+
+            earned_points += question_score
+
+        return earned_points / total_points
+
 class SubmissionAnswer(models.Model):
     submission = models.ForeignKey(QuizSubmission, on_delete=models.CASCADE, related_name='answers')
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
