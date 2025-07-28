@@ -13,48 +13,13 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardList,
-  Award,
-  Video,
   Library,
   UserCheck,
-  PieChart,
-  TrendingUp,
-  Mail,
+  Video,
   HelpCircle,
-  Star,
-  Plus,
-  Edit,
-  Eye
+  TrendingUp,
 } from 'lucide-react';
-import TeacherSettings from '../Components/TeacherSettings';
-
-const PlaceholderPage = ({ title, description }) => (
-  <div className="space-y-8">
-    <div className="text-center mb-8">
-      <h2 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-gray-400 mb-4">
-        {title}
-      </h2>
-      <p className="text-gray-300 text-lg max-w-2xl mx-auto">
-        {description}
-      </p>
-    </div>
-
-    <div className="backdrop-blur-md bg-white/10 rounded-xl p-8 border border-white/20 text-center">
-      <div className="mb-4">
-        <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-full mx-auto mb-4 flex items-center justify-center">
-          <Star className="w-8 h-8 text-white" />
-        </div>
-        <h3 className="text-xl font-bold text-white mb-2">Teacher Module</h3>
-        <p className="text-gray-300 mb-4">
-          This module would be imported from: <code className="bg-gray-800 px-2 py-1 rounded text-red-400">./teacher/{title.replace(/\s+/g, '')}</code>
-        </p>
-        <p className="text-sm text-gray-400">
-          Create a separate component file and import it at the top of this dashboard
-        </p>
-      </div>
-    </div>
-  </div>
-);
+import { Link, useLocation, Outlet } from 'react-router-dom';
 
 const TeacherOverview = () => (
   <div className="space-y-8">
@@ -178,43 +143,35 @@ const AnimatedBackground = () => (
 );
 
 const TeacherDashboard = () => {
-  const [currentPage, setCurrentPage] = useState('overview');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const location = useLocation();
 
   const menuItems = [
-    { id: 'overview', label: 'Dashboard', icon: Home, description: 'Overview of your teaching activities' },
-    { id: 'courses', label: 'My Courses', icon: BookOpen, description: 'Manage your courses and curriculum' },
-    { id: 'assignments', label: 'Assignments', icon: ClipboardList, description: 'Create and manage assignments' },
-    { id: 'grading', label: 'Grading Center', icon: FileText, description: 'Review and grade submissions' },
-    { id: 'attendance', label: 'Attendance', icon: UserCheck, description: 'Track student attendance' },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3, description: 'Student performance analytics' },
-    { id: 'schedule', label: 'Class Schedule', icon: Calendar, description: 'Manage your teaching schedule' },
-    { id: 'content', label: 'Content Library', icon: Library, description: 'Course materials and resources' },
-    { id: 'live_classes', label: 'Live Classes', icon: Video, description: 'Conduct virtual classes' },
-    { id: 'forums', label: 'Discussion Forums', icon: MessageSquare, description: 'Moderate class discussions' },
-    { id: 'notifications', label: 'Notifications', icon: Bell, description: 'System alerts and updates' },
-    { id: 'support', label: 'Support', icon: HelpCircle, description: 'Get help and report issues' },
-    { id: 'settings', label: 'Settings', icon: Settings, description: 'Configure your preferences' },
+    { id: 'overview', label: 'Dashboard', icon: Home, description: 'Overview of your teaching activities', path: '/teacherdashboard' },
+    { id: 'courses', label: 'My Courses', icon: BookOpen, description: 'Manage your courses and curriculum', path: '/teacherdashboard/courses' },
+    { id: 'quizzes', label: 'Quizzes', icon: ClipboardList, description: 'Create and manage assignments', path: '/teacherdashboard/quizzes' },
+    { id: 'grading', label: 'Grading Center', icon: FileText, description: 'Review and grade submissions', path: '/teacherdashboard/grading' },
+    { id: 'attendance', label: 'Attendance', icon: UserCheck, description: 'Track student attendance', path: '/teacherdashboard/attendance' },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3, description: 'Student performance analytics', path: '/teacherdashboard/analytics' },
+    { id: 'schedule', label: 'Class Schedule', icon: Calendar, description: 'Manage your teaching schedule', path: '/teacherdashboard/schedule' },
+    { id: 'content', label: 'Content Library', icon: Library, description: 'Course materials and resources', path: '/teacherdashboard/content' },
+    { id: 'live_classes', label: 'Live Classes', icon: Video, description: 'Conduct virtual classes', path: '/teacherdashboard/live_classes' },
+    { id: 'forums', label: 'Discussion Forums', icon: MessageSquare, description: 'Moderate class discussions', path: '/teacherdashboard/forums' },
+    { id: 'notifications', label: 'Notifications', icon: Bell, description: 'System alerts and updates', path: '/teacherdashboard/notifications' },
+    { id: 'support', label: 'Support', icon: HelpCircle, description: 'Get help and report issues', path: '/teacherdashboard/support' },
+    { id: 'settings', label: 'Settings', icon: Settings, description: 'Configure your preferences', path: '/teacherdashboard/settings' },
   ];
-
-  const renderPage = () => {
-    const currentMenuItem = menuItems.find((item) => item.id === currentPage);
-    switch (currentPage) {
-      case 'overview': 
-        return <TeacherOverview />;
-      case 'settings':
-        return <TeacherSettings/>
-      default:
-        return <PlaceholderPage title={currentMenuItem?.label || 'Page Not Found'} description={currentMenuItem?.description || "This section is under development"} />;
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-red-900 to-gray-900 relative overflow-hidden">
       <AnimatedBackground />
       <div className="flex h-screen relative z-10">
         {/* Sidebar */}
-        <div className={`backdrop-blur-md bg-black/20 border-r border-white/10 shadow-2xl transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-64'}`}>
+        <div
+          className={`backdrop-blur-md bg-black/20 border-r border-white/10 shadow-2xl transition-all duration-300 ${
+            sidebarCollapsed ? 'w-16' : 'w-64'
+          }`}
+        >
           <div className="p-4 border-b border-white/10">
             <div className="flex items-center justify-between">
               {!sidebarCollapsed && (
@@ -237,12 +194,13 @@ const TeacherDashboard = () => {
           <nav className="mt-4 overflow-y-auto max-h-[calc(100vh-120px)]">
             {menuItems.map((item) => {
               const Icon = item.icon;
+              const isActive = location.pathname === item.path || (item.id === 'overview' && location.pathname === '/teacherdashboard');
               return (
-                <button
+                <Link
                   key={item.id}
-                  onClick={() => setCurrentPage(item.id)}
+                  to={item.path}
                   className={`w-full flex items-center px-4 py-3 text-left transition-all duration-300 hover:scale-105 ${
-                    currentPage === item.id
+                    isActive
                       ? 'bg-gradient-to-r from-red-500/20 to-gray-500/20 border-r-2 border-red-400 text-white shadow-lg'
                       : 'text-gray-300 hover:bg-white/10 hover:text-white'
                   }`}
@@ -250,7 +208,7 @@ const TeacherDashboard = () => {
                 >
                   <Icon size={20} className="flex-shrink-0" />
                   {!sidebarCollapsed && <span className="ml-3 font-medium">{item.label}</span>}
-                </button>
+                </Link>
               );
             })}
           </nav>
@@ -260,7 +218,11 @@ const TeacherDashboard = () => {
         <div className="flex-1 overflow-auto">
           <div className="p-4 md:p-8 relative z-10">
             <div className="backdrop-blur-lg bg-gray-900/30 rounded-2xl border border-gray-700 shadow-xl min-h-[calc(100vh-4rem)] p-4 md:p-8">
-              {renderPage()}
+              {location.pathname === '/teacherdashboard' || location.pathname === '/teacherdashboard/overview' ? (
+                <TeacherOverview />
+              ) : (
+                <Outlet />
+              )}
             </div>
           </div>
         </div>

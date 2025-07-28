@@ -2,16 +2,17 @@ from rest_framework import viewsets, permissions
 from .models import Quiz, Question
 from .serializers import QuizSerializer, QuestionSerializer, QuizStudentSerializer
 from accounts.models import User, UserType
+from django.core.exceptions import ObjectDoesNotExist
 
 class IsTeacherOrReadOnly(permissions.BasePermission):
     def has_permission(self, request, view):
         if request.method in permissions.SAFE_METHODS:
-            return True  # Allow read-only access (GET, HEAD, OPTIONS) for all authenticated users
+            return True
         return request.user.user_type == UserType.TEACHER
 
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
-            return True  # Allow read-only access to objects
+            return True
         if isinstance(obj, Quiz):
             return obj.teacher == request.user
         elif isinstance(obj, Question):
@@ -32,7 +33,10 @@ class QuizViewSet(viewsets.ModelViewSet):
         return QuizStudentSerializer
 
     def perform_create(self, serializer):
-        serializer.save(teacher=self.request.user)
+        try:
+            serializer.save(teacher=self.request.user)
+        except ObjectDoesNotExist:
+            raise serializers.ValidationError({"teacher": ["Authentication failed, user not found."]})
 
 class QuestionViewSet(viewsets.ModelViewSet):
     serializer_class = QuestionSerializer
