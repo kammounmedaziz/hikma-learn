@@ -2,14 +2,14 @@
 .create-quiz-button {
   display: inline-block;
   padding: 10px 20px;
-  background: linear-gradient(to right, #6366f1, #a855f7);
+  background: linear-gradient(to right, #f163cb, #e94848);
   color: white;
   text-decoration: none;
   border-radius: 5px;
   margin-top: 20px;
 }
 .create-quiz-button:hover {
-  background: linear-gradient(to right, #4f46e5, #9333ea);
+  background: linear-gradient(to right, #902ba7, #a51e39);
 }
 .quiz-list li {
   transition: transform 0.3s;
@@ -47,4 +47,30 @@ button:hover {
   border-radius: 5px;
   ;
 
+}
+
+.delete-quiz-button {
+  display: inline-block;
+  padding: 10px 20px;
+  background: linear-gradient(to right, #f163cb, #e94848);
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  margin-top: 20px;
+}
+.delete-quiz-button:hover {
+  background: linear-gradient(to right, #902ba7, #a51e39);
+}
+
+.edit-quiz-button {
+  display: inline-block;
+  padding: 10px 20px;
+  background: linear-gradient(to right, #659bff, #4935e5);
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  margin-top: 20px;
+}
+.edit-quiz-button:hover {
+  background: linear-gradient(to right, #3d6bc7, #1e1ea5);
 }

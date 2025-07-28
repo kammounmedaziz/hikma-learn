@@ -1,5 +1,5 @@
 import React from 'react';
-import './QuestionForm.css';
+import '../teacherQuiz/QuestionForm.css';
 
 const QuestionForm = ({ question, questions, setQuestions, onDelete }) => {
   const updateQuestion = (field, value) => {

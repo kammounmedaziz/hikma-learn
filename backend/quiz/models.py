@@ -21,19 +21,19 @@ class Quiz(models.Model):
 
 class Question(models.Model):
     quiz = models.ForeignKey(Quiz, related_name='questions', on_delete=models.CASCADE)
-    text = models.TextField()
+    text = models.TextField(blank=True, null=True)  # Allow null/blank for flexibility
     question_type = models.CharField(max_length=50, default='MCQ', choices=[('MCQ', 'Multiple Choice')])
     points = models.IntegerField(default=1)
-    difficulty_level = models.CharField(max_length=50, choices=[('EASY', 'Easy'), ('MEDIUM', 'Medium'), ('HARD', 'Hard')], blank=True)
+    difficulty_level = models.CharField(max_length=50, choices=[('EASY', 'Easy'), ('MEDIUM', 'Medium'), ('HARD', 'Hard')], blank=True, null=True)
     creation_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.text[:50]
+        return self.text[:50] if self.text else "No text"
 
 class Answer(models.Model):
     question = models.ForeignKey(Question, related_name='answers', on_delete=models.CASCADE)
-    text = models.CharField(max_length=500)
+    text = models.CharField(max_length=500, blank=True, null=True)  # Allow null/blank
     is_correct = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.text[:50]
+        return self.text[:50] if self.text else "No text"

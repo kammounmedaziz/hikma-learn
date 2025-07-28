@@ -10,7 +10,7 @@ const Navbar = () => {
   const navigate = useNavigate(); // Added for navigation
 
   const navItems = useMemo(() => [
-    { href: "/exams-quizzes", label: "Exams & Quizzes" },
+   
     { href: "#Home", label: "Home" },
     { href: "#Inspiration", label: "Inspiration" },
     { href: "#About", label: "About" },

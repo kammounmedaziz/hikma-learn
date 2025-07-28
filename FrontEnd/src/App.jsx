@@ -13,22 +13,16 @@ import AuthPage from './Components/Auth';
 import StudyDashboard from './Pages/StudyDashboard';
 import Inspiration from './Pages/Inspirations';
 import Team from './Pages/Team';
-import CommunityDashboard from './Pages/CommunityDashboard'
-import Footer from './Components/Footer'
+import CommunityDashboard from './Pages/CommunityDashboard';
+import Footer from './Components/Footer';
 import AdminManageTeachers from './Pages/AdminManageTeachers';
 import AdminDashboard from './Pages/AdminDashboard';
-import TeacherDashboard from './Pages/TeacherDhasboard'
-
-
-import CourseDetails from './Pages/CourseDetails';
-
-
-
-
-
-import ExamsQuizzes from './Pages/ExamsQuizzes';
-import CreateQuiz from './Pages/CreateQuiz';
-import StudyOverview from './Pages/StudyOverview'; // Added to resolve undefined error
+import TeacherDashboard from './Pages/TeacherDashboard'; // Fixed typo: TeacherDhasboard → TeacherDashboard
+import ExamsQuizzes from './Pages/teacher-quiz/ExamsQuizzes';
+import CreateQuiz from './Pages/teacher-quiz/CreateQuiz';
+import EditQuiz from './Pages/teacher-quiz/EditQuiz';
+import TeacherSettings from './Components/TeacherSettings';
+import PlaceholderPage from './Components/PlaceholderPage';
 
 const LandingPage = ({ showWelcome, setShowWelcome }) => {
   return (
@@ -41,14 +35,11 @@ const LandingPage = ({ showWelcome, setShowWelcome }) => {
 
       {!showWelcome && (
         <div className="relative">
-          {/* Background with lower z-index */}
           <div className="absolute inset-0 z-0">
             <AnimatedBackground />
           </div>
-          
-
           <div className="relative z-10">
-            <AuthPage/>
+            <AuthPage />
           </div>
         </div>
       )}
@@ -67,17 +58,66 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<LandingPage showWelcome={showWelcome} setShowWelcome={setShowWelcome} />} />
+        <Route
+          path="/"
+          element={<LandingPage showWelcome={showWelcome} setShowWelcome={setShowWelcome} />}
+        />
         <Route path="/auth" element={<AuthPage />} />
+        <Route path="/StudyDashboard" element={<StudyDashboard />} /> {/* Fixed typo: StudydDashboard → StudyDashboard */}
         <Route path="/community" element={<CommunityDashboard />} />
-        <Route path="/TeacherDashboard" element={<TeacherDashboard />} />
-        <Route path="/AdminDashboard" element={<AdminDashboard />} />
-        <Route path="/courses/:courseId/chapters/" element={<CourseDetails />} />
-        <Route path="/study-dashboard" element={<StudyDashboard />}>
-          <Route index element={<StudyOverview />} />
-          <Route path="ExamsQuizzes" element={<ExamsQuizzes />} />
-          <Route path="ExamsQuizzes/create" element={<CreateQuiz />} />
+        <Route path="/teacherdashboard" element={<TeacherDashboard />}>
+          <Route index element={<div />} /> {/* Placeholder for index route; TeacherDashboard handles it */}
+          <Route path="overview" element={<div />} /> {/* Placeholder; TeacherDashboard handles it */}
+          <Route path="quizzes" element={<ExamsQuizzes />} />
+          <Route path="quizzes/create" element={<CreateQuiz />} />
+           <Route path="quizzes/edit/:id" element={<EditQuiz />} />  {/* ✅ New route added here */}
+          <Route path="settings" element={<TeacherSettings />} />
+          <Route
+            path="courses"
+            element={<PlaceholderPage title="My Courses" description="Manage your courses and curriculum" />}
+          />
+          <Route
+            path="grading"
+            element={<PlaceholderPage title="Grading Center" description="Review and grade submissions" />}
+          />
+          <Route
+            path="attendance"
+            element={<PlaceholderPage title="Attendance" description="Track student attendance" />}
+          />
+          <Route
+            path="analytics"
+            element={<PlaceholderPage title="Analytics" description="Student performance analytics" />}
+          />
+          <Route
+            path="schedule"
+            element={<PlaceholderPage title="Class Schedule" description="Manage your teaching schedule" />}
+          />
+          <Route
+            path="content"
+            element={<PlaceholderPage title="Content Library" description="Course materials and resources" />}
+          />
+          <Route
+            path="live_classes"
+            element={<PlaceholderPage title="Live Classes" description="Conduct virtual classes" />}
+          />
+          <Route
+            path="forums"
+            element={<PlaceholderPage title="Discussion Forums" description="Moderate class discussions" />}
+          />
+          <Route
+            path="notifications"
+            element={<PlaceholderPage title="Notifications" description="System alerts and updates" />}
+          />
+          <Route
+            path="support"
+            element={<PlaceholderPage title="Support" description="Get help and report issues" />}
+          />
+          <Route
+            path="*"
+            element={<PlaceholderPage title="Page Not Found" description="This section is under development" />}
+          />
         </Route>
+        <Route path="/AdminDashboard" element={<AdminDashboard />} />
       </Routes>
     </BrowserRouter>
   );

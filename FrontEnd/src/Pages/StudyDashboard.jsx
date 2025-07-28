@@ -29,9 +29,6 @@ import StudentSettings from '../Components/StudentSettings'
 //import Actualite from './Actualite';
 //import Contact from './Contact';
 import MyCourses from './MyCourses';  // <-- Import your MyCourses component
-import ExamsQuizzes from './ExamsQuizzes';
-import CreateQuiz from './CreateQuiz'; // Added to render create page
-import { useNavigate, useLocation, Link, Outlet } from 'react-router-dom';
 
 const PlaceholderPage = ({ title, description }) => (
   <div className="space-y-8">
@@ -64,15 +61,13 @@ const PlaceholderPage = ({ title, description }) => (
 const AnimatedBackground = () => null;
 
 const StudyDashboard = () => {
+  const [currentPage, setCurrentPage] = useState('overview');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
-  
 
   const menuItems = [
-    { id: 'overview', label: 'Overview', icon: Home, description: 'Study summary and quick insights', path: '/study-dashboard' },
+    { id: 'overview', label: 'Overview', icon: Home, description: 'Study summary and quick insights' },
     { id: 'courses', label: 'My Courses', icon: BookOpen, description: 'Explore your enrolled courses' },
-    { id: 'exams', label: 'Exams & Quizzes', icon: FileText, description: 'Upcoming tests and past results', path: '/study-dashboard/ExamsQuizzes' },
+    { id: 'exams', label: 'Exams & Quizzes', icon: FileText, description: 'Upcoming tests and past results' },
     { id: 'assignments', label: 'Assignments', icon: Target, description: 'Track and submit assignments' },
     { id: 'schedule', label: 'Schedule', icon: Calendar, description: 'Daily and weekly learning schedule' },
     { id: 'progress', label: 'Progress & Analytics', icon: TrendingUp, description: 'Your learning analytics and goals' },
@@ -86,16 +81,7 @@ const StudyDashboard = () => {
   ];
 
   const renderPage = () => {
-    if (location.pathname.startsWith('/study-dashboard/ExamsQuizzes/create')) {
-      return <CreateQuiz />; // Handle create route
-    }
-    if (location.pathname === '/study-dashboard/ExamsQuizzes') {
-      return <ExamsQuizzes />;
-    }
-    if (location.pathname === '/study-dashboard') {
-      return <StudyOverview />;
-    }
-   const currentMenuItem = menuItems.find((item) => item.id === currentPage);
+    const currentMenuItem = menuItems.find((item) => item.id === currentPage);
     switch (currentPage) {
       case 'overview': return <StudyOverview />;
       case 'settings': return <StudentSettings/>
@@ -108,7 +94,6 @@ const StudyDashboard = () => {
       //case 'contact': return <Contact />;
       case 'courses':
         return <MyCourses />;  // <-- Render MyCourses here
-   
       default:
         return (
           <PlaceholderPage 
@@ -117,7 +102,7 @@ const StudyDashboard = () => {
           />
         );
     }
-  }
+  };
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -147,11 +132,11 @@ const StudyDashboard = () => {
             {menuItems.map((item) => {
               const Icon = item.icon;
               return (
-                <Link
+                <button
                   key={item.id}
-                  to={item.path}
+                  onClick={() => setCurrentPage(item.id)}
                   className={`w-full flex items-center px-4 py-3 text-left transition-all duration-300 hover:scale-105 ${
-                    location.pathname === item.path
+                    currentPage === item.id
                       ? 'bg-gradient-to-r from-red-500/20 to-gray-500/20 border-r-2 border-red-400 text-white shadow-lg'
                       : 'text-gray-300 hover:bg-white/10 hover:text-white'
                   }`}
@@ -159,7 +144,7 @@ const StudyDashboard = () => {
                 >
                   <Icon size={20} className="flex-shrink-0" />
                   {!sidebarCollapsed && <span className="ml-3 font-medium">{item.label}</span>}
-                </Link>
+                </button>
               );
             })}
           </nav>

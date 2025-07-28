@@ -20,5 +20,5 @@ class QuestionAdmin(admin.ModelAdmin):
 @admin.register(Answer)
 class AnswerAdmin(admin.ModelAdmin):
     list_display = ('text', 'question', 'is_correct')
-    search_fields = ('text', 'question__text')
+
     list_filter = ('is_correct',)
