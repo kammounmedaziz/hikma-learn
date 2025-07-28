@@ -1,6 +1,7 @@
 from django.db import models
 from accounts.models import User, UserType
 # from courses.models import Chapter
+from django.core.exceptions import ValidationError
 
 class Quiz(models.Model):
     # chapter = models.ForeignKey(Chapter, related_name='quizzes', on_delete=models.CASCADE)
@@ -46,6 +47,27 @@ class QuizSubmission(models.Model):
 
     def __str__(self):
         return f"Submission by {self.student.username} for {self.quiz.title}"
+
+    def clean(self) -> None:
+        if self.student.user_type != UserType.STUDENT:
+            raise ValidationError({'student': "Only students can submit quizzes."})
+
+        if not self.quiz.is_published:
+            raise ValidationError({'quiz': "Cannot submit to an unpublished quiz."})
+
+        # Validate that answers are provided for all quiz questions
+        question_ids = set(self.quiz.questions.values_list('id', flat=True))
+        answered_question_ids = set(self.answers.values_list('question_id', flat=True))
+
+        missing_questions = question_ids - answered_question_ids
+        if missing_questions:
+            missing_texts = list(
+                self.quiz.questions.filter(id__in=missing_questions).values_list('text', flat=True)
+            )
+            raise ValidationError({
+                'answers': f"Missing answers for questions: {', '.join(missing_texts)}"
+            })
+
 
     def calculate_grade(self):
         """
@@ -99,3 +121,11 @@ class SubmissionAnswer(models.Model):
     submission = models.ForeignKey(QuizSubmission, on_delete=models.CASCADE, related_name='answers')
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     chosen_answer = models.ForeignKey(Answer, on_delete=models.CASCADE)
+
+    def clean(self) -> None:
+
+        if self.submission.quiz != self.question.quiz:
+            raise ValidationError("The question does not belong to the quiz of this submission.")
+
+        if self.chosen_answer.question != self.question:
+            raise ValidationError("The chosen answer does not belong to the specified question.")

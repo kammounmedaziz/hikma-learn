@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Quiz, Question, Answer
+from .models import Quiz, Question, Answer, QuizSubmission, SubmissionAnswer
 
 @admin.register(Quiz)
 class QuizAdmin(admin.ModelAdmin):
@@ -22,3 +22,14 @@ class AnswerAdmin(admin.ModelAdmin):
     list_display = ('text', 'question', 'is_correct')
 
     list_filter = ('is_correct',)
+
+@admin.register(QuizSubmission)
+class QuizSubmissionAdmin(admin.ModelAdmin):
+    list_display = ('student', 'quiz', 'submitted_at', 'grade')
+    search_fields = ('student__username', 'quiz__title')
+    list_filter = ('quiz', 'grade')
+
+@admin.register(SubmissionAnswer)
+class SubmissionAnswerAdmin(admin.ModelAdmin):
+    list_display = ('submission', 'question', 'chosen_answer')
+    search_fields = ('submission__student__username', 'question__text', 'chosen_answer__text')
