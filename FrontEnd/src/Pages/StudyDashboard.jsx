@@ -37,7 +37,6 @@ const PlaceholderPage = ({ title, description }) => (
         {description}
       </p>
     </div>
-
     <div className="backdrop-blur-md bg-white/10 rounded-xl p-8 border border-white/20 text-center">
       <div className="mb-4">
         <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-full mx-auto mb-4 flex items-center justify-center">
@@ -85,13 +84,13 @@ const StudyDashboard = () => {
         // Map followed course IDs
         const followedIds = new Set(followedData.map(course => course.id));
 
-        // Format courses with teacherName and isFollowed
+        // Format courses with teacher as an object, matching AdminDashboard
         const formattedCourses = coursesData.map(course => ({
           id: course.id,
           title: course.title,
           description: course.description,
-          teacherName: course.teacher, // Map teacher username to teacherName
-          isFollowed: followedIds.has(course.id), // Determine if followed
+          teacher: course.teacher && typeof course.teacher === 'object' ? course.teacher : { username: course.teacher || 'Unknown Teacher' },
+          isFollowed: followedIds.has(course.id),
         }));
         console.log('Formatted courses:', formattedCourses);
         setAllCourses(formattedCourses);
@@ -150,7 +149,7 @@ const StudyDashboard = () => {
         id: course.id,
         title: course.title,
         description: course.description,
-        teacherName: course.teacher,
+        teacher: course.teacher && typeof course.teacher === 'object' ? course.teacher : { username: course.teacher || 'Unknown Teacher' },
         isFollowed: followedIds.has(course.id),
       }));
       setAllCourses(updatedFormattedCourses);
@@ -202,7 +201,6 @@ const StudyDashboard = () => {
       case 'all-courses':
         return (
           <div className="space-y-8">
-            {/* Page Header */}
             <div className="text-center mb-8">
               <h2 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-gray-400 mb-4">
                 Explore All Courses
@@ -211,7 +209,6 @@ const StudyDashboard = () => {
                 Browse all available courses and start learning something new today.
               </p>
             </div>
-            {/* Course List Container */}
             <div className="backdrop-blur-md bg-white/10 rounded-xl p-8 border border-white/20">
               {loading ? (
                 <p className="text-gray-300 text-center">Loading courses...</p>
@@ -255,7 +252,6 @@ const StudyDashboard = () => {
               </button>
             </div>
           </div>
-
           <nav className="mt-4 overflow-y-auto max-h-[calc(100vh-120px)]">
             {menuItems.map((item) => {
               const Icon = item.icon;
@@ -277,7 +273,6 @@ const StudyDashboard = () => {
             })}
           </nav>
         </div>
-
         <div className="flex-1 overflow-auto">
           <div className="p-4 md:p-8 relative z-10">
             <div className="backdrop-blur-lg bg-gray-900/30 rounded-2xl border border-gray-700 shadow-xl min-h-[calc(100vh-4rem)] p-4 md:p-8">
@@ -286,7 +281,6 @@ const StudyDashboard = () => {
           </div>
         </div>
       </div>
-
       <style>{`
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
         @keyframes spin-slower { to { transform: rotate(360deg); } }

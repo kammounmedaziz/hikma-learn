@@ -17,7 +17,6 @@ const PlaceholderPage = ({ title, description }) => (
         {description}
       </p>
     </div>
-
     <div className="backdrop-blur-md bg-white/10 rounded-xl p-8 border border-white/20 text-center">
       <div className="mb-4">
         <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-full mx-auto mb-4 flex items-center justify-center">
@@ -45,7 +44,6 @@ const TeacherOverview = () => (
         Your teaching dashboard - manage classes, track student progress, and create engaging content
       </p>
     </div>
-
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       <div className="backdrop-blur-md bg-white/10 rounded-xl p-6 border border-white/20 hover:bg-white/20 transition-all duration-300">
         <div className="flex items-center justify-between mb-4">
@@ -55,7 +53,6 @@ const TeacherOverview = () => (
         <h3 className="text-lg font-semibold text-white mb-2">Total Students</h3>
         <p className="text-green-400 text-sm">+12 this month</p>
       </div>
-
       <div className="backdrop-blur-md bg-white/10 rounded-xl p-6 border border-white/20 hover:bg-white/20 transition-all duration-300">
         <div className="flex items-center justify-between mb-4">
           <BookOpen className="w-8 h-8 text-red-400" />
@@ -64,7 +61,6 @@ const TeacherOverview = () => (
         <h3 className="text-lg font-semibold text-white mb-2">Active Courses</h3>
         <p className="text-red-400 text-sm">2 new this semester</p>
       </div>
-
       <div className="backdrop-blur-md bg-white/10 rounded-xl p-6 border border-white/20 hover:bg-white/20 transition-all duration-300">
         <div className="flex items-center justify-between mb-4">
           <ClipboardList className="w-8 h-8 text-green-400" />
@@ -73,7 +69,6 @@ const TeacherOverview = () => (
         <h3 className="text-lg font-semibold text-white mb-2">Pending Reviews</h3>
         <p className="text-yellow-400 text-sm">6 urgent</p>
       </div>
-
       <div className="backdrop-blur-md bg-white/10 rounded-xl p-6 border border-white/20 hover:bg-white/20 transition-all duration-300">
         <div className="flex items-center justify-between mb-4">
           <TrendingUp className="w-8 h-8 text-yellow-400" />
@@ -83,7 +78,6 @@ const TeacherOverview = () => (
         <p className="text-green-400 text-sm">+5% improvement</p>
       </div>
     </div>
-
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
       <div className="backdrop-blur-md bg-white/10 rounded-xl p-6 border border-white/20">
         <h3 className="text-xl font-bold text-white mb-4 flex items-center">
@@ -114,7 +108,6 @@ const TeacherOverview = () => (
           </div>
         </div>
       </div>
-
       <div className="backdrop-blur-md bg-white/10 rounded-xl p-6 border border-white/20">
         <h3 className="text-xl font-bold text-white mb-4 flex items-center">
           <Bell className="w-5 h-5 mr-2 text-yellow-400" />
@@ -177,14 +170,14 @@ const TeacherDashboard = () => {
           throw new Error(`HTTP error! Status: ${coursesResponse.status}`);
         }
         const coursesData = await coursesResponse.json();
-        console.log('Raw courses data:', coursesData); // Log raw response for debugging
+        console.log('Raw courses data:', coursesData);
 
-        // Format all courses, ensuring teacherName uses username if available
+        // Format all courses with teacher as an object, matching AdminDashboard
         const formattedCourses = coursesData.map(course => ({
           id: course.id,
           title: course.title,
           description: course.description,
-          teacherName: course.teacher && typeof course.teacher === 'object' ? course.teacher.username : course.teacher || 'Unknown Teacher',
+          teacher: course.teacher && typeof course.teacher === 'object' ? course.teacher : { username: course.teacher || 'Unknown Teacher' },
           isFollowed: false,
         }));
         console.log('Formatted all courses:', formattedCourses);
@@ -228,7 +221,7 @@ const TeacherDashboard = () => {
         id: course.id,
         title: course.title,
         description: course.description,
-        teacherName: course.teacher && typeof course.teacher === 'object' ? course.teacher.username : course.teacher || 'Unknown Teacher',
+        teacher: course.teacher && typeof course.teacher === 'object' ? course.teacher : { username: course.teacher || 'Unknown Teacher' },
         isFollowed: false,
       }));
       setAllCourses(formattedCourses);
@@ -299,7 +292,6 @@ const TeacherDashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-red-900 to-gray-900 relative overflow-hidden">
       <AnimatedBackground />
       <div className="flex h-screen relative z-10">
-        {/* Sidebar */}
         <div className={`backdrop-blur-md bg-black/20 border-r border-white/10 shadow-2xl transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-64'}`}>
           <div className="p-4 border-b border-white/10">
             <div className="flex items-center justify-between">
@@ -319,7 +311,6 @@ const TeacherDashboard = () => {
               </button>
             </div>
           </div>
-
           <nav className="mt-4 overflow-y-auto max-h-[calc(100vh-120px)]">
             {menuItems.map((item) => {
               const Icon = item.icon;
@@ -334,15 +325,13 @@ const TeacherDashboard = () => {
                   }`}
                   title={!sidebarCollapsed ? item.description : item.label}
                 >
-                  <Icon size={20} className="flex-shrink-0" /> {/* Fixed syntax error here */}
+                  <Icon size={20} className="flex-shrink-0" />
                   {!sidebarCollapsed && <span className="ml-3 font-medium">{item.label}</span>}
                 </button>
               );
             })}
           </nav>
         </div>
-
-        {/* Main Content */}
         <div className="flex-1 overflow-auto">
           <div className="p-4 md:p-8 relative z-10">
             <div className="backdrop-blur-lg bg-gray-900/30 rounded-2xl border border-gray-700 shadow-xl min-h-[calc(100vh-4rem)] p-4 md:p-8">
@@ -351,7 +340,6 @@ const TeacherDashboard = () => {
           </div>
         </div>
       </div>
-
       <style>{`
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
         @keyframes spin-slower { to { transform: rotate(360deg); } }

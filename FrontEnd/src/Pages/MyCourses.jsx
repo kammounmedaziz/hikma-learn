@@ -172,7 +172,7 @@ const MyCourses = () => {
                       <Tooltip title="View" placement="top" slotProps={{ tooltip: { sx: { backgroundColor: '#2D3748', color: '#FFFFFF', border: '1px solid #F56565' } } }}>
                         <IconButton
                           component={Link}
-                          to={`/courses/${course.id}/chapters/`}
+                          to={`/courses/${course.id}/`}
                           sx={{
                             backgroundColor: '#F56565',
                             color: '#FFFFFF',

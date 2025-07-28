@@ -308,7 +308,7 @@ const MyCoursesTeacher = () => {
 
                     <CardActions sx={{ padding: '0 16px 16px', justifyContent: 'flex-end' }}>
                       <Tooltip title="View" placement="top" arrow slotProps={{ tooltip: { sx: { backgroundColor: '#2D3748', color: '#FFFFFF', border: '1px solid #F56565' } } }}>
-                        <Link to={`/courses/${course.id}/chapters/`}>
+                        <Link to={`/courses/${course.id}/`}>
                           <Button
                             size="small"
                             sx={{

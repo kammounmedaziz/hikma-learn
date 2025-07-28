@@ -26,8 +26,8 @@ import {
 } from 'lucide-react';
 import AdminManageTeachers from './AdminManageTeachers';
 import CourseList from '../Components/CourseList'; // Import CourseList
+import AdminManageStudents from './AdminManageStudents';
 
-import AdminManageStudents from './AdminManageStudents'
 const PlaceholderPage = ({ title, description }) => (
   <div className="space-y-8">
     <div className="text-center mb-8">
@@ -247,15 +247,16 @@ const AdminDashboard = () => {
           throw new Error(`HTTP error! Status: ${coursesResponse.status}`);
         }
         const coursesData = await coursesResponse.json();
-        console.log('Courses data:', coursesData);
+        console.log('Raw courses data:', coursesData);
 
-        // Format courses (assuming the backend returns all courses)
+        // Format courses with detailed teacher and cover_photo handling
         const formattedCourses = coursesData.map(course => ({
           id: course.id,
           title: course.title,
           description: course.description,
-          teacherName: course.teacher_name || 'Unknown Teacher', // Adjust based on your API response
+          teacher: course.teacher || { username: course.teacher_name || 'Unknown Teacher' }, // Handle teacher as object or string
           isFollowed: false, // Admins don't follow courses
+          cover_photo: course.cover_photo || null,
         }));
         console.log('Formatted courses:', formattedCourses);
         setAllCourses(formattedCourses);
@@ -298,8 +299,9 @@ const AdminDashboard = () => {
         id: course.id,
         title: course.title,
         description: course.description,
-        teacherName: course.teacher_name || 'Unknown Teacher',
+        teacher: course.teacher || { username: course.teacher_name || 'Unknown Teacher' },
         isFollowed: false,
+        cover_photo: course.cover_photo || null,
       }));
       setAllCourses(formattedCourses);
     } catch (err) {
@@ -331,7 +333,7 @@ const AdminDashboard = () => {
       case 'overview':
         return <AdminOverview />;
       case 'AdminManagingStudents':
-        return <AdminManageStudents/>;
+        return <AdminManageStudents />;
       case 'AdminManageTeachers':
         return <AdminManageTeachers />;
       case 'course_management':
