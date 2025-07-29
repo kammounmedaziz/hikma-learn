@@ -1,6 +1,6 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useState, useEffect } from 'react';
 import "./index.css";
 import Navbar from "./Components/MainNavbar";
 import Home from "./Pages/Home";
@@ -26,6 +26,7 @@ import CourseDetails from './Pages/CourseDetails';
 
 
 
+import { ensureValidToken } from './utils/api';
 
 const LandingPage = ({ showWelcome, setShowWelcome }) => {
   return (
@@ -58,13 +59,37 @@ LandingPage.propTypes = {
   setShowWelcome: PropTypes.func.isRequired,
 };
 
+const getRedirectPath = () => {
+  const userType = localStorage.getItem('userType');
+  if (userType === 'student') return '/StudydDashboard';
+  if (userType === 'teacher') return '/TeacherDashboard';
+  if (userType === 'admin') return '/AdminDashboard';
+  return '/auth';
+};
+
 function App() {
-  const [showWelcome, setShowWelcome] = useState(true);
+  const [authReady, setAuthReady] = useState(false);
+  const [redirectPath, setRedirectPath] = useState('/auth');
+
+  useEffect(() => {
+    const init = async () => {
+      const ok = await ensureValidToken();
+      setRedirectPath(ok ? getRedirectPath() : '/auth');
+      setAuthReady(true);
+    };
+    init();
+
+    const sync = () => init();
+    window.addEventListener('storage', sync);
+    return () => window.removeEventListener('storage', sync);
+  }, []);
+
+  if (!authReady) return <div>Loading...</div>;
 
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<LandingPage showWelcome={showWelcome} setShowWelcome={setShowWelcome} />} />
+        <Route path="/" element={<Navigate to={redirectPath} replace />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/StudydDashboard" element={<StudyDashboard />} />
         <Route path="/community" element={<CommunityDashboard />} />

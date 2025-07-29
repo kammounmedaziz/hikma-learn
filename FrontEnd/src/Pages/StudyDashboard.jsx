@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios'; // Added Axios
 import {
   Home,
   BookOpen,
@@ -16,19 +17,15 @@ import {
   ChevronRight,
   GraduationCap,
   Target,
-  Star
+  Star,
 } from 'lucide-react';
 
 import StudyOverview from './StudyOverview';
-import StudentSettings from '../Components/StudentSettings'
-//import MeetOurLearners from './MeetOurLearners';
-//import SharingFeedbacks from './SharingFeedbacks';
-//import Events from './Events';
-//import PartnersAndSupporters from './PartnersAndSupporters';
-//import VoicesOfCommunity from './VoicesOfCommunity';
-//import Actualite from './Actualite';
-//import Contact from './Contact';
-import MyCourses from './MyCourses';  // <-- Import your MyCourses component
+import StudentSettings from '../Components/StudentSettings';
+import MyCourses from './MyCourses';
+import CourseList from '../Components/CourseList'; // ✅ import
+
+const AnimatedBackground = () => null;
 
 const PlaceholderPage = ({ title, description }) => (
   <div className="space-y-8">
@@ -40,7 +37,6 @@ const PlaceholderPage = ({ title, description }) => (
         {description}
       </p>
     </div>
-
     <div className="backdrop-blur-md bg-white/10 rounded-xl p-8 border border-white/20 text-center">
       <div className="mb-4">
         <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-full mx-auto mb-4 flex items-center justify-center">
@@ -58,14 +54,114 @@ const PlaceholderPage = ({ title, description }) => (
   </div>
 );
 
-const AnimatedBackground = () => null;
-
 const StudyDashboard = () => {
   const [currentPage, setCurrentPage] = useState('overview');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [allCourses, setAllCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        setLoading(true);
+        const token = localStorage.getItem('token') || '';
+        console.log('Fetching all courses with token...', token);
+
+        const coursesResponse = await axios.get('http://localhost:8000/courses/', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        console.log('Courses response status:', coursesResponse.status);
+        const coursesData = coursesResponse.data;
+
+        console.log('Fetching followed courses...');
+        const followedResponse = await axios.get('http://localhost:8000/courses/followed-courses/', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        console.log('Followed response status:', followedResponse.status);
+        const followedData = followedResponse.data;
+
+        // Map followed course IDs
+        const followedIds = new Set(followedData.map(course => course.id));
+
+        // Format courses with teacher as an object, matching AdminDashboard
+        const formattedCourses = coursesData.map(course => ({
+          id: course.id,
+          title: course.title,
+          description: course.description,
+          teacher: course.teacher && typeof course.teacher === 'object' ? course.teacher : { username: course.teacher || 'Unknown Teacher' },
+          isFollowed: followedIds.has(course.id),
+        }));
+        console.log('Formatted courses:', formattedCourses);
+        setAllCourses(formattedCourses);
+      } catch (err) {
+        console.error('Fetch error:', err);
+        setError(`Error fetching courses: ${err.message}. 
+          - Ensure the Django server is running at http://localhost:8000/.
+          - Check token authentication.
+          - Verify you are authenticated as a student.
+          - Check browser console for details.`);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, []);
+
+  const handleCourseAction = async (action, courseId) => {
+    console.log(`Action: ${action}, Course ID: ${courseId}`);
+    try {
+      const token = localStorage.getItem('token') || '';
+      let response;
+
+      if (action === 'follow') {
+        response = await axios.post(`http://localhost:8000/courses/${courseId}/follow/`, {}, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (response.status === 201) {
+          console.log(`${action} action succeeded`);
+        }
+      } else if (action === 'unfollow') {
+        response = await axios.delete(`http://localhost:8000/courses/${courseId}/follow/`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (response.status === 204) {
+          console.log(`${action} action succeeded`);
+        }
+      }
+
+      // Refresh courses to update isFollowed status
+      const updatedCoursesResponse = await axios.get('http://localhost:8000/courses/', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (updatedCoursesResponse.status !== 200) throw new Error(`Failed to refresh courses: ${updatedCoursesResponse.status}`);
+      const updatedCoursesData = updatedCoursesResponse.data;
+
+      const followedResponse = await axios.get('http://localhost:8000/courses/followed-courses/', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (followedResponse.status !== 200) throw new Error(`Failed to refresh followed courses: ${followedResponse.status}`);
+      const followedData = followedResponse.data;
+
+      const followedIds = new Set(followedData.map(course => course.id));
+      const updatedFormattedCourses = updatedCoursesData.map(course => ({
+        id: course.id,
+        title: course.title,
+        description: course.description,
+        teacher: course.teacher && typeof course.teacher === 'object' ? course.teacher : { username: course.teacher || 'Unknown Teacher' },
+        isFollowed: followedIds.has(course.id),
+      }));
+      setAllCourses(updatedFormattedCourses);
+    } catch (error) {
+      console.error(`${action} action failed:`, error.message);
+      setError(`Failed to ${action} course. Please try again.`);
+    }
+  };
 
   const menuItems = [
     { id: 'overview', label: 'Overview', icon: Home, description: 'Study summary and quick insights' },
+    { id: 'all-courses', label: 'All Courses', icon: GraduationCap, description: 'Explore our courses' },
     { id: 'courses', label: 'My Courses', icon: BookOpen, description: 'Explore your enrolled courses' },
     { id: 'exams', label: 'Exams & Quizzes', icon: FileText, description: 'Upcoming tests and past results' },
     { id: 'assignments', label: 'Assignments', icon: Target, description: 'Track and submit assignments' },
@@ -82,25 +178,54 @@ const StudyDashboard = () => {
 
   const renderPage = () => {
     const currentMenuItem = menuItems.find((item) => item.id === currentPage);
+
     switch (currentPage) {
       case 'overview': return <StudyOverview />;
-      case 'settings': return <StudentSettings/>
-    //  case 'meet_learners': return <MeetOurLearners />;
-    //  case 'sharing_feedbacks': return <SharingFeedbacks />;
-      //case 'events': return <Events />;
-      //case 'partners_supporters': return <PartnersAndSupporters />;
-      //case 'voices_community': return <VoicesOfCommunity />;
-      //case 'actualite': return <Actualite />;
-      //case 'contact': return <Contact />;
+      case 'settings': return <PlaceholderPage title="Settings" description="Manage your profile and preferences" />;
+      case 'exams': return <PlaceholderPage title="Exams & Quizzes" description="Upcoming tests and past results" />;
+      case 'assignments': return <PlaceholderPage title="Assignments" description="Track and submit assignments" />;
+      case 'schedule': return <PlaceholderPage title="Schedule" description="Daily and weekly learning schedule" />;
+      case 'progress': return <PlaceholderPage title="Progress & Analytics" description="Your learning analytics and goals" />;
+      case 'achievements': return <PlaceholderPage title="Achievements" description="Your badges and certificates" />;
+      case 'library': return <PlaceholderPage title="Resource Library" description="Extra resources and materials" />;
+      case 'forum': return <PlaceholderPage title="Discussion Forum" description="Ask and answer questions" />;
+      case 'study_groups': return <PlaceholderPage title="Study Groups" description="Join or create study circles" />;
+      case 'notifications': return <PlaceholderPage title="Notifications" description="Alerts and important messages" />;
+      case 'support': return <PlaceholderPage title="Support Center" description="Ask for help or report issues" />;
       case 'courses':
-        return <MyCourses />;  // <-- Render MyCourses here
-      default:
         return (
-          <PlaceholderPage 
-            title={currentMenuItem?.label || 'Page Not Found'} 
-            description={currentMenuItem?.description || "This section is under development"} 
-          />
+          <div className="space-y-8">
+            <MyCourses />
+          </div>
         );
+      case 'all-courses':
+        return (
+          <div className="space-y-8">
+            <div className="text-center mb-8">
+              <h2 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-gray-400 mb-4">
+                Explore All Courses
+              </h2>
+              <p className="text-gray-300 text-lg max-w-2xl mx-auto">
+                Browse all available courses and start learning something new today.
+              </p>
+            </div>
+            <div className="backdrop-blur-md bg-white/10 rounded-xl p-8 border border-white/20">
+              {loading ? (
+                <p className="text-gray-300 text-center">Loading courses...</p>
+              ) : error ? (
+                <p className="text-red-400 text-center">{error}</p>
+              ) : (
+                <CourseList
+                  role="student"
+                  courses={allCourses}
+                  onAction={handleCourseAction}
+                />
+              )}
+            </div>
+          </div>
+        );
+      default:
+        return <PlaceholderPage title={currentMenuItem?.label || 'Page Not Found'} description={currentMenuItem?.description || 'This section is under development.'} />;
     }
   };
 
@@ -127,7 +252,6 @@ const StudyDashboard = () => {
               </button>
             </div>
           </div>
-
           <nav className="mt-4 overflow-y-auto max-h-[calc(100vh-120px)]">
             {menuItems.map((item) => {
               const Icon = item.icon;
@@ -149,7 +273,6 @@ const StudyDashboard = () => {
             })}
           </nav>
         </div>
-
         <div className="flex-1 overflow-auto">
           <div className="p-4 md:p-8 relative z-10">
             <div className="backdrop-blur-lg bg-gray-900/30 rounded-2xl border border-gray-700 shadow-xl min-h-[calc(100vh-4rem)] p-4 md:p-8">
@@ -158,7 +281,6 @@ const StudyDashboard = () => {
           </div>
         </div>
       </div>
-
       <style>{`
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
         @keyframes spin-slower { to { transform: rotate(360deg); } }
