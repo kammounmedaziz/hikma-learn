@@ -43,6 +43,36 @@ const CourseDetails = () => {
     file: null,
   });
 
+  const [showFullContent, setShowFullContent] = useState(false);
+
+  const toggleContent = () => {
+    setShowFullContent(!showFullContent);
+  };
+
+  const MAX_LENGTH = 100; // nombre de caractères visibles par défaut
+
+  // États dans ton composant
+  const [showModal, setShowModal] = React.useState(false);
+  const [modalContent, setModalContent] = React.useState(null); // Contenu affiché dans la popup
+
+  // Ouvre la popup avec un contenu précis
+  const openModal = (content) => {
+    setModalContent(content);
+    setShowModal(true);
+  };
+
+  // Ferme la popup
+  const closeModal = () => {
+    setShowModal(false);
+    setModalContent(null);
+  };
+
+  function extractYouTubeId(url) {
+  const regExp = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|embed|watch)|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/i;
+  const match = url.match(regExp);
+  return match ? match[1] : null;
+  }
+
   const handleEditContent = (content) => {
   setEditingContentId(content.id);
   setEditContentData({
@@ -601,30 +631,186 @@ const CourseDetails = () => {
                                 </div>
                               </div>
                             ) : (
-                               <p className="text-sm italic mt-2 whitespace-pre-line text-gray-200">
-                              {content.content_kind === 'LINK' && content.url ? (
-                                <a
-                                  href={content.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="underline text-blue-300 hover:text-blue-400"
-                                >
-                                  {content.url}
-                                </a>
-                              ) : content.content_kind === 'FILE' && content.file ? (
-                                <a
-                                  href={content.file}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="underline text-blue-300 hover:text-blue-400"
-                                >
-                                {content.file.split('/').pop()}
-                                </a>
+                               <p className="text-base leading-relaxed mt-2 whitespace-pre-line text-gray-100 font-medium">
+                              {(content.content_kind === 'LINK' && content.url) || (content.content_kind === 'FILE' && content.file) ? (
+                                <div className="mb-4">
+                                  {(() => {
+                                    const url =
+                                      content.content_kind === 'LINK'
+                                        ? content.url
+                                        : content.content_kind === 'FILE'
+                                        ? content.file
+                                        : null;
+
+                                    if (!url) {
+                                      return <p className="text-gray-400">No content available.</p>;
+                                    }
+
+                                    const lowerUrl = url.toLowerCase();
+
+                                    // Récupère nom fichier
+                                    const getFileName = (fullUrl) => fullUrl.split('/').pop();
+
+                                    // Détecte image
+                                    const isImage = (u) => u.match(/\.(jpeg|jpg|gif|png|svg)$/i) !== null;
+
+                                    // Icônes
+                                    const YouTubeIcon = () => (
+                                      <svg xmlns="http://www.w3.org/2000/svg" fill="red" viewBox="0 0 24 24" stroke="none" className="inline w-6 h-6" aria-hidden="true">
+                                        <path d="M23.499 6.203a2.97 2.97 0 00-2.09-2.095C19.706 3.5 12 3.5 12 3.5s-7.706 0-9.41.608a2.97 2.97 0 00-2.09 2.095A31.14 31.14 0 000 12a31.14 31.14 0 00.5 5.797 2.97 2.97 0 002.09 2.095c1.704.608 9.41.608 9.41.608s7.706 0 9.41-.608a2.97 2.97 0 002.09-2.095A31.14 31.14 0 0024 12a31.14 31.14 0 00-.501-5.797zM9.75 15.021V8.979l6 3.02-6 3.022z" />
+                                      </svg>
+                                    );
+
+                                    const PdfIcon = () => (
+                                      <span role="img" aria-label="PDF file" className="inline text-blue-600 text-lg">📄</span>
+                                    );
+
+                                    const ImageIcon = () => (
+                                      <span role="img" aria-label="Image file" className="inline text-blue-600 text-lg">🖼️</span>
+                                    );
+
+                                    let icon = null;
+                                    if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
+                                      icon = <YouTubeIcon />;
+                                    } else if (lowerUrl.endsWith('.pdf')) {
+                                      icon = <PdfIcon />;
+                                    } else if (isImage(lowerUrl)) {
+                                      icon = <ImageIcon />;
+                                    } else {
+                                      icon = <span className="text-blue-600">🔗</span>;
+                                    }
+
+                                    // --- EMBED YOUTUBE (iframe) ---
+
+                                    if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
+                                      // Transformation en URL embed
+                                      let embedUrl = url;
+                                      if (url.includes('watch?v=')) {
+                                        embedUrl = url.replace('watch?v=', 'embed/');
+                                      } else if (url.includes('youtu.be/')) {
+                                        embedUrl = url.replace('youtu.be/', 'www.youtube.com/embed/');
+                                      }
+
+                                      return (
+                                        <div>
+                                          <a
+                                            href={url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            title={url}
+                                            className="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-800 mb-2"
+                                          >
+                                            {icon}
+                                            <span>{url}</span>
+                                          </a>
+
+                                          <div className="aspect-w-16 aspect-h-9">
+                                            <iframe
+                                              src={embedUrl}
+                                              title="YouTube video player"
+                                              frameBorder="0"
+                                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                              allowFullScreen
+                                              className="w-full h-64 rounded"
+                                            />
+                                          </div>
+                                        </div>
+                                      );
+                                    }
+
+                                    // --- Image embed ---
+                                    if (isImage(lowerUrl)) {
+                                      return (
+                                        <div>
+                                          <a
+                                            href={url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-800 mb-2"
+                                          >
+                                            {icon}
+                                            <span>{getFileName(url)}</span>
+                                          </a>
+                                          <div className="mt-2 flex justify-center">
+                                            <img
+                                              src={url}
+                                              alt={getFileName(url)}
+                                              className="max-w-full h-auto rounded shadow"
+                                            />
+                                          </div>
+                                        </div>
+                                      );
+                                    }
+
+                                    return (
+                                      <a
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        title={url}
+                                        className="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-800 hover:underline"
+                                      >
+                                        {icon}
+                                        <span>
+                                          {(lowerUrl.startsWith('http://') || lowerUrl.startsWith('https://')) && !isImage(lowerUrl) && !lowerUrl.endsWith('.pdf')
+                                            ? url
+                                            : getFileName(url)}
+                                        </span>
+                                      </a>
+                                    );
+                                  })()}
+                                </div>
+
+
                               ) : content.text ? (
-                                content.text
-                              ) : (
-                                'No content available.'
-                              )}
+                                  <>
+                                    <div key={content.id} className="...">
+                                      <div className="flex justify-between items-center mb-1">
+                                        <h4 className="font-semibold text-white">{content.title}</h4>
+                                        {content.text.length > MAX_LENGTH && (
+                                          <button
+                                            onClick={() => openModal(content)}
+                                            className="text-blue-400 hover:text-blue-300 text-sm font-medium"
+                                          >
+                                            View more
+                                          </button>
+                                        )}
+                                      </div>
+
+                                      <p className="text-base leading-relaxed whitespace-pre-line text-gray-100 font-medium">
+                                        {content.text.length > MAX_LENGTH
+                                          ? content.text.slice(0, MAX_LENGTH) + "..."
+                                          : content.text}
+                                      </p>
+                                    </div>
+
+                                    {/* Popup Modal (en bas du render) */}
+                                    {showModal && modalContent && (
+                                      <div
+                                        className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50"
+                                        onClick={closeModal}
+                                      >
+                                        <div
+                                          className="bg-white text-black p-6 rounded max-w-lg max-h-[80vh] overflow-auto"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          <h2 className="text-lg font-bold mb-4">{modalContent.title}</h2>
+                                          <p className="whitespace-pre-line">{modalContent.text}</p>
+                                          <button
+                                            onClick={closeModal}
+                                            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                          >
+                                            Close
+                                          </button>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </>
+                                ) : (
+                                  'No content available.'
+                                )}
+
+
                             </p>
                             )}
                           </div>
@@ -681,100 +867,124 @@ const CourseDetails = () => {
 
       
       {showContentPopup && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-gray-900 text-white p-6 rounded-lg shadow-lg w-full max-w-md space-y-4">
-                <h2 className="text-xl font-semibold">Add Content</h2>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-900 text-white p-6 rounded-lg shadow-lg w-full max-w-md space-y-4">
+            <h2 className="text-xl font-semibold text-center">Add New Content</h2>
 
-                {/* Type de contenu */}
-                <select
-                  className="w-full bg-gray-800 border border-gray-600 p-2 rounded"
-                  value={contentType}
-                  onChange={(e) => setContentType(e.target.value)}
+            {/* Barre d’icônes */}
+            <div className="grid grid-cols-4 gap-2">
+              {[
+                { type: 'TEXT', label: 'Text', icon: '📝' },
+                { type: 'LINK', label: 'Link', icon: '🔗' },
+                { type: 'FILE', label: 'File', icon: '📁' },
+                { type: 'QUIZ', label: 'Quiz', icon: '❓' },
+              ].map(({ type, label, icon }) => (
+                <button
+                  key={type}
+                  onClick={() => setContentType(type)}
+                  className={`flex flex-col items-center justify-center py-2 px-1 text-sm font-medium rounded transition text-white ${
+                    contentType === type
+                      ? 'btn-gradient-red'
+                      : 'bg-gray-800 border border-gray-600 text-gray-300 hover:bg-gray-700'
+                  }`}
                 >
-                  <option value="TEXT">Text</option>
-                  <option value="LINK">Link</option>
-                  <option value="FILE">File</option>
-                  <option value="QUIZ">Quiz</option>
-                </select>
+                  <div className="text-2xl">{icon}</div>
+                  <div>{label}</div>
+                </button>
+              ))}
+            </div>
 
-                {/* Titre du contenu */}
-                <input
-                  type="text"
-                  placeholder="Title *"
-                  className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 text-white"
-                  value={contentForm.title}
-                  onChange={(e) => setContentForm(prev => ({ ...prev, title: e.target.value }))}
-                />
 
-                {/* Champs dynamiques */}
-                {contentType === 'TEXT' && (
-                  <textarea
-                    placeholder="Enter text"
-                    className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 text-white"
-                    value={contentForm.text}
-                    onChange={(e) => setContentForm(prev => ({ ...prev, text: e.target.value }))}
-                  />
-                )}
+            {/* Titre */}
+            <input
+              type="text"
+              placeholder="Title *"
+              className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 text-white"
+              value={contentForm.title}
+              onChange={(e) =>
+                setContentForm((prev) => ({ ...prev, title: e.target.value }))
+              }
+            />
 
-                {contentType === 'LINK' && (
+            {/* Champs spécifiques */}
+            {contentType === 'TEXT' && (
+              <textarea
+                placeholder="Enter text"
+                className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 text-white"
+                value={contentForm.text}
+                onChange={(e) =>
+                  setContentForm((prev) => ({ ...prev, text: e.target.value }))
+                }
+              />
+            )}
+
+            {contentType === 'LINK' && (
+              <input
+                type="url"
+                placeholder="Enter URL"
+                className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 text-white"
+                value={contentForm.url}
+                onChange={(e) =>
+                  setContentForm((prev) => ({ ...prev, url: e.target.value }))
+                }
+              />
+            )}
+
+            {contentType === 'FILE' && (
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Upload a file</label>
+                <div className="relative w-full">
                   <input
-                    type="url"
-                    placeholder="Enter URL"
-                    className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 text-white"
-                    value={contentForm.url}
-                    onChange={(e) => setContentForm(prev => ({ ...prev, url: e.target.value }))}
+                    type="file"
+                    id="fileUpload"
+                    className="absolute left-0 top-0 opacity-0 w-full h-full cursor-pointer"
+                    onChange={(e) =>
+                      setContentForm((prev) => ({
+                        ...prev,
+                        file: e.target.files[0],
+                      }))
+                    }
                   />
-                )}
+                  <label
+                    htmlFor="fileUpload"
+                    className="btn-gradient-red inline-block text-sm px-4 py-2 text-center cursor-pointer"
+                  >
+                    Choose file
+                  </label>
 
-                {contentType === 'FILE' && (
-                    <div className="mt-2">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Upload a file
-                      </label>
-                      <div className="relative w-full">
-                        <input
-                          type="file"
-                          id="fileUpload"
-                          className="absolute left-0 top-0 opacity-0 w-full h-full cursor-pointer"
-                          onChange={(e) =>
-                            setContentForm((prev) => ({
-                              ...prev,
-                              file: e.target.files[0],
-                            }))
-                          }
-                        />
-                        <label
-                          htmlFor="fileUpload"
-                          className="inline-block bg-red-600 text-white text-sm font-semibold px-4 py-2 rounded cursor-pointer hover:bg-red-700"
-                        >
-                          Choose file
-                        </label>
-                        {contentForm.file && (
-                          <p className="mt-1 text-sm text-gray-500">Selected: {contentForm.file.name}</p>
-                        )}
-                      </div>
-                    </div>
+                  {contentForm.file && (
+                    <p className="mt-1 text-sm text-gray-400">
+                      Selected: {contentForm.file.name}
+                    </p>
                   )}
-
-
-                {/* Boutons */}
-                <div className="flex justify-end space-x-2">
-                  <button
-                    onClick={() => setShowContentPopup(false)}
-                    className="btn-gradient-gray text-sm px-3 py-1 rounded"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={submitContent}
-                    className="btn-gradient-green"
-                  >
-                    Add
-                  </button>
                 </div>
               </div>
+            )}
+
+            {contentType === 'QUIZ' && (
+              <p className="text-sm text-gray-400">Quiz creation coming soon...</p>
+            )}
+
+            {/* Boutons */}
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => setShowContentPopup(false)}
+                className="btn-gradient-gray"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitContent}
+                className="btn-gradient-green"
+              >
+                Add
+              </button>
             </div>
-          )}
+          </div>
+        </div>
+      )}
+
+  
 
     </div>
   );
