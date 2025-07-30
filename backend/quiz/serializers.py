@@ -40,7 +40,6 @@ class QuestionSerializer(serializers.ModelSerializer):
         return instance
 
 class QuizStudentSerializer(serializers.ModelSerializer):
-    url = serializers.HyperlinkedIdentityField(view_name='quiz:quiz-detail', lookup_field='pk')
     teacher = serializers.CharField(source='teacher.username', read_only=True)
 
     class Meta:
