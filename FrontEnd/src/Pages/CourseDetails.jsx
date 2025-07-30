@@ -3,7 +3,6 @@ import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import "../App.css";
 
-
 const CourseDetails = () => {
   const { courseId } = useParams();
   const [course, setCourse] = useState(null);
@@ -17,23 +16,18 @@ const CourseDetails = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [newChapterTitle, setNewChapterTitle] = useState('');
   const [newChapterDescription, setNewChapterDescription] = useState('');
-
   const token = localStorage.getItem('token');
   const userType = localStorage.getItem('userType');
-  const isTeacher = userType == 'teacher';
-
+  const isTeacher = userType === 'teacher';
   const [showContentPopup, setShowContentPopup] = useState(false);
-  const [contentType, setContentType] = useState('TEXT'); // Valeur par défaut
+  const [contentType, setContentType] = useState('TEXT');
   const [selectedChapterId, setSelectedChapterId] = useState(null);
-  
   const [contentForm, setContentForm] = useState({
-  title: '',
-  text: '',
-  url: '',
-  file: null,
-  //quiz:
+    title: '',
+    text: '',
+    url: '',
+    file: null,
   });
-
   const [editingContentId, setEditingContentId] = useState(null);
   const [editContentData, setEditContentData] = useState({
     title: '',
@@ -42,155 +36,136 @@ const CourseDetails = () => {
     url: '',
     file: null,
   });
-
   const [showFullContent, setShowFullContent] = useState(false);
+  const [chapterContents, setChapterContents] = useState({});
+  const [showModal, setShowModal] = useState(false);
+  const [modalContent, setModalContent] = useState(null);
+  const [showReorderPopup, setShowReorderPopup] = useState(false);
+  const [reorderedChapters, setReorderedChapters] = useState([]);
+  const [draggedItem, setDraggedItem] = useState(null);
 
   const toggleContent = () => {
     setShowFullContent(!showFullContent);
   };
 
-  const MAX_LENGTH = 100; // nombre de caractères visibles par défaut
+  const MAX_LENGTH = 100;
 
-  // États dans ton composant
-  const [showModal, setShowModal] = React.useState(false);
-  const [modalContent, setModalContent] = React.useState(null); // Contenu affiché dans la popup
-
-  // Ouvre la popup avec un contenu précis
   const openModal = (content) => {
     setModalContent(content);
     setShowModal(true);
   };
 
-  // Ferme la popup
   const closeModal = () => {
     setShowModal(false);
     setModalContent(null);
   };
 
   function extractYouTubeId(url) {
-  const regExp = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|embed|watch)|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/i;
-  const match = url.match(regExp);
-  return match ? match[1] : null;
+    const regExp = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|embed|watch)|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/i;
+    const match = url.match(regExp);
+    return match ? match[1] : null;
   }
 
   const handleEditContent = (content) => {
-  setEditingContentId(content.id);
-  setEditContentData({
-    title: content.title,
-    content_kind: content.content_kind,
-    text: content.content_kind === 'TEXT' ? content.content : '',
-    url: content.content_kind === 'LINK' ? content.url : '',
-    file: null,  // pas prérempli pour les fichiers
-  });
+    setEditingContentId(content.id);
+    setEditContentData({
+      title: content.title,
+      content_kind: content.content_kind,
+      text: content.content_kind === 'TEXT' ? content.content : '',
+      url: content.content_kind === 'LINK' ? content.url : '',
+      file: null,
+    });
   };
 
   const handleEditContentChange = (e) => {
-  const { name, value, files } = e.target;
-  if(name === 'file') {
-    setEditContentData(prev => ({ ...prev, file: files[0] }));
-  } else {
-    setEditContentData(prev => ({ ...prev, [name]: value }));
-  }
- };
-
- const submitEditContent = async (chapterId, contentId) => {
-  try {
-    const csrfToken = getCookie('csrftoken');
-    const formData = new FormData();
-    formData.append('title', editContentData.title);
-    formData.append('content_kind', editContentData.content_kind);
-
-    if (editContentData.content_kind === 'TEXT') {
-      formData.append('text', editContentData.text);
-    } else if (editContentData.content_kind === 'LINK') {
-      formData.append('url', editContentData.url);
-    } else if (editContentData.content_kind === 'FILE') {
-      if (editContentData.file) formData.append('file', editContentData.file);
-      else {
-        alert("Please select a file.");
-        return;
-      }
+    const { name, value, files } = e.target;
+    if (name === 'file') {
+      setEditContentData(prev => ({ ...prev, file: files[0] }));
+    } else {
+      setEditContentData(prev => ({ ...prev, [name]: value }));
     }
-
-    const res = await axios.put(
-      `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/`,
-      formData,
-      {
-        headers: {
-          'X-CSRFToken': csrfToken,
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
-        },
-      }
-    );
-
-    // Met à jour la liste locale des contenus
-    setChapterContents(prev => ({
-      ...prev,
-      [chapterId]: prev[chapterId].map(c =>
-        c.id === contentId ? res.data : c
-      ),
-    }));
-
-    setEditingContentId(null);
-  } catch (err) {
-    console.error("Erreur de mise à jour du contenu :", err);
-    alert("Erreur lors de la mise à jour.");
-  }
   };
 
-  const [chapterContents, setChapterContents] = useState({}); // { chapterId: [contents] }
+  const submitEditContent = async (chapterId, contentId) => {
+    try {
+      const csrfToken = getCookie('csrftoken');
+      const formData = new FormData();
+      formData.append('title', editContentData.title);
+      formData.append('content_kind', editContentData.content_kind);
+
+      if (editContentData.content_kind === 'TEXT') {
+        formData.append('text', editContentData.text);
+      } else if (editContentData.content_kind === 'LINK') {
+        formData.append('url', editContentData.url);
+      } else if (editContentData.content_kind === 'FILE') {
+        if (editContentData.file) formData.append('file', editContentData.file);
+        else {
+          alert("Please select a file.");
+          return;
+        }
+      }
+
+      const res = await axios.put(
+        `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/`,
+        formData,
+        {
+          headers: {
+            'X-CSRFToken': csrfToken,
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      setChapterContents(prev => ({
+        ...prev,
+        [chapterId]: prev[chapterId].map(c =>
+          c.id === contentId ? res.data : c
+        ),
+      }));
+
+      setEditingContentId(null);
+    } catch (err) {
+      console.error("Erreur de mise à jour du contenu :", err);
+      alert("Erreur lors de la mise à jour.");
+    }
+  };
 
   const fetchContentsForChapter = async (chapterId) => {
-  try {
-    const res = await axios.get(`http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    setChapterContents(prev => ({ ...prev, [chapterId]: res.data }));
-  } catch (error) {
-    console.error("Erreur fetch contenus :", error);
-    setChapterContents(prev => ({ ...prev, [chapterId]: [] }));
-  }
+    try {
+      const res = await axios.get(`http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setChapterContents(prev => ({ ...prev, [chapterId]: res.data }));
+    } catch (error) {
+      console.error("Erreur fetch contenus :", error);
+      setChapterContents(prev => ({ ...prev, [chapterId]: [] }));
+    }
   };
-
 
   const handleDeleteContent = async (chapterId, contentId) => {
-  console.log('handleDeleteContent called with:', { courseId, chapterId, contentId });
+    if (!window.confirm('Confirm deletion of this content?')) return;
 
-  if (!window.confirm('Confirm deletion of this content?')) return;
+    try {
+      await axios.delete(
+        `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-  try {
-    console.log(`Suppression content id=${contentId} du chapitre ${chapterId}`);
-
-    const token = localStorage.getItem('token'); // ou sessionStorage selon ton projet
-
-    await axios.delete(
-      `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    // Mise à jour du contenu local sans l'élément supprimé
-    setChapterContents(prev => {
-      const updated = prev[chapterId].filter(c => c.id !== contentId);
-      return { ...prev, [chapterId]: updated };
-    });
-
-    setDeleteError('');
-  } catch (error) {
-    console.error('Erreur lors de la suppression:', error);
-    if (error.response) {
-      console.log('Response data:', error.response.data);
-      console.log('Status:', error.response.status);
+      setChapterContents(prev => {
+        const updated = prev[chapterId].filter(c => c.id !== contentId);
+        return { ...prev, [chapterId]: updated };
+      });
+    } catch (error) {
+      console.error('Erreur lors de la suppression:', error);
+      alert('La suppression a échoué. Veuillez réessayer.');
     }
-    setDeleteError('La suppression a échoué. Veuillez réessayer.');
-  }
   };
 
-  // Fonction pour récupérer le cookie CSRF
   const getCookie = (name) => {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
@@ -207,31 +182,31 @@ const CourseDetails = () => {
   };
 
   useEffect(() => {
-  setLoading(true);
-  setError(null);
+    setLoading(true);
+    setError(null);
 
-  const fetchCourse = axios.get(`http://127.0.0.1:8000/courses/${courseId}/`, { headers: { Authorization: `Bearer ${token}` } });
-  const fetchChapters = axios.get(`http://127.0.0.1:8000/courses/${courseId}/chapters/`, { headers: { Authorization: `Bearer ${token}` } });
-  Promise.all([fetchCourse, fetchChapters, ])
-    .then(([courseRes, chaptersRes]) => {
-      setCourse(courseRes.data);
-      setChapters(chaptersRes.data);
-    })
-    .catch(err => {
-      console.error(err);
-      setError("Erreur lors du chargement des données.");
-    })
-    .finally(() => setLoading(false));
+    const fetchCourse = axios.get(`http://127.0.0.1:8000/courses/${courseId}/`, { headers: { Authorization: `Bearer ${token}` } });
+    const fetchChapters = axios.get(`http://127.0.0.1:8000/courses/${courseId}/chapters/`, { headers: { Authorization: `Bearer ${token}` } });
+    Promise.all([fetchCourse, fetchChapters])
+      .then(([courseRes, chaptersRes]) => {
+        setCourse(courseRes.data);
+        setChapters(chaptersRes.data);
+        setReorderedChapters(chaptersRes.data);
+      })
+      .catch(err => {
+        console.error(err);
+        setError("Erreur lors du chargement des données.");
+      })
+      .finally(() => setLoading(false));
   }, [courseId]);
 
-
   const toggleChapter = (id) => {
-  if (expandedChapterId === id) {
-    setExpandedChapterId(null);
-  } else {
-    setExpandedChapterId(id);
-    fetchContentsForChapter(id);
-  }
+    if (expandedChapterId === id) {
+      setExpandedChapterId(null);
+    } else {
+      setExpandedChapterId(id);
+      fetchContentsForChapter(id);
+    }
   };
 
   const handleAddChapter = () => {
@@ -251,7 +226,6 @@ const CourseDetails = () => {
   const handleEditSubmit = async (chapterId) => {
     try {
       const csrfToken = getCookie('csrftoken');
-
       const res = await axios.put(
         `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/`,
         editData,
@@ -266,6 +240,7 @@ const CourseDetails = () => {
         chap.id === chapterId ? res.data : chap
       );
       setChapters(updated);
+      setReorderedChapters(updated);
       setEditingChapterId(null);
     } catch (err) {
       console.error("Erreur de mise à jour :", err);
@@ -279,10 +254,11 @@ const CourseDetails = () => {
       const csrfToken = getCookie('csrftoken');
       await axios.delete(`http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/`, {
         headers: {
-            'X-CSRFToken': csrfToken, Authorization: `Bearer ${token}`
+          'X-CSRFToken': csrfToken, Authorization: `Bearer ${token}`
         },
       });
       setChapters(prev => prev.filter(c => c.id !== chapterId));
+      setReorderedChapters(prev => prev.filter(c => c.id !== chapterId));
     } catch (err) {
       console.error("Erreur de suppression :", err);
       alert("Échec de la suppression");
@@ -290,12 +266,11 @@ const CourseDetails = () => {
   };
 
   const handleAddContent = (chapterId) => {
-  setSelectedChapterId(chapterId);
-  setShowContentPopup(true);
-  setContentType('TEXT');
-  setContentForm({ title: '', text: '', url: '', file: null });
+    setSelectedChapterId(chapterId);
+    setShowContentPopup(true);
+    setContentType('TEXT');
+    setContentForm({ title: '', text: '', url: '', file: null });
   };
-
 
   const submitNewChapter = async () => {
     if (!newChapterTitle || !newChapterDescription) {
@@ -318,6 +293,7 @@ const CourseDetails = () => {
         }
       );
       setChapters([...chapters, res.data]);
+      setReorderedChapters([...chapters, res.data]);
       setShowPopup(false);
       setNewChapterTitle('');
       setNewChapterDescription('');
@@ -327,59 +303,113 @@ const CourseDetails = () => {
     }
   };
 
-
   const submitContent = async () => {
-  if (!contentForm.title) {
-    alert("Title is required.");
-    return;
-  }
+    if (!contentForm.title) {
+      alert("Title is required.");
+      return;
+    }
 
-  const csrfToken = getCookie('csrftoken');
-  const formData = new FormData();
+    const csrfToken = getCookie('csrftoken');
+    const formData = new FormData();
 
-  formData.append('title', contentForm.title);
-  formData.append('content_kind', contentType);
+    formData.append('title', contentForm.title);
+    formData.append('content_kind', contentType);
 
-  if (contentType === 'TEXT') {
-    if (!contentForm.text) return alert("Text is required.");
-    formData.append('text', contentForm.text);
-  } else if (contentType === 'LINK') {
-    if (!contentForm.url) return alert("URL is required.");
-    formData.append('url', contentForm.url);
-  } else if (contentType === 'FILE') {
-    if (!contentForm.file) return alert("File is required.");
-    formData.append('file', contentForm.file);
-  } else if (contentType === 'QUIZ') {
-    alert("Quiz support not implemented yet.");
-    return;
-  }
+    if (contentType === 'TEXT') {
+      if (!contentForm.text) return alert("Text is required.");
+      formData.append('text', contentForm.text);
+    } else if (contentType === 'LINK') {
+      if (!contentForm.url) return alert("URL is required.");
+      formData.append('url', contentForm.url);
+    } else if (contentType === 'FILE') {
+      if (!contentForm.file) return alert("File is required.");
+      formData.append('file', contentForm.file);
+    } else if (contentType === 'QUIZ') {
+      alert("Quiz support not implemented yet.");
+      return;
+    }
 
-  try {
-    const res = await axios.post(
-      `http://127.0.0.1:8000/courses/${courseId}/chapters/${selectedChapterId}/contents/`,
-      formData,
-      {
-        headers: {
-          'X-CSRFToken': csrfToken,
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
-        },
-      }
-    );
+    try {
+      const res = await axios.post(
+        `http://127.0.0.1:8000/courses/${courseId}/chapters/${selectedChapterId}/contents/`,
+        formData,
+        {
+          headers: {
+            'X-CSRFToken': csrfToken,
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
 
-    // Recharge la liste des contenus du chapitre ajouté
-    await fetchContentsForChapter(selectedChapterId);
-
-    setShowContentPopup(false);
-  } catch (err) {
-    console.error("Erreur ajout content :", err);
-    alert("Erreur lors de l'ajout du contenu.");
-  }
+      await fetchContentsForChapter(selectedChapterId);
+      setShowContentPopup(false);
+    } catch (err) {
+      console.error("Erreur ajout content :", err);
+      alert("Erreur lors de l'ajout du contenu.");
+    }
   };
 
+  const handleDragStart = (e, chapter) => {
+    setDraggedItem(chapter);
+    e.dataTransfer.setData('text/plain', chapter.id);
+  };
 
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
 
-  // Filtrer les chapitres selon searchTerm
+  const handleDrop = (e, targetChapter) => {
+    e.preventDefault();
+    if (!draggedItem || draggedItem.id === targetChapter.id) return;
+
+    const newOrder = [...reorderedChapters];
+    const draggedIndex = newOrder.findIndex(c => c.id === draggedItem.id);
+    const targetIndex = newOrder.findIndex(c => c.id === targetChapter.id);
+
+    newOrder.splice(draggedIndex, 1);
+    newOrder.splice(targetIndex, 0, draggedItem);
+
+    setReorderedChapters(newOrder);
+    setDraggedItem(null);
+  };
+
+  const handleToggleReordering = () => {
+    setShowReorderPopup(true);
+    setReorderedChapters(chapters);
+  };
+
+  const handleSaveOrder = async () => {
+    try {
+      const csrfToken = getCookie('csrftoken');
+      const item_ids = reorderedChapters.map(chapter => chapter.id);
+
+      const response = await axios.post(
+        `http://127.0.0.1:8000/courses/${courseId}/chapters/reorder/`,
+        { item_ids },
+        {
+          headers: {
+            'X-CSRFToken': csrfToken,
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      setChapters(reorderedChapters);
+      setShowReorderPopup(false);
+      alert(response.data.detail); // Show success message
+    } catch (err) {
+      console.error("Erreur lors de la réorganisation :", err);
+      alert(err.response?.data?.detail || "Échec de l'enregistrement de l'ordre");
+    }
+  };
+
+  const handleCancelReordering = () => {
+    setShowReorderPopup(false);
+    setReorderedChapters(chapters);
+  };
+
   const filteredChapters = chapters.filter(chap =>
     chap.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     chap.description.toLowerCase().includes(searchTerm.toLowerCase())
@@ -417,25 +447,32 @@ const CourseDetails = () => {
         </div>
       </h3>
 
-
       {isTeacher && (
-      <div className="flex justify-end mb-6">
-        <button
-          onClick={handleAddChapter}
-          className="btn-gradient-red flex items-center space-x-2 px-4 py-2 rounded font-semibold"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#f3f4f6" strokeWidth={3} className="w-5 h-5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
-          <span>Add a chapter</span>
-        </button>
-
-      </div>
+        <div className="flex justify-end mb-6 space-x-2">
+          <button
+            onClick={handleAddChapter}
+            className="btn-gradient-red flex items-center space-x-2 px-4 py-2 rounded font-semibold"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#f3f4f6" strokeWidth={3} className="w-5 h-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            <span>Add a chapter</span>
+          </button>
+          <button
+            onClick={handleToggleReordering}
+            className="btn-gradient-blue flex items-center space-x-2 px-4 py-2 rounded font-semibold"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="#f3f4f6" strokeWidth={2} className="w-5 h-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m-12 6h12m-12 0l4 4m-4-4l4-4" />
+            </svg>
+            <span>Reorder Chapters</span>
+          </button>
+        </div>
       )}
 
       <div className="space-y-4">
         {filteredChapters.length > 0 ? (
-          filteredChapters.map((chap, index) => (
+          filteredChapters.map((chap) => (
             <div
               key={chap.id}
               className="p-4 rounded-lg border border-white/20 bg-black/30"
@@ -471,13 +508,12 @@ const CourseDetails = () => {
                           Save
                         </button>
                         <button
-                          onClick={() => setEditingChapterId(null)} 
+                          onClick={() => setEditingChapterId(null)}
                           className="btn-gradient-gray text-sm px-3 py-1 rounded"
                         >
                           Cancel
                         </button>
                       </div>
-
                     </div>
                   ) : (
                     <div>
@@ -521,307 +557,282 @@ const CourseDetails = () => {
               </div>
 
               {expandedChapterId === chap.id && (
-                  <div className="mt-4 space-y-2 text-left text-gray-300">
-                    {chapterContents[chap.id] && chapterContents[chap.id].length > 0 ? (
-                        chapterContents[chap.id].map(content => (
-                          <div key={content.id} className="border border-white/10 p-3 rounded bg-black/20 flex flex-col space-y-2">
-                            <div className="flex items-center justify-between">
-                              <div
-                                className="flex items-center space-x-2"
+                <div className="mt-4 space-y-2 text-left text-gray-300">
+                  {chapterContents[chap.id] && chapterContents[chap.id].length > 0 ? (
+                    chapterContents[chap.id].map(content => (
+                      <div key={content.id} className="border border-white/10 p-3 rounded bg-black/20 flex flex-col space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="#3b82f6"
+                              strokeWidth={2}
+                              className="w-6 h-6"
+                            >
+                              <circle cx="12" cy="12" r="10" />
+                            </svg>
+                            <h4 className="font-semibold text-white">{content.title}</h4>
+                          </div>
+
+                          <div className="flex space-x-2">
+                            {isTeacher && (
+                              <button
+                                onClick={() => {
+                                  setEditingContentId(content.id);
+                                  setEditContentData({
+                                    title: content.title,
+                                    text: content.text,
+                                    url: content.url,
+                                    file: null,
+                                    content_kind: content.content_kind,
+                                  });
+                                }}
+                                title="Edit content"
+                                className="text-yellow-400 hover:text-yellow-300"
                               >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  fill="none"
-                                  viewBox="0 0 24 24"
-                                  stroke="#3b82f6"
-                                  strokeWidth={2}
-                                  className="w-6 h-6"
-                                >
-                                  <circle cx="12" cy="12" r="10" />
-                                </svg>
-                                <h4 className="font-semibold text-white">{content.title}</h4>
-                              </div>
+                                ✏️
+                              </button>
+                            )}
 
-                              <div className="flex space-x-2">
-                                {isTeacher && (
-                                  <button
-                                    onClick={() => {
-                                      setEditingContentId(content.id);
-                                      setEditContentData({
-                                        title: content.title,
-                                        text: content.text,
-                                        url: content.url,
-                                        file: null,
-                                        content_kind: content.content_kind,
-                                      });
-                                    }}
-                                    title="Edit content"
-                                    className="text-yellow-400 hover:text-yellow-300"
-                                  >
-                                    ✏️
-                                  </button>
-                                )}
+                            {isTeacher && (
+                              <button
+                                onClick={() => handleDeleteContent(chap.id, content.id)}
+                                title="Delete content"
+                                className="text-red-500 hover:text-red-400"
+                              >
+                                🗑️
+                              </button>
+                            )}
+                          </div>
+                        </div>
 
-                                {isTeacher && (
-                                  <button
-                                    onClick={() => {
-                                      console.log('Delete button clicked');
-                                      handleDeleteContent(chap.id, content.id);
-                                    }}
-                                    title="Delete content"
-                                    className="text-red-500 hover:text-red-400"
-                                  >
-                                    🗑️
-                                  </button>
-                                )}
-
-
-                              </div>
+                        {editingContentId === content.id ? (
+                          <div className="space-y-2">
+                            <input
+                              name="title"
+                              value={editContentData.title}
+                              onChange={handleEditContentChange}
+                              className="w-full px-2 py-1 rounded bg-gray-800 text-white"
+                              placeholder="Title"
+                            />
+                            {editContentData.content_kind === 'TEXT' && (
+                              <textarea
+                                name="text"
+                                value={editContentData.text}
+                                onChange={handleEditContentChange}
+                                className="w-full px-2 py-1 rounded bg-gray-800 text-white"
+                                placeholder="Text content"
+                              />
+                            )}
+                            {editContentData.content_kind === 'LINK' && (
+                              <input
+                                name="url"
+                                type="url"
+                                value={editContentData.url}
+                                onChange={handleEditContentChange}
+                                className="w-full px-2 py-1 rounded bg-gray-800 text-white"
+                                placeholder="URL"
+                              />
+                            )}
+                            {editContentData.content_kind === 'FILE' && (
+                              <input
+                                name="file"
+                                type="file"
+                                onChange={handleEditContentChange}
+                                className="w-full text-white"
+                              />
+                            )}
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => submitEditContent(chap.id, content.id)}
+                                className="btn-gradient-green text-sm px-3 py-1 rounded"
+                              >
+                                Save
+                              </button>
+                              <button
+                                onClick={() => setEditingContentId(null)}
+                                className="btn-gradient-gray text-sm px-3 py-1 rounded"
+                              >
+                                Cancel
+                              </button>
                             </div>
+                          </div>
+                        ) : (
+                          <p className="text-base leading-relaxed mt-2 whitespace-pre-line text-gray-100 font-medium">
+                            {(content.content_kind === 'LINK' && content.url) || (content.content_kind === 'FILE' && content.file) ? (
+                              <div className="mb-4">
+                                {(() => {
+                                  const url =
+                                    content.content_kind === 'LINK'
+                                      ? content.url
+                                      : content.content_kind === 'FILE'
+                                      ? content.file
+                                      : null;
 
-                            {editingContentId === content.id ? (
-                              <div className="space-y-2">
-                                <input
-                                  name="title"
-                                  value={editContentData.title}
-                                  onChange={handleEditContentChange}
-                                  className="w-full px-2 py-1 rounded bg-gray-800 text-white"
-                                  placeholder="Title"
-                                />
-                                {editContentData.content_kind === 'TEXT' && (
-                                  <textarea
-                                    name="text"
-                                    value={editContentData.text}
-                                    onChange={handleEditContentChange}
-                                    className="w-full px-2 py-1 rounded bg-gray-800 text-white"
-                                    placeholder="Text content"
-                                  />
-                                )}
-                                {editContentData.content_kind === 'LINK' && (
-                                  <input
-                                    name="url"
-                                    type="url"
-                                    value={editContentData.url}
-                                    onChange={handleEditContentChange}
-                                    className="w-full px-2 py-1 rounded bg-gray-800 text-white"
-                                    placeholder="URL"
-                                  />
-                                )}
-                                {editContentData.content_kind === 'FILE' && (
-                                  <input
-                                    name="file"
-                                    type="file"
-                                    onChange={handleEditContentChange}
-                                    className="w-full text-white"
-                                  />
-                                )}
-                                <div className="flex space-x-2">
-                                  <button
-                                    onClick={() => submitEditContent(chap.id, content.id)}
-                                    className="btn-gradient-green text-sm px-3 py-1 rounded"
-                                  >
-                                    Save
-                                  </button>
-                                  <button
-                                    onClick={() => setEditingContentId(null)}
-                                    className="btn-gradient-gray text-sm px-3 py-1 rounded"
-                                  >
-                                    Cancel
-                                  </button>
-                                </div>
-                              </div>
-                            ) : (
-                               <p className="text-base leading-relaxed mt-2 whitespace-pre-line text-gray-100 font-medium">
-                              {(content.content_kind === 'LINK' && content.url) || (content.content_kind === 'FILE' && content.file) ? (
-                                <div className="mb-4">
-                                  {(() => {
-                                    const url =
-                                      content.content_kind === 'LINK'
-                                        ? content.url
-                                        : content.content_kind === 'FILE'
-                                        ? content.file
-                                        : null;
+                                  if (!url) {
+                                    return <p className="text-gray-400">No content available.</p>;
+                                  }
 
-                                    if (!url) {
-                                      return <p className="text-gray-400">No content available.</p>;
-                                    }
+                                  const lowerUrl = url.toLowerCase();
+                                  const getFileName = (fullUrl) => fullUrl.split('/').pop();
+                                  const isImage = (u) => u.match(/\.(jpeg|jpg|gif|png|svg)$/i) !== null;
 
-                                    const lowerUrl = url.toLowerCase();
+                                  const YouTubeIcon = () => (
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="red" viewBox="0 0 24 24" stroke="none" className="inline w-6 h-6" aria-hidden="true">
+                                      <path d="M23.499 6.203a2.97 2.97 0 00-2.09-2.095C19.706 3.5 12 3.5 12 3.5s-7.706 0-9.41.608a2.97 2.97 0 00-2.09 2.095A31.14 31.14 0 000 12a31.14 31.14 0 00.5 5.797 2.97 2.97 0 002.09 2.095c1.704.608 9.41.608 9.41.608s7.706 0 9.41-.608a2.97 2.97 0 002.09-2.095A31.14 31.14 0 0024 12a31.14 31.14 0 00-.501-5.797zM9.75 15.021V8.979l6 3.02-6 3.022z" />
+                                    </svg>
+                                  );
 
-                                    // Récupère nom fichier
-                                    const getFileName = (fullUrl) => fullUrl.split('/').pop();
+                                  const PdfIcon = () => (
+                                    <span role="img" aria-label="PDF file" className="inline text-blue-600 text-lg">📄</span>
+                                  );
 
-                                    // Détecte image
-                                    const isImage = (u) => u.match(/\.(jpeg|jpg|gif|png|svg)$/i) !== null;
+                                  const ImageIcon = () => (
+                                    <span role="img" aria-label="Image file" className="inline text-blue-600 text-lg">🖼️</span>
+                                  );
 
-                                    // Icônes
-                                    const YouTubeIcon = () => (
-                                      <svg xmlns="http://www.w3.org/2000/svg" fill="red" viewBox="0 0 24 24" stroke="none" className="inline w-6 h-6" aria-hidden="true">
-                                        <path d="M23.499 6.203a2.97 2.97 0 00-2.09-2.095C19.706 3.5 12 3.5 12 3.5s-7.706 0-9.41.608a2.97 2.97 0 00-2.09 2.095A31.14 31.14 0 000 12a31.14 31.14 0 00.5 5.797 2.97 2.97 0 002.09 2.095c1.704.608 9.41.608 9.41.608s7.706 0 9.41-.608a2.97 2.97 0 002.09-2.095A31.14 31.14 0 0024 12a31.14 31.14 0 00-.501-5.797zM9.75 15.021V8.979l6 3.02-6 3.022z" />
-                                      </svg>
-                                    );
+                                  let icon = null;
+                                  if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
+                                    icon = <YouTubeIcon />;
+                                  } else if (lowerUrl.endsWith('.pdf')) {
+                                    icon = <PdfIcon />;
+                                  } else if (isImage(lowerUrl)) {
+                                    icon = <ImageIcon />;
+                                  } else {
+                                    icon = <span className="text-blue-600">🔗</span>;
+                                  }
 
-                                    const PdfIcon = () => (
-                                      <span role="img" aria-label="PDF file" className="inline text-blue-600 text-lg">📄</span>
-                                    );
-
-                                    const ImageIcon = () => (
-                                      <span role="img" aria-label="Image file" className="inline text-blue-600 text-lg">🖼️</span>
-                                    );
-
-                                    let icon = null;
-                                    if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
-                                      icon = <YouTubeIcon />;
-                                    } else if (lowerUrl.endsWith('.pdf')) {
-                                      icon = <PdfIcon />;
-                                    } else if (isImage(lowerUrl)) {
-                                      icon = <ImageIcon />;
-                                    } else {
-                                      icon = <span className="text-blue-600">🔗</span>;
-                                    }
-
-                                    // --- EMBED YOUTUBE (iframe) ---
-
-                                    if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
-                                      // Transformation en URL embed
-                                      let embedUrl = url;
-                                      if (url.includes('watch?v=')) {
-                                        embedUrl = url.replace('watch?v=', 'embed/');
-                                      } else if (url.includes('youtu.be/')) {
-                                        embedUrl = url.replace('youtu.be/', 'www.youtube.com/embed/');
-                                      }
-
-                                      return (
-                                        <div>
-                                          <a
-                                            href={url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            title={url}
-                                            className="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-800 mb-2"
-                                          >
-                                            {icon}
-                                            <span>{url}</span>
-                                          </a>
-
-                                          <div className="aspect-w-16 aspect-h-9">
-                                            <iframe
-                                              src={embedUrl}
-                                              title="YouTube video player"
-                                              frameBorder="0"
-                                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                              allowFullScreen
-                                              className="w-full h-64 rounded"
-                                            />
-                                          </div>
-                                        </div>
-                                      );
-                                    }
-
-                                    // --- Image embed ---
-                                    if (isImage(lowerUrl)) {
-                                      return (
-                                        <div>
-                                          <a
-                                            href={url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-800 mb-2"
-                                          >
-                                            {icon}
-                                            <span>{getFileName(url)}</span>
-                                          </a>
-                                          <div className="mt-2 flex justify-center">
-                                            <img
-                                              src={url}
-                                              alt={getFileName(url)}
-                                              className="max-w-full h-auto rounded shadow"
-                                            />
-                                          </div>
-                                        </div>
-                                      );
+                                  if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
+                                    let embedUrl = url;
+                                    if (url.includes('watch?v=')) {
+                                      embedUrl = url.replace('watch?v=', 'embed/');
+                                    } else if (url.includes('youtu.be/')) {
+                                      embedUrl = url.replace('youtu.be/', 'www.youtube.com/embed/');
                                     }
 
                                     return (
-                                      <a
-                                        href={url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        title={url}
-                                        className="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-800 hover:underline"
-                                      >
-                                        {icon}
-                                        <span>
-                                          {(lowerUrl.startsWith('http://') || lowerUrl.startsWith('https://')) && !isImage(lowerUrl) && !lowerUrl.endsWith('.pdf')
-                                            ? url
-                                            : getFileName(url)}
-                                        </span>
-                                      </a>
-                                    );
-                                  })()}
-                                </div>
-
-
-                              ) : content.text ? (
-                                  <>
-                                    <div key={content.id} className="...">
-                                      <div className="flex justify-between items-center mb-1">
-                                        <h4 className="font-semibold text-white">{content.title}</h4>
-                                        {content.text.length > MAX_LENGTH && (
-                                          <button
-                                            onClick={() => openModal(content)}
-                                            className="text-blue-400 hover:text-blue-300 text-sm font-medium"
-                                          >
-                                            View more
-                                          </button>
-                                        )}
-                                      </div>
-
-                                      <p className="text-base leading-relaxed whitespace-pre-line text-gray-100 font-medium">
-                                        {content.text.length > MAX_LENGTH
-                                          ? content.text.slice(0, MAX_LENGTH) + "..."
-                                          : content.text}
-                                      </p>
-                                    </div>
-
-                                    {/* Popup Modal (en bas du render) */}
-                                    {showModal && modalContent && (
-                                      <div
-                                        className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50"
-                                        onClick={closeModal}
-                                      >
-                                        <div
-                                          className="bg-white text-black p-6 rounded max-w-lg max-h-[80vh] overflow-auto"
-                                          onClick={(e) => e.stopPropagation()}
+                                      <div>
+                                        <a
+                                          href={url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          title="url"
+                                          className="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-800 mb-2"
                                         >
-                                          <h2 className="text-lg font-bold mb-4">{modalContent.title}</h2>
-                                          <p className="whitespace-pre-line">{modalContent.text}</p>
-                                          <button
-                                            onClick={closeModal}
-                                            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                                          >
-                                            Close
-                                          </button>
+                                          {icon}
+                                          <span>{url}</span>
+                                        </a>
+                                        <div className="aspect-w-16 aspect-h-9">
+                                          <iframe
+                                            src={embedUrl}
+                                            title="YouTube video player"
+                                            frameBorder="0"
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                            allowFullScreen
+                                            className="w-full h-64 rounded"
+                                          />
                                         </div>
                                       </div>
+                                    );
+                                  }
+
+                                  if (isImage(lowerUrl)) {
+                                    return (
+                                      <div>
+                                        <a
+                                          href={url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-800 mb-2"
+                                        >
+                                          {icon}
+                                          <span>{getFileName(url)}</span>
+                                        </a>
+                                        <div className="mt-2 flex justify-center">
+                                          <img
+                                            src={url}
+                                            alt={getFileName(url)}
+                                            className="max-w-full h-auto rounded shadow"
+                                          />
+                                        </div>
+                                      </div>
+                                    );
+                                  }
+
+                                  return (
+                                    <a
+                                      href={url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      title="url"
+                                      className="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-800 hover:underline"
+                                    >
+                                      {icon}
+                                      <span>
+                                        {(lowerUrl.startsWith('http://') || lowerUrl.startsWith('https://')) && !isImage(lowerUrl) && !lowerUrl.endsWith('.pdf')
+                                          ? url
+                                          : getFileName(url)}
+                                      </span>
+                                    </a>
+                                  );
+                                })()}
+                              </div>
+                            ) : content.text ? (
+                              <>
+                                <div key={content.id} className="...">
+                                  <div className="flex justify-between items-center mb-1">
+                                    <h4 className="font-semibold text-white">{content.title}</h4>
+                                    {content.text.length > MAX_LENGTH && (
+                                      <button
+                                        onClick={() => openModal(content)}
+                                        className="text-blue-400 hover:text-blue-300 text-sm font-medium"
+                                      >
+                                        View more
+                                      </button>
                                     )}
-                                  </>
-                                ) : (
-                                  'No content available.'
+                                  </div>
+                                  <p className="text-base leading-relaxed whitespace-pre-line text-gray-100 font-medium">
+                                    {content.text.length > MAX_LENGTH
+                                      ? content.text.slice(0, MAX_LENGTH) + "..."
+                                      : content.text}
+                                  </p>
+                                </div>
+
+                                {showModal && modalContent && (
+                                  <div
+                                    className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50"
+                                    onClick={closeModal}
+                                  >
+                                    <div
+                                      className="bg-white text-black p-6 rounded max-w-lg max-h-[80vh] overflow-auto"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <h2 className="text-lg font-bold mb-4">{modalContent.title}</h2>
+                                      <p className="whitespace-pre-line">{modalContent.text}</p>
+                                      <button
+                                        onClick={closeModal}
+                                        className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                      >
+                                        Close
+                                      </button>
+                                    </div>
+                                  </div>
                                 )}
-
-
-                            </p>
+                              </>
+                            ) : (
+                              'No content available.'
                             )}
-                          </div>
-                        ))
-                      ) : (
-                        <p className="text-center text-gray-400 italic">This folder is empty.</p>
-                      )}
-
-                  </div>
-                )}
-
+                          </p>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-center text-gray-400 italic">This folder is empty.</p>
+                  )}
+                </div>
+              )}
             </div>
           ))
         ) : (
@@ -853,7 +864,6 @@ const CourseDetails = () => {
               >
                 Cancel
               </button>
-
               <button
                 onClick={submitNewChapter}
                 className="btn-gradient-green"
@@ -865,13 +875,10 @@ const CourseDetails = () => {
         </div>
       )}
 
-      
       {showContentPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-gray-900 text-white p-6 rounded-lg shadow-lg w-full max-w-md space-y-4">
             <h2 className="text-xl font-semibold text-center">Add New Content</h2>
-
-            {/* Barre d’icônes */}
             <div className="grid grid-cols-4 gap-2">
               {[
                 { type: 'TEXT', label: 'Text', icon: '📝' },
@@ -893,9 +900,6 @@ const CourseDetails = () => {
                 </button>
               ))}
             </div>
-
-
-            {/* Titre */}
             <input
               type="text"
               placeholder="Title *"
@@ -905,8 +909,6 @@ const CourseDetails = () => {
                 setContentForm((prev) => ({ ...prev, title: e.target.value }))
               }
             />
-
-            {/* Champs spécifiques */}
             {contentType === 'TEXT' && (
               <textarea
                 placeholder="Enter text"
@@ -917,7 +919,6 @@ const CourseDetails = () => {
                 }
               />
             )}
-
             {contentType === 'LINK' && (
               <input
                 type="url"
@@ -929,7 +930,6 @@ const CourseDetails = () => {
                 }
               />
             )}
-
             {contentType === 'FILE' && (
               <div>
                 <label className="block text-sm text-gray-400 mb-1">Upload a file</label>
@@ -951,7 +951,6 @@ const CourseDetails = () => {
                   >
                     Choose file
                   </label>
-
                   {contentForm.file && (
                     <p className="mt-1 text-sm text-gray-400">
                       Selected: {contentForm.file.name}
@@ -960,12 +959,9 @@ const CourseDetails = () => {
                 </div>
               </div>
             )}
-
             {contentType === 'QUIZ' && (
               <p className="text-sm text-gray-400">Quiz creation coming soon...</p>
             )}
-
-            {/* Boutons */}
             <div className="flex justify-end space-x-2">
               <button
                 onClick={() => setShowContentPopup(false)}
@@ -984,8 +980,41 @@ const CourseDetails = () => {
         </div>
       )}
 
-  
-
+      {showReorderPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-900 text-white p-6 rounded-lg shadow-lg w-full max-w-md space-y-4">
+            <h2 className="text-xl font-semibold">Reorder Chapters</h2>
+            <div className="space-y-2 max-h-[50vh] overflow-auto">
+              {reorderedChapters.map((chapter) => (
+                <div
+                  key={chapter.id}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, chapter)}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, chapter)}
+                  className="p-2 bg-gray-700 rounded cursor-move text-white"
+                >
+                  {chapter.title}
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={handleCancelReordering}
+                className="btn-gradient-gray px-4 py-2 rounded font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveOrder}
+                className="btn-gradient-green px-4 py-2 rounded font-semibold"
+              >
+                Save Order
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
