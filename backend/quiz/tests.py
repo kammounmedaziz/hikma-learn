@@ -13,8 +13,8 @@ class QuizSubmissionTests(APITestCase):
         self.student = User.objects.create_user(username='student1', password='pass', user_type=UserType.STUDENT)
         self.other_student = User.objects.create_user(username='student2', password='pass', user_type=UserType.STUDENT)
 
-        self.quiz = Quiz.objects.create(teacher=self.teacher, title="Sample Quiz", is_published=True)
-        self.quiz_other = Quiz.objects.create(teacher=self.teacher2, title="Other Quiz", is_published=True)
+        self.quiz = Quiz.objects.create(teacher=self.teacher, title="Sample Quiz")
+        self.quiz_other = Quiz.objects.create(teacher=self.teacher2, title="Other Quiz")
 
         self.q1 = Question.objects.create(quiz=self.quiz, text="Q1", points=1)
         self.a1_1 = Answer.objects.create(question=self.q1, text="Correct", is_correct=True)
@@ -146,7 +146,7 @@ class QuizGradingLogicTests(TestCase):
 
         # --- Quiz 1 : two questions (original scenario) ---
         self.quiz_2q = Quiz.objects.create(
-            teacher=self.teacher, title="Two-Question Quiz", is_published=True)
+            teacher=self.teacher, title="Two-Question Quiz")
         self.q1_2q = self._make_question(
             quiz=self.quiz_2q, text="Q1", points=2,
             correct_texts=["C1"], wrong_texts=["W1"])
@@ -156,14 +156,14 @@ class QuizGradingLogicTests(TestCase):
 
         # --- Quiz 2 : single question ---
         self.quiz_1q = Quiz.objects.create(
-            teacher=self.teacher, title="Single-Question Quiz", is_published=True)
+            teacher=self.teacher, title="Single-Question Quiz")
         self.q1_1q = self._make_question(
             quiz=self.quiz_1q, text="Only Q", points=5,
             correct_texts=["Right"], wrong_texts=["Wrong"])
 
         # --- Quiz 3 : multiple correct answers + different weights ---
         self.quiz_mc = Quiz.objects.create(
-            teacher=self.teacher, title="Multi-Correct Quiz", is_published=True)
+            teacher=self.teacher, title="Multi-Correct Quiz")
         self.q1_mc = self._make_question(
             quiz=self.quiz_mc, text="MC", points=4,
             correct_texts=["C1", "C2"], wrong_texts=["W"])
@@ -241,7 +241,7 @@ class QuizGradingLogicTests(TestCase):
                     = 0.5   (because every question incurs exactly one penalty)
         """
         quiz = Quiz.objects.create(
-            teacher=self.teacher, title="Five-Q Varied-Correct", is_published=True)
+            teacher=self.teacher, title="Five-Q Varied-Correct")
 
         questions = []
         for n in range(1, 6):                       # n = 1..5
@@ -280,7 +280,7 @@ class QuizGradingLogicTests(TestCase):
         Policy: ratio = (#correct chosen / 3) - 0.5 * (#wrong chosen)
         """
         quiz = Quiz.objects.create(
-            teacher=self.teacher, title="Partial", is_published=True)
+            teacher=self.teacher, title="Partial")
         q = self._make_question(
             quiz=quiz,
             text="Pick all three",

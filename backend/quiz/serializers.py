@@ -150,9 +150,6 @@ class QuizSubmissionSerializer(serializers.ModelSerializer):
         if QuizSubmission.objects.filter(student=user, quiz=quiz).exists():
             raise serializers.ValidationError("You have already submitted this quiz.")
 
-        if not quiz.is_published:
-            raise serializers.ValidationError("This quiz is not currently available.")
-
         answers = data.get('answers', [])
 
         # Check all questions have answers

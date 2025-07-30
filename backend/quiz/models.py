@@ -52,9 +52,6 @@ class QuizSubmission(models.Model):
         if self.student.user_type != UserType.STUDENT:
             raise ValidationError({'student': "Only students can submit quizzes."})
 
-        if not self.quiz.is_published:
-            raise ValidationError({'quiz': "Cannot submit to an unpublished quiz."})
-
         # Validate that answers are provided for all quiz questions
         question_ids = set(self.quiz.questions.values_list('id', flat=True))
         answered_question_ids = set(self.answers.values_list('question_id', flat=True))
