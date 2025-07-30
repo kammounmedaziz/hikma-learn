@@ -108,9 +108,11 @@ class QuizSerializer(serializers.ModelSerializer):
 
 class SubmissionAnswerSerializer(serializers.ModelSerializer):
 
+    is_correct = serializers.BooleanField(source='chosen_answer.is_correct', read_only=True)
+
     class Meta:
         model = SubmissionAnswer
-        fields = ['question', 'chosen_answer']
+        fields = ['question', 'chosen_answer', 'is_correct']
         read_only_fields = ['question']
 
     def validate(self, data):
