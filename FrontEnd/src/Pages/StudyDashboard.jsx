@@ -20,15 +20,10 @@ import {
 } from 'lucide-react';
 
 import StudyOverview from './StudyOverview';
-import StudentSettings from '../Components/StudentSettings'
-//import MeetOurLearners from './MeetOurLearners';
-//import SharingFeedbacks from './SharingFeedbacks';
-//import Events from './Events';
-//import PartnersAndSupporters from './PartnersAndSupporters';
-//import VoicesOfCommunity from './VoicesOfCommunity';
-//import Actualite from './Actualite';
-//import Contact from './Contact';
-import MyCourses from './MyCourses';  // <-- Import your MyCourses component
+import StudentSettings from '../Components/StudentSettings';
+import ExamsQuiz from './student-quiz/ExamsQuiz';
+import MyCourses from './MyCourses';
+import { NavLink, Outlet } from 'react-router-dom';
 
 const PlaceholderPage = ({ title, description }) => (
   <div className="space-y-8">
@@ -61,48 +56,23 @@ const PlaceholderPage = ({ title, description }) => (
 const AnimatedBackground = () => null;
 
 const StudyDashboard = () => {
-  const [currentPage, setCurrentPage] = useState('overview');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const menuItems = [
-    { id: 'overview', label: 'Overview', icon: Home, description: 'Study summary and quick insights' },
-    { id: 'courses', label: 'My Courses', icon: BookOpen, description: 'Explore your enrolled courses' },
-    { id: 'exams', label: 'Exams & Quizzes', icon: FileText, description: 'Upcoming tests and past results' },
-    { id: 'assignments', label: 'Assignments', icon: Target, description: 'Track and submit assignments' },
-    { id: 'schedule', label: 'Schedule', icon: Calendar, description: 'Daily and weekly learning schedule' },
-    { id: 'progress', label: 'Progress & Analytics', icon: TrendingUp, description: 'Your learning analytics and goals' },
-    { id: 'achievements', label: 'Achievements', icon: Award, description: 'Your badges and certificates' },
-    { id: 'library', label: 'Resource Library', icon: Library, description: 'Extra resources and materials' },
-    { id: 'forum', label: 'Discussion Forum', icon: MessageSquare, description: 'Ask and answer questions' },
-    { id: 'study_groups', label: 'Study Groups', icon: Users, description: 'Join or create study circles' },
-    { id: 'notifications', label: 'Notifications', icon: Bell, description: 'Alerts and important messages' },
-    { id: 'support', label: 'Support Center', icon: HelpCircle, description: 'Ask for help or report issues' },
-    { id: 'settings', label: 'Settings', icon: Settings, description: 'Manage your profile and preferences' },
+    { id: 'overview', label: 'Overview', icon: Home, description: 'Study summary and quick insights', path: '' },
+    { id: 'courses', label: 'My Courses', icon: BookOpen, description: 'Explore your enrolled courses', path: 'courses' },
+    { id: 'ExamsQuiz', label: 'Exams & Quizzes', icon: FileText, description: 'Upcoming tests and past results', path: 'ExamsQuiz' },
+    { id: 'assignments', label: 'Assignments', icon: Target, description: 'Track and submit assignments', path: 'assignments' },
+    { id: 'schedule', label: 'Schedule', icon: Calendar, description: 'Daily and weekly learning schedule', path: 'schedule' },
+    { id: 'progress', label: 'Progress & Analytics', icon: TrendingUp, description: 'Your learning analytics and goals', path: 'progress' },
+    { id: 'achievements', label: 'Achievements', icon: Award, description: 'Your badges and certificates', path: 'achievements' },
+    { id: 'library', label: 'Resource Library', icon: Library, description: 'Extra resources and materials', path: 'library' },
+    { id: 'forum', label: 'Discussion Forum', icon: MessageSquare, description: 'Ask and answer questions', path: 'forum' },
+    { id: 'study_groups', label: 'Study Groups', icon: Users, description: 'Join or create study circles', path: 'study_groups' },
+    { id: 'notifications', label: 'Notifications', icon: Bell, description: 'Alerts and important messages', path: 'notifications' },
+    { id: 'support', label: 'Support Center', icon: HelpCircle, description: 'Ask for help or report issues', path: 'support' },
+    { id: 'settings', label: 'Settings', icon: Settings, description: 'Manage your profile and preferences', path: 'settings' },
   ];
-
-  const renderPage = () => {
-    const currentMenuItem = menuItems.find((item) => item.id === currentPage);
-    switch (currentPage) {
-      case 'overview': return <StudyOverview />;
-      case 'settings': return <StudentSettings/>
-    //  case 'meet_learners': return <MeetOurLearners />;
-    //  case 'sharing_feedbacks': return <SharingFeedbacks />;
-      //case 'events': return <Events />;
-      //case 'partners_supporters': return <PartnersAndSupporters />;
-      //case 'voices_community': return <VoicesOfCommunity />;
-      //case 'actualite': return <Actualite />;
-      //case 'contact': return <Contact />;
-      case 'courses':
-        return <MyCourses />;  // <-- Render MyCourses here
-      default:
-        return (
-          <PlaceholderPage 
-            title={currentMenuItem?.label || 'Page Not Found'} 
-            description={currentMenuItem?.description || "This section is under development"} 
-          />
-        );
-    }
-  };
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -132,19 +102,21 @@ const StudyDashboard = () => {
             {menuItems.map((item) => {
               const Icon = item.icon;
               return (
-                <button
+                <NavLink
                   key={item.id}
-                  onClick={() => setCurrentPage(item.id)}
-                  className={`w-full flex items-center px-4 py-3 text-left transition-all duration-300 hover:scale-105 ${
-                    currentPage === item.id
-                      ? 'bg-gradient-to-r from-red-500/20 to-gray-500/20 border-r-2 border-red-400 text-white shadow-lg'
-                      : 'text-gray-300 hover:bg-white/10 hover:text-white'
-                  }`}
+                  to={item.path}
+                  className={({ isActive }) =>
+                    `w-full flex items-center px-4 py-3 text-left transition-all duration-300 hover:scale-105 ${
+                      isActive
+                        ? 'bg-gradient-to-r from-red-500/20 to-gray-500/20 border-r-2 border-red-400 text-white shadow-lg'
+                        : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                    }`
+                  }
                   title={!sidebarCollapsed ? item.description : item.label}
                 >
                   <Icon size={20} className="flex-shrink-0" />
                   {!sidebarCollapsed && <span className="ml-3 font-medium">{item.label}</span>}
-                </button>
+                </NavLink>
               );
             })}
           </nav>
@@ -153,7 +125,7 @@ const StudyDashboard = () => {
         <div className="flex-1 overflow-auto">
           <div className="p-4 md:p-8 relative z-10">
             <div className="backdrop-blur-lg bg-gray-900/30 rounded-2xl border border-gray-700 shadow-xl min-h-[calc(100vh-4rem)] p-4 md:p-8">
-              {renderPage()}
+              <Outlet />
             </div>
           </div>
         </div>

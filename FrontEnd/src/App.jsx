@@ -1,14 +1,14 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { useState } from 'react';
-import "./index.css";
-import Navbar from "./Components/MainNavbar";
-import Home from "./Pages/Home";
-import About from "./Pages/About";
-import WelcomeScreen from "./Pages/WelcomeScreen";
-import AnimatedBackground from "./Components/Background";
-import { AnimatePresence } from "framer-motion";
-import PropTypes from "prop-types";
+import './index.css';
+import Navbar from './Components/MainNavbar';
+import Home from './Pages/Home';
+import About from './Pages/About';
+import WelcomeScreen from './Pages/WelcomeScreen';
+import AnimatedBackground from './Components/Background';
+import { AnimatePresence } from 'framer-motion';
+import PropTypes from 'prop-types';
 import AuthPage from './Components/Auth';
 import StudyDashboard from './Pages/StudyDashboard';
 import Inspiration from './Pages/Inspirations';
@@ -17,12 +17,14 @@ import CommunityDashboard from './Pages/CommunityDashboard';
 import Footer from './Components/Footer';
 import AdminManageTeachers from './Pages/AdminManageTeachers';
 import AdminDashboard from './Pages/AdminDashboard';
-import TeacherDashboard from './Pages/TeacherDashboard'; // Fixed typo: TeacherDhasboard → TeacherDashboard
+import TeacherDashboard from './Pages/TeacherDashboard';
 import ExamsQuizzes from './Pages/teacher-quiz/ExamsQuizzes';
 import CreateQuiz from './Pages/teacher-quiz/CreateQuiz';
 import EditQuiz from './Pages/teacher-quiz/EditQuiz';
 import TeacherSettings from './Components/TeacherSettings';
 import PlaceholderPage from './Components/PlaceholderPage';
+import ExamsQuiz from './Pages/student-quiz/ExamsQuiz';
+import StudyOverview from './Pages/StudyOverview';
 
 const LandingPage = ({ showWelcome, setShowWelcome }) => {
   return (
@@ -63,14 +65,33 @@ function App() {
           element={<LandingPage showWelcome={showWelcome} setShowWelcome={setShowWelcome} />}
         />
         <Route path="/auth" element={<AuthPage />} />
-        <Route path="/StudyDashboard" element={<StudyDashboard />} /> {/* Fixed typo: StudydDashboard → StudyDashboard */}
+        <Route path="/StudydDashboard" element={<StudyDashboard />}>
+          <Route index element={<StudyOverview />} />
+          <Route path="ExamsQuiz" element={<ExamsQuiz />} />
+          <Route path="ExamsQuiz/:id" element={<ExamsQuiz />} />
+          <Route path="courses" element={<PlaceholderPage title="courses" description="Track and submit assignments" />} />
+          <Route path="settings" element={<PlaceholderPage title="settings" description="Track and submit assignments" />} />
+          <Route path="assignments" element={<PlaceholderPage title="Assignments" description="Track and submit assignments" />} />
+          <Route path="schedule" element={<PlaceholderPage title="Schedule" description="Daily and weekly learning schedule" />} />
+          <Route path="progress" element={<PlaceholderPage title="Progress & Analytics" description="Your learning analytics and goals" />} />
+          <Route path="achievements" element={<PlaceholderPage title="Achievements" description="Your badges and certificates" />} />
+          <Route path="library" element={<PlaceholderPage title="Resource Library" description="Extra resources and materials" />} />
+          <Route path="forum" element={<PlaceholderPage title="Discussion Forum" description="Ask and answer questions" />} />
+          <Route path="study_groups" element={<PlaceholderPage title="Study Groups" description="Join or create study circles" />} />
+          <Route path="notifications" element={<PlaceholderPage title="Notifications" description="Alerts and important messages" />} />
+          <Route path="support" element={<PlaceholderPage title="Support Center" description="Ask for help or report issues" />} />
+          <Route
+            path="*"
+            element={<PlaceholderPage title="Page Not Found" description="This section is under development" />}
+          />
+        </Route>
         <Route path="/community" element={<CommunityDashboard />} />
         <Route path="/teacherdashboard" element={<TeacherDashboard />}>
-          <Route index element={<div />} /> {/* Placeholder for index route; TeacherDashboard handles it */}
-          <Route path="overview" element={<div />} /> {/* Placeholder; TeacherDashboard handles it */}
+          <Route index element={<div />} />
+          <Route path="overview" element={<div />} />
           <Route path="quizzes" element={<ExamsQuizzes />} />
           <Route path="quizzes/create" element={<CreateQuiz />} />
-           <Route path="quizzes/edit/:id" element={<EditQuiz />} />  {/* ✅ New route added here */}
+          <Route path="quizzes/edit/:id" element={<EditQuiz />} />
           <Route path="settings" element={<TeacherSettings />} />
           <Route
             path="courses"

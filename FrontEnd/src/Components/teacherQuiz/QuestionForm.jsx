@@ -53,65 +53,66 @@ const QuestionForm = ({ question, questions, setQuestions, onDelete }) => {
     updateQuestion('score', parseInt(value) || 0);
   };
 
-return (
-  <div className="question-card">
-    <div className="question-header">
-      <input
-        type="text"
-        value={question.text}
-        onChange={(e) => updateQuestion('text', e.target.value)}
-        placeholder="Enter question"
-        className="question-input"
-      />
-      <div className="score-container">
-        <label>Score:</label>
+  return (
+    <div className="question-card">
+      <div className="question-header">
         <input
-          type="number"
-          value={question.score}
-          onChange={(e) => updateScore(e.target.value)}
-          className="score-input"
-          min="0"
+          id={`question-text-${question.id}`} // Unique id
+          type="text"
+          value={question.text}
+          onChange={(e) => updateQuestion('text', e.target.value)}
+          placeholder="Enter question"
+          className="question-input"
         />
+        <div className="score-container">
+          <label htmlFor={`question-score-${question.id}`}>Score:</label> {/* Link label to input */}
+          <input
+            id={`question-score-${question.id}`} // Unique id
+            type="number"
+            value={question.score}
+            onChange={(e) => updateScore(e.target.value)}
+            className="score-input"
+            min="0"
+          />
+        </div>
+      </div>
+
+      {question.options.map((opt, index) => (
+        <div key={index} className="option-row">
+          <button
+            onClick={() => deleteOption(index)}
+            className="option-delete"
+          >
+            ❌
+          </button>
+          <input
+            id={`option-${question.id}-${index}`} // Unique id
+            type="text"
+            value={opt}
+            onChange={(e) => updateOption(index, e.target.value)}
+            placeholder={`Option ${index + 1}`}
+            className="option-input"
+          />
+          <input
+            id={`correct-${question.id}-opt-${index}`} // Unique id
+            type="checkbox"
+            checked={question.correctAnswers.includes(opt)}
+            onChange={() => toggleCorrectAnswer(index)}
+            className="checkbox"
+          />
+        </div>
+      ))}
+
+      <div className="button-row">
+        <button onClick={addOption} className="icon-button add">
+          ➕
+        </button>
+        <button onClick={onDelete} className="icon-button delete">
+          🗑️
+        </button>
       </div>
     </div>
-
-    {question.options.map((opt, index) => (
-      <div key={index} className="option-row">
-        <button
-          onClick={() => deleteOption(index)}
-          className="option-delete"
-        >
-          ❌
-        </button>
-        <input
-          type="text"
-          value={opt}
-          onChange={(e) => updateOption(index, e.target.value)}
-          placeholder={`Option ${index + 1}`}
-          className="option-input"
-        />
-        <input
-          type="checkbox"
-          id={`correct-${question.id}-opt-${index}`}
-          name={`correct-${question.id}`}
-          checked={question.correctAnswers.includes(opt)}
-          onChange={() => toggleCorrectAnswer(index)}
-          className="checkbox"
-        />
-      </div>
-    ))}
-
-   <div className="button-row">
-  <button onClick={addOption} className="icon-button add">
-    ➕
-  </button>
-  <button onClick={onDelete} className="icon-button delete">
-    🗑️
-  </button>
-</div>
-
-  </div>
-);
+  );
 };
 
 export default QuestionForm;

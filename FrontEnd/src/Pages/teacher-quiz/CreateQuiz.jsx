@@ -64,16 +64,7 @@ const CreateQuiz = () => {
         <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-gray-400 mb-6 center">
           Create Quiz
         </h1>
-        <div className="mb-6">
-          <label className="text-lg font-semibold text-white">Quiz Title:</label>
-          <input
-            type="text"
-            value={quizTitle}
-            onChange={(e) => setQuizTitle(e.target.value)}
-            className="w-full p-2 mt-2 bg-gray-700 text-white rounded"
-            placeholder="Enter quiz title"
-          />
-        </div>
+       
         <QuizForm quizTitle={quizTitle} onSave={handleSave} />
       </div>
     </div>
