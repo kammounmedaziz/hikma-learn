@@ -1,4 +1,4 @@
-from rest_framework import viewsets, permissions
+from rest_framework import viewsets, permissions, serializers
 from .models import Quiz, Question, QuizSubmission
 from .serializers import QuizSerializer, QuestionSerializer, QuizStudentSerializer, QuizSubmissionSerializer
 from accounts.models import User, UserType
@@ -71,7 +71,9 @@ class QuizViewSet(viewsets.ModelViewSet):
         return Quiz.objects.filter(is_published=True)
 
     def get_serializer_class(self):
-        if self.request.user.user_type == UserType.TEACHER:
+        if self.action == 'retrieve':
+            return QuizSerializer  # full detail with questions and answers
+        elif self.request.user.user_type == UserType.TEACHER:
             return QuizSerializer
         return QuizStudentSerializer
 

@@ -20,20 +20,19 @@ const EditQuiz = () => {
     }
 
     fetch(`http://127.0.0.1:8000/quizzes/${id}/`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
+      headers: { 'Authorization': `Bearer ${token}` },
     })
       .then(res => res.json())
       .then(data => {
-        setQuizTitle(data.title);
-        const formattedQuestions = data.questions.map((q) => ({
-          text: q.text,
-          score: q.points,
+        console.log('Fetched quiz data:', data);
+        setQuizTitle(data.title || '');
+        setInitialQuestions(data.questions.map((q, index) => ({
+          text: q.text || '',
+          score: q.points || 0,
           correctAnswers: q.answers.filter(a => a.is_correct).map(a => a.text),
           options: q.answers.map(a => a.text),
-        }));
-        setInitialQuestions(formattedQuestions);
+          id: q.id || Date.now() + index, // Assign unique id if missing
+        })));
         setLoading(false);
       })
       .catch(error => {
@@ -102,18 +101,8 @@ const EditQuiz = () => {
         <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-gray-400 mb-6 center">
           Edit Quiz
         </h1>
-        <div className="mb-6">
-          <label className="text-lg font-semibold text-white">Quiz Title:</label>
-          <input
-            type="text"
-            value={quizTitle}
-            onChange={(e) => setQuizTitle(e.target.value)}
-            className="w-full p-2 mt-2 bg-gray-700 text-white rounded"
-            placeholder="Enter quiz title"
-          />
-        </div>
         <QuizForm
-          quizTitle={quizTitle}
+          name={quizTitle}
           onSave={handleSave}
           initialQuestions={initialQuestions}
         />

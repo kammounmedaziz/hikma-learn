@@ -1,0 +1,97 @@
+/* Reuse and extend styles from teacher CSS */
+.student-question-card {
+  background: rgba(39, 39, 42, 0.5);
+  border: 1px solid #4b5563;
+  border-radius: 0.5rem;
+  padding: 1rem; /* Reduced from 1.5rem for compactness */
+  margin-bottom: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.question-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem; /* Reduced spacing */
+}
+
+.question-input {
+  flex: 1;
+  padding: 0.5rem; /* Reduced padding */
+  background: #374151;
+  color: #fff;
+  border: none;
+  border-radius: 0.25rem;
+  font-size: 1rem;
+}
+
+.score-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.score-input {
+  padding: 0.25rem; /* Reduced padding */
+  width: 4rem;
+  background: #374151;
+  color: #fff;
+  border: none;
+  border-radius: 0.25rem;
+  text-align: center;
+}
+
+.student-option-row {
+  display: flex;
+  align-items: center;
+  margin: 0.25rem 0; /* Reduced vertical margin for compactness */
+  gap: 1.5rem; /* Increased space between checkbox and answer */
+}
+
+.checkbox {
+  margin: 0;
+  accent-color: #f87171; /* Red accent for checkboxes */
+}
+
+.option-input {
+  flex: 1;
+  padding: 0.5rem; /* Reduced padding */
+  background: #374151;
+  color: #fff;
+  border: none;
+  border-radius: 0.25rem;
+  font-size: 1rem;
+}
+
+/* Reuse button styles from teacher CSS */
+.button-container {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.save-question-button {
+  display: inline-block;
+  padding: 0.625rem 1.25rem;
+  background: linear-gradient(to right, #ff609d, #a855f7);
+  color: white;
+  text-decoration: none;
+  border-radius: 0.3125rem;
+}
+
+.save-question-button:hover {
+  background: linear-gradient(to right, #e85a8a, #9333ea);
+}
+
+.add-question-button {
+  display: inline-block;
+  padding: 0.625rem 1.25rem;
+  background: linear-gradient(to right, #6b7280, #4b5563);
+  color: white;
+  text-decoration: none;
+  border-radius: 0.3125rem;
+}
+
+.add-question-button:hover {
+  background: linear-gradient(to right, #4b5563, #374151);
+}

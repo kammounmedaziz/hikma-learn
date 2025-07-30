@@ -9,7 +9,7 @@ class AnswerSerializer(serializers.ModelSerializer):
         extra_kwargs = {'is_correct': {'required': True}}
 
 class QuestionSerializer(serializers.ModelSerializer):
-    answers = AnswerSerializer(many=True, required=True)
+    answers = AnswerSerializer(many=True)
 
     class Meta:
         model = Question
@@ -50,7 +50,7 @@ class QuizStudentSerializer(serializers.ModelSerializer):
         ]
 
 class QuizSerializer(serializers.ModelSerializer):
-    questions = QuestionSerializer(many=True, required=True)
+    questions = QuestionSerializer(many=True)
     teacher = serializers.PrimaryKeyRelatedField(read_only=True)
     question_count = serializers.IntegerField(read_only=True)
 
@@ -64,7 +64,7 @@ class QuizSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         questions_data = validated_data.pop('questions')
-        quiz = Quiz.objects.create(**validated_data)  # Viewset should set teacher
+        quiz = Quiz.objects.create(**validated_data)
 
         for question_data in questions_data:
             if 'answers' not in question_data or not question_data['answers']:
