@@ -68,7 +68,7 @@ class QuizViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         if self.request.user.user_type == UserType.TEACHER:
             return Quiz.objects.filter(teacher=self.request.user)
-        return Quiz.objects.filter(is_published=True)
+        return Quiz.objects
 
     def get_serializer_class(self):
         if self.action == 'retrieve':

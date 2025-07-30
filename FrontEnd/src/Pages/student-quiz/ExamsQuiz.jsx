@@ -11,7 +11,6 @@ const ExamsQuiz = () => {
   const [quiz, setQuiz] = useState(null);
   const [answers, setAnswers] = useState({});
 
-  // Static quiz data matching the QuizForm structure
   const staticQuizzes = {
     '1': {
       id: 1,
@@ -62,36 +61,77 @@ const ExamsQuiz = () => {
   };
 
   const handleSubmit = () => {
-    console.log('Submitted Answers:', answers);
-    alert('Quiz submitted! Check the console for your answers.');
-    navigate('/StudydDashboard/ExamsQuiz');
-  };
+  console.log('Submitted Answers:', answers);
+
+  const questions = quiz.questions; // ✅ use quiz.questions directly
+  let totalCorrect = 0;
+
+  questions.forEach((q) => {
+    const correct = q.correctAnswers || [];
+    const selected = answers[q.id] || [];
+
+    const correctSorted = [...correct].sort();
+    const selectedSorted = [...selected].sort();
+
+    if (JSON.stringify(correctSorted) === JSON.stringify(selectedSorted)) {
+      totalCorrect++;
+    }
+  });
+
+  const scorePercent = Math.round((totalCorrect / questions.length) * 100);
+
+navigate(`/StudydDashboard/ResultPage/${quiz.id}`, {
+  state: {
+    quiz,
+    answers,
+    scorePercent,
+  }
+});
+
+};
+
+
+
 
   if (id && !quiz) return <div className="text-center text-white py-8">Loading quiz...</div>;
 
   if (!id) {
     return (
-      <div className="space-y-6">
-        <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-gray-400 mb-4">Available Quizzes</h2>
-        <ul className="space-y-4">
-          {Object.values(staticQuizzes).map((quiz) => (
-            <li key={quiz.id} className="bg-gray-800/50 border border-gray-700 p-4 rounded-xl shadow">
-              <button
-                onClick={() => navigate(`/StudydDashboard/ExamsQuiz/${quiz.id}`)}
-                className="text-lg font-semibold text-white hover:underline w-full text-left"
-              >
-                {quiz.name}
-              </button>
-            </li>
-          ))}
-        </ul>
+      <div className="justify-center">
+        <div className="quiz-list-container">
+          <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-gray-400 mb-6">Available Quizzes</h2>
+<ul className="quiz-list">
+  {Object.values(staticQuizzes).map((quiz) => (
+    <li key={quiz.id} className="quiz-card">
+      <button
+        onClick={() => {
+          localStorage.setItem(`seen-quiz-${quiz.id}`, 'true');
+          navigate(`/StudydDashboard/ExamsQuiz/${quiz.id}`);
+        }}
+        className="quiz-button"
+      >
+        <div className="quiz-title-row">
+          <span className="quiz-title">{quiz.name}</span>
+          <div className="quiz-icons">
+            <span className="score-indicator">Score: 0%</span>
+            {localStorage.getItem(`seen-quiz-${quiz.id}`) === 'true' && (
+              <span className="seen-icon">👁️</span> // You can use an actual icon here
+            )}
+          </div>
+        </div>
+      </button>
+    </li>
+  ))}
+</ul>
+
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="relative text-gray-200">
-      <div className="relative z-10 max-w-6xl mx-auto px-4 py-12">
+    <div className="relative text-gray-200 min-h-screen flex items-center justify-center">
+      <div className="quiz-container">
         <StudentQuizForm
           name={quiz.name}
           initialQuestions={quiz.questions}

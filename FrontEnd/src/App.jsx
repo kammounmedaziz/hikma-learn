@@ -24,6 +24,7 @@ import EditQuiz from './Pages/teacher-quiz/EditQuiz';
 import TeacherSettings from './Components/TeacherSettings';
 import PlaceholderPage from './Components/PlaceholderPage';
 import ExamsQuiz from './Pages/student-quiz/ExamsQuiz';
+import StudentResultPage from './Pages/student-quiz/StudentResultPage';
 import StudyOverview from './Pages/StudyOverview';
 
 const LandingPage = ({ showWelcome, setShowWelcome }) => {
@@ -69,6 +70,7 @@ function App() {
           <Route index element={<StudyOverview />} />
           <Route path="ExamsQuiz" element={<ExamsQuiz />} />
           <Route path="ExamsQuiz/:id" element={<ExamsQuiz />} />
+          <Route path="ResultPage/:id" element={<StudentResultPage />} />
           <Route path="courses" element={<PlaceholderPage title="courses" description="Track and submit assignments" />} />
           <Route path="settings" element={<PlaceholderPage title="settings" description="Track and submit assignments" />} />
           <Route path="assignments" element={<PlaceholderPage title="Assignments" description="Track and submit assignments" />} />
