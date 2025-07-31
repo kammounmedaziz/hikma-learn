@@ -8,6 +8,13 @@ class AnswerSerializer(serializers.ModelSerializer):
         fields = ['id', 'text', 'is_correct']
         extra_kwargs = {'is_correct': {'required': True}}
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        request = self.context.get('request')
+        if request and request.user.user_type == 'student':
+            representation.pop('is_correct', None)
+        return representation
+
 class QuestionSerializer(serializers.ModelSerializer):
     answers = AnswerSerializer(many=True)
 
@@ -39,15 +46,6 @@ class QuestionSerializer(serializers.ModelSerializer):
             Answer.objects.create(question=instance, **answer_data)
         return instance
 
-class QuizStudentSerializer(serializers.ModelSerializer):
-    teacher = serializers.CharField(source='teacher.username', read_only=True)
-
-    class Meta:
-        model = Quiz
-        fields = [
-            'id', 'url', 'title', 'description', 'time_limit',
-            'is_published', 'creation_date', 'updated_date', 'teacher'
-        ]
 
 class QuizSerializer(serializers.ModelSerializer):
     questions = QuestionSerializer(many=True)

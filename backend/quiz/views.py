@@ -1,6 +1,6 @@
 from rest_framework import viewsets, permissions, serializers
 from .models import Quiz, Question, QuizSubmission
-from .serializers import QuizSerializer, QuestionSerializer, QuizStudentSerializer, QuizSubmissionSerializer
+from .serializers import QuizSerializer, QuestionSerializer, QuizSubmissionSerializer
 from accounts.models import User, UserType
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import get_object_or_404
@@ -64,36 +64,19 @@ class IsStudentOrTeacherSubmissionAccess(permissions.BasePermission):
 
 class QuizViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated, IsTeacherOrReadOnly]
+    serializer_class = QuizSerializer
 
     def get_queryset(self):
         if self.request.user.user_type == UserType.TEACHER:
             return Quiz.objects.filter(teacher=self.request.user)
         return Quiz.objects
 
-    def get_serializer_class(self):
-        if self.action == 'retrieve':
-            return QuizSerializer  # full detail with questions and answers
-        elif self.request.user.user_type == UserType.TEACHER:
-            return QuizSerializer
-        return QuizStudentSerializer
 
     def perform_create(self, serializer):
         try:
             serializer.save(teacher=self.request.user)
         except ObjectDoesNotExist:
             raise serializers.ValidationError({"teacher": ["Authentication failed, user not found."]})
-
-class QuestionViewSet(viewsets.ModelViewSet):
-    serializer_class = QuestionSerializer
-    permission_classes = [permissions.IsAuthenticated, IsTeacherOrReadOnly]
-
-    def get_queryset(self):
-        quiz_id = self.kwargs.get('quiz_pk')
-        return Question.objects.filter(quiz_id=quiz_id, quiz__teacher=self.request.user) if quiz_id else Question.objects.none()
-
-    def perform_create(self, serializer):
-        quiz = Quiz.objects.get(id=self.kwargs['quiz_pk'], teacher=self.request.user)
-        serializer.save(quiz=quiz)
 
 class QuizSubmissionViewSet(viewsets.ModelViewSet):
     serializer_class = QuizSubmissionSerializer
