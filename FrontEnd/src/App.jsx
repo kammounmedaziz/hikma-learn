@@ -21,6 +21,7 @@ import TeacherDashboard from './Pages/TeacherDhasboard'
 
 
 import CourseDetails from './Pages/CourseDetails';
+import ContentDetail from './Pages/ContentDetail';
 
 
 
@@ -96,6 +97,7 @@ function App() {
         <Route path="/TeacherDashboard" element={<TeacherDashboard />} />
         <Route path="/AdminDashboard" element={<AdminDashboard />} />
         <Route path="/courses/:courseId/" element={<CourseDetails />} />
+        <Route path="/courses/:courseId/chapters/:chapterId/contents/:contentId" element={<ContentDetail />} />
       </Routes>
     </BrowserRouter>
   );

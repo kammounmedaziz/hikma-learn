@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import "../App.css";
 
@@ -36,42 +36,178 @@ const CourseDetails = () => {
     url: '',
     file: null,
   });
-  const [showFullContent, setShowFullContent] = useState(false);
   const [chapterContents, setChapterContents] = useState({});
-  const [showModal, setShowModal] = useState(false);
-  const [modalContent, setModalContent] = useState(null);
   const [showReorderPopup, setShowReorderPopup] = useState(false);
   const [reorderedChapters, setReorderedChapters] = useState([]);
   const [draggedItem, setDraggedItem] = useState(null);
 
-  const toggleContent = () => {
-    setShowFullContent(!showFullContent);
-  };
-
   const MAX_LENGTH = 100;
 
-  const openModal = (content) => {
-    setModalContent(content);
-    setShowModal(true);
+  const getCookie = (name) => {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.startsWith(name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
   };
 
-  const closeModal = () => {
-    setShowModal(false);
-    setModalContent(null);
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+
+    const fetchCourse = axios.get(`http://127.0.0.1:8000/courses/${courseId}/`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const fetchChapters = axios.get(`http://127.0.0.1:8000/courses/${courseId}/chapters/`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    Promise.all([fetchCourse, fetchChapters])
+      .then(([courseRes, chaptersRes]) => {
+        setCourse(courseRes.data);
+        setChapters(chaptersRes.data);
+        setReorderedChapters(chaptersRes.data);
+      })
+      .catch(err => {
+        console.error(err);
+        setError("Erreur lors du chargement des données.");
+      })
+      .finally(() => setLoading(false));
+  }, [courseId]);
+
+  const toggleChapter = (id) => {
+    if (expandedChapterId === id) {
+      setExpandedChapterId(null);
+    } else {
+      setExpandedChapterId(id);
+      fetchContentsForChapter(id);
+    }
   };
 
-  function extractYouTubeId(url) {
-    const regExp = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|embed|watch)|.*[?&]v=)|youtu\.be\/)([^"&?/\s]{11})/i;
-    const match = url.match(regExp);
-    return match ? match[1] : null;
-  }
+  const fetchContentsForChapter = async (chapterId) => {
+    try {
+      const res = await axios.get(
+        `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setChapterContents(prev => ({ ...prev, [chapterId]: res.data }));
+    } catch (error) {
+      console.error("Erreur fetch contenus :", error);
+      setChapterContents(prev => ({ ...prev, [chapterId]: [] }));
+    }
+  };
+
+  const handleAddChapter = () => {
+    setShowPopup(true);
+  };
+
+  const handleEditChapter = (chapter) => {
+    setEditingChapterId(chapter.id);
+    setEditData({ title: chapter.title, description: chapter.description });
+  };
+
+  const handleEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditSubmit = async (chapterId) => {
+    try {
+      const csrfToken = getCookie('csrftoken');
+      const res = await axios.put(
+        `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/`,
+        editData,
+        {
+          headers: {
+            'X-CSRFToken': csrfToken,
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const updated = chapters.map(chap =>
+        chap.id === chapterId ? res.data : chap
+      );
+      setChapters(updated);
+      setReorderedChapters(updated);
+      setEditingChapterId(null);
+    } catch (err) {
+      console.error("Erreur de mise à jour :", err);
+      alert("Échec de la mise à jour");
+    }
+  };
+
+  const handleDeleteChapter = async (chapterId) => {
+    if (!window.confirm("Confirm deletion of this chapter ?")) return;
+    try {
+      const csrfToken = getCookie('csrftoken');
+      await axios.delete(`http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/`, {
+        headers: {
+          'X-CSRFToken': csrfToken,
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setChapters(prev => prev.filter(c => c.id !== chapterId));
+      setReorderedChapters(prev => prev.filter(c => c.id !== chapterId));
+    } catch (err) {
+      console.error("Erreur de suppression :", err);
+      alert("Échec de la suppression");
+    }
+  };
+
+  const handleAddContent = (chapterId) => {
+    setSelectedChapterId(chapterId);
+    setShowContentPopup(true);
+    setContentType('TEXT');
+    setContentForm({ title: '', text: '', url: '', file: null });
+  };
+
+  const submitNewChapter = async () => {
+    if (!newChapterTitle || !newChapterDescription) {
+      alert("Title and description are required.");
+      return;
+    }
+
+    try {
+      const csrfToken = getCookie('csrftoken');
+      const res = await axios.post(
+        `http://127.0.0.1:8000/courses/${courseId}/chapters/`,
+        {
+          title: newChapterTitle,
+          description: newChapterDescription,
+        },
+        {
+          headers: {
+            'X-CSRFToken': csrfToken,
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setChapters([...chapters, res.data]);
+      setReorderedChapters([...chapters, res.data]);
+      setShowPopup(false);
+      setNewChapterTitle('');
+      setNewChapterDescription('');
+    } catch (err) {
+      console.error("Erreur d'ajout :", err);
+      alert("Erreur lors de l'ajout du chapitre");
+    }
+  };
 
   const handleEditContent = (content) => {
     setEditingContentId(content.id);
     setEditContentData({
       title: content.title,
       content_kind: content.content_kind,
-      text: content.content_kind === 'TEXT' ? content.content : '',
+      text: content.content_kind === 'TEXT' ? content.text : '',
       url: content.content_kind === 'LINK' ? content.url : '',
       file: null,
     });
@@ -131,18 +267,6 @@ const CourseDetails = () => {
     }
   };
 
-  const fetchContentsForChapter = async (chapterId) => {
-    try {
-      const res = await axios.get(`http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setChapterContents(prev => ({ ...prev, [chapterId]: res.data }));
-    } catch (error) {
-      console.error("Erreur fetch contenus :", error);
-      setChapterContents(prev => ({ ...prev, [chapterId]: [] }));
-    }
-  };
-
   const handleDeleteContent = async (chapterId, contentId) => {
     if (!window.confirm('Confirm deletion of this content?')) return;
 
@@ -156,197 +280,13 @@ const CourseDetails = () => {
         }
       );
 
-      setChapterContents(prev => {
-        const updated = prev[chapterId].filter(c => c.id !== contentId);
-        return { ...prev, [chapterId]: updated };
-      });
+      setChapterContents(prev => ({
+        ...prev,
+        [chapterId]: prev[chapterId].filter(c => c.id !== contentId),
+      }));
     } catch (error) {
       console.error('Erreur lors de la suppression:', error);
       alert('La suppression a échoué. Veuillez réessayer.');
-    }
-  };
-
-  const getCookie = (name) => {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-      const cookies = document.cookie.split(';');
-      for (let i = 0; i < cookies.length; i++) {
-        const cookie = cookies[i].trim();
-        if (cookie.startsWith(name + '=')) {
-          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-          break;
-        }
-      }
-    }
-    return cookieValue;
-  };
-
-  useEffect(() => {
-    setLoading(true);
-    setError(null);
-
-    const fetchCourse = axios.get(`http://127.0.0.1:8000/courses/${courseId}/`, { headers: { Authorization: `Bearer ${token}` } });
-    const fetchChapters = axios.get(`http://127.0.0.1:8000/courses/${courseId}/chapters/`, { headers: { Authorization: `Bearer ${token}` } });
-    Promise.all([fetchCourse, fetchChapters])
-      .then(([courseRes, chaptersRes]) => {
-        setCourse(courseRes.data);
-        setChapters(chaptersRes.data);
-        setReorderedChapters(chaptersRes.data);
-      })
-      .catch(err => {
-        console.error(err);
-        setError("Erreur lors du chargement des données.");
-      })
-      .finally(() => setLoading(false));
-  }, [courseId]);
-
-  const toggleChapter = (id) => {
-    if (expandedChapterId === id) {
-      setExpandedChapterId(null);
-    } else {
-      setExpandedChapterId(id);
-      fetchContentsForChapter(id);
-    }
-  };
-
-  const handleAddChapter = () => {
-    setShowPopup(true);
-  };
-
-  const handleEditChapter = (chapter) => {
-    setEditingChapterId(chapter.id);
-    setEditData({ title: chapter.title, description: chapter.description });
-  };
-
-  const handleEditChange = (e) => {
-    const { name, value } = e.target;
-    setEditData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleEditSubmit = async (chapterId) => {
-    try {
-      const csrfToken = getCookie('csrftoken');
-      const res = await axios.put(
-        `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/`,
-        editData,
-        {
-          headers: {
-            'X-CSRFToken': csrfToken, Authorization: `Bearer ${token}`
-          },
-        }
-      );
-
-      const updated = chapters.map(chap =>
-        chap.id === chapterId ? res.data : chap
-      );
-      setChapters(updated);
-      setReorderedChapters(updated);
-      setEditingChapterId(null);
-    } catch (err) {
-      console.error("Erreur de mise à jour :", err);
-      alert("Échec de la mise à jour");
-    }
-  };
-
-  const handleDeleteChapter = async (chapterId) => {
-    if (!window.confirm("Confirm deletion of this chapter ?")) return;
-    try {
-      const csrfToken = getCookie('csrftoken');
-      await axios.delete(`http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/`, {
-        headers: {
-          'X-CSRFToken': csrfToken, Authorization: `Bearer ${token}`
-        },
-      });
-      setChapters(prev => prev.filter(c => c.id !== chapterId));
-      setReorderedChapters(prev => prev.filter(c => c.id !== chapterId));
-    } catch (err) {
-      console.error("Erreur de suppression :", err);
-      alert("Échec de la suppression");
-    }
-  };
-
-  const handleAddContent = (chapterId) => {
-    setSelectedChapterId(chapterId);
-    setShowContentPopup(true);
-    setContentType('TEXT');
-    setContentForm({ title: '', text: '', url: '', file: null });
-  };
-
-  const submitNewChapter = async () => {
-    if (!newChapterTitle || !newChapterDescription) {
-      alert("Title and description are required.");
-      return;
-    }
-
-    try {
-      const csrfToken = getCookie('csrftoken');
-      const res = await axios.post(
-        `http://127.0.0.1:8000/courses/${courseId}/chapters/`,
-        {
-          title: newChapterTitle,
-          description: newChapterDescription,
-        },
-        {
-          headers: {
-            'X-CSRFToken': csrfToken, Authorization: `Bearer ${token}`
-          },
-        }
-      );
-      setChapters([...chapters, res.data]);
-      setReorderedChapters([...chapters, res.data]);
-      setShowPopup(false);
-      setNewChapterTitle('');
-      setNewChapterDescription('');
-    } catch (err) {
-      console.error("Erreur d'ajout :", err);
-      alert("Erreur lors de l'ajout du chapitre");
-    }
-  };
-
-  const submitContent = async () => {
-    if (!contentForm.title) {
-      alert("Title is required.");
-      return;
-    }
-
-    const csrfToken = getCookie('csrftoken');
-    const formData = new FormData();
-
-    formData.append('title', contentForm.title);
-    formData.append('content_kind', contentType);
-
-    if (contentType === 'TEXT') {
-      if (!contentForm.text) return alert("Text is required.");
-      formData.append('text', contentForm.text);
-    } else if (contentType === 'LINK') {
-      if (!contentForm.url) return alert("URL is required.");
-      formData.append('url', contentForm.url);
-    } else if (contentType === 'FILE') {
-      if (!contentForm.file) return alert("File is required.");
-      formData.append('file', contentForm.file);
-    } else if (contentType === 'QUIZ') {
-      alert("Quiz support not implemented yet.");
-      return;
-    }
-
-    try {
-      const res = await axios.post(
-        `http://127.0.0.1:8000/courses/${courseId}/chapters/${selectedChapterId}/contents/`,
-        formData,
-        {
-          headers: {
-            'X-CSRFToken': csrfToken,
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      );
-
-      await fetchContentsForChapter(selectedChapterId);
-      setShowContentPopup(false);
-    } catch (err) {
-      console.error("Erreur ajout content :", err);
-      alert("Erreur lors de l'ajout du contenu.");
     }
   };
 
@@ -398,7 +338,7 @@ const CourseDetails = () => {
 
       setChapters(reorderedChapters);
       setShowReorderPopup(false);
-      alert(response.data.detail); // Show success message
+      alert(response.data.detail);
     } catch (err) {
       console.error("Erreur lors de la réorganisation :", err);
       alert(err.response?.data?.detail || "Échec de l'enregistrement de l'ordre");
@@ -560,7 +500,7 @@ const CourseDetails = () => {
                 <div className="mt-4 space-y-2 text-left text-gray-300">
                   {chapterContents[chap.id] && chapterContents[chap.id].length > 0 ? (
                     chapterContents[chap.id].map(content => (
-                      <div key={content.id} className="border border-white/10 p-3 rounded bg-black/20 flex flex-col space-y-2">
+                      <div key={content.id} className="border border-white/20 p-4 rounded-lg bg-black/20 flex flex-col space-y-2">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-2">
                             <svg
@@ -575,37 +515,32 @@ const CourseDetails = () => {
                             </svg>
                             <h4 className="font-semibold text-white">{content.title}</h4>
                           </div>
-
-                          <div className="flex space-x-2">
-                            {isTeacher && (
-                              <button
-                                onClick={() => {
-                                  setEditingContentId(content.id);
-                                  setEditContentData({
-                                    title: content.title,
-                                    text: content.text,
-                                    url: content.url,
-                                    file: null,
-                                    content_kind: content.content_kind,
-                                  });
-                                }}
-                                title="Edit content"
-                                className="text-yellow-400 hover:text-yellow-300"
+                          {isTeacher && (
+                            <div className="flex flex-col items-end space-y-1">
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => handleEditContent(content)}
+                                  title="Edit content"
+                                  className="text-yellow-400 hover:text-yellow-300 text-lg"
+                                >
+                                  ✏️
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteContent(chap.id, content.id)}
+                                  title="Delete content"
+                                  className="text-red-500 hover:text-red-400 text-lg"
+                                >
+                                  🗑️
+                                </button>
+                              </div>
+                              <Link
+                                to={`/courses/${courseId}/chapters/${chap.id}/contents/${content.id}`}
+                                className="text-sm text-blue-600 hover:text-blue-800 underline"
                               >
-                                ✏️
-                              </button>
-                            )}
-
-                            {isTeacher && (
-                              <button
-                                onClick={() => handleDeleteContent(chap.id, content.id)}
-                                title="Delete content"
-                                className="text-red-500 hover:text-red-400"
-                              >
-                                🗑️
-                              </button>
-                            )}
-                          </div>
+                                View More
+                              </Link>
+                            </div>
+                          )}
                         </div>
 
                         {editingContentId === content.id ? (
@@ -614,7 +549,7 @@ const CourseDetails = () => {
                               name="title"
                               value={editContentData.title}
                               onChange={handleEditContentChange}
-                              className="w-full px-2 py-1 rounded bg-gray-800 text-white"
+                              className="w-full px-2 py-1 rounded bg-gray-800 text-white border border-gray-600"
                               placeholder="Title"
                             />
                             {editContentData.content_kind === 'TEXT' && (
@@ -622,7 +557,7 @@ const CourseDetails = () => {
                                 name="text"
                                 value={editContentData.text}
                                 onChange={handleEditContentChange}
-                                className="w-full px-2 py-1 rounded bg-gray-800 text-white"
+                                className="w-full px-2 py-1 rounded bg-gray-800 text-white border border-gray-600"
                                 placeholder="Text content"
                               />
                             )}
@@ -632,7 +567,7 @@ const CourseDetails = () => {
                                 type="url"
                                 value={editContentData.url}
                                 onChange={handleEditContentChange}
-                                className="w-full px-2 py-1 rounded bg-gray-800 text-white"
+                                className="w-full px-2 py-1 rounded bg-gray-800 text-white border border-gray-600"
                                 placeholder="URL"
                               />
                             )}
@@ -660,9 +595,9 @@ const CourseDetails = () => {
                             </div>
                           </div>
                         ) : (
-                          <p className="text-base leading-relaxed mt-2 whitespace-pre-line text-gray-100 font-medium">
+                          <div className="text-base leading-relaxed mt-2">
                             {(content.content_kind === 'LINK' && content.url) || (content.content_kind === 'FILE' && content.file) ? (
-                              <div className="mb-4">
+                              <div className="flex flex-col space-y-2">
                                 {(() => {
                                   const url =
                                     content.content_kind === 'LINK'
@@ -678,6 +613,8 @@ const CourseDetails = () => {
                                   const lowerUrl = url.toLowerCase();
                                   const getFileName = (fullUrl) => fullUrl.split('/').pop();
                                   const isImage = (u) => u.match(/\.(jpeg|jpg|gif|png|svg)$/i) !== null;
+                                  const isYouTube = lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be');
+                                  const isPdf = lowerUrl.endsWith('.pdf');
 
                                   const YouTubeIcon = () => (
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="red" viewBox="0 0 24 24" stroke="none" className="inline w-6 h-6" aria-hidden="true">
@@ -694,137 +631,124 @@ const CourseDetails = () => {
                                   );
 
                                   let icon = null;
-                                  if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
+                                  let linkComponent = null;
+                                  let preview = null;
+                                  if (isYouTube) {
                                     icon = <YouTubeIcon />;
-                                  } else if (lowerUrl.endsWith('.pdf')) {
-                                    icon = <PdfIcon />;
-                                  } else if (isImage(lowerUrl)) {
-                                    icon = <ImageIcon />;
-                                  } else {
-                                    icon = <span className="text-blue-600">🔗</span>;
-                                  }
-
-                                  if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
+                                    linkComponent = (
+                                      <a
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-blue-600 hover:text-blue-800"
+                                      >
+                                        {getFileName(url)}
+                                      </a>
+                                    );
                                     let embedUrl = url;
                                     if (url.includes('watch?v=')) {
                                       embedUrl = url.replace('watch?v=', 'embed/');
                                     } else if (url.includes('youtu.be/')) {
                                       embedUrl = url.replace('youtu.be/', 'www.youtube.com/embed/');
                                     }
-
-                                    return (
-                                      <div>
-                                        <a
-                                          href={url}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          title="url"
-                                          className="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-800 mb-2"
-                                        >
-                                          {icon}
-                                          <span>{url}</span>
-                                        </a>
-                                        <div className="aspect-w-16 aspect-h-9">
-                                          <iframe
-                                            src={embedUrl}
-                                            title="YouTube video player"
-                                            frameBorder="0"
-                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                            allowFullScreen
-                                            className="w-full h-64 rounded"
-                                          />
-                                        </div>
+                                    preview = (
+                                      <div className="aspect-w-16 aspect-h-9">
+                                        <iframe
+                                          src={embedUrl}
+                                          title="YouTube video player"
+                                          frameBorder="0"
+                                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                          allowFullScreen
+                                          className="w-full h-64 rounded"
+                                        />
                                       </div>
                                     );
-                                  }
-
-                                  if (isImage(lowerUrl)) {
-                                    return (
-                                      <div>
-                                        <a
-                                          href={url}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-800 mb-2"
-                                        >
-                                          {icon}
-                                          <span>{getFileName(url)}</span>
-                                        </a>
-                                        <div className="mt-2 flex justify-center">
-                                          <img
-                                            src={url}
-                                            alt={getFileName(url)}
-                                            className="max-w-full h-auto rounded shadow"
-                                          />
-                                        </div>
+                                  } else if (isPdf) {
+                                    icon = <PdfIcon />;
+                                    linkComponent = (
+                                      <Link
+                                        to={`/courses/${courseId}/chapters/${chap.id}/contents/${content.id}`}
+                                        className="text-blue-600 hover:text-blue-800"
+                                      >
+                                        {getFileName(url)}
+                                      </Link>
+                                    );
+                                  } else if (isImage(lowerUrl)) {
+                                    icon = <ImageIcon />;
+                                    linkComponent = (
+                                      <Link
+                                        to={`/courses/${courseId}/chapters/${chap.id}/contents/${content.id}`}
+                                        className="text-blue-600 hover:text-blue-800"
+                                      >
+                                        {getFileName(url)}
+                                      </Link>
+                                    );
+                                    preview = (
+                                      <div className="flex justify-center">
+                                        <img
+                                          src={url}
+                                          alt={getFileName(url)}
+                                          className="max-w-full h-64 rounded shadow"
+                                        />
                                       </div>
+                                    );
+                                  } else {
+                                    icon = <span className="text-blue-600">🔗</span>;
+                                    linkComponent = (
+                                      <a
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-blue-600 hover:text-blue-800"
+                                      >
+                                        {url}
+                                      </a>
                                     );
                                   }
 
                                   return (
-                                    <a
-                                      href={url}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      title="url"
-                                      className="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-800 hover:underline"
-                                    >
-                                      {icon}
-                                      <span>
-                                        {(lowerUrl.startsWith('http://') || lowerUrl.startsWith('https://')) && !isImage(lowerUrl) && !lowerUrl.endsWith('.pdf')
-                                          ? url
-                                          : getFileName(url)}
-                                      </span>
-                                    </a>
+                                    <>
+                                      <div className="flex items-center space-x-1">
+                                        {icon}
+                                        {linkComponent}
+                                      </div>
+                                      {!isTeacher && (
+                                        <div className="flex justify-end">
+                                          <Link
+                                            to={`/courses/${courseId}/chapters/${chap.id}/contents/${content.id}`}
+                                            className="text-sm text-blue-600 hover:text-blue-800 underline"
+                                          >
+                                            View More
+                                          </Link>
+                                        </div>
+                                      )}
+                                      {preview}
+                                    </>
                                   );
                                 })()}
                               </div>
                             ) : content.text ? (
-                              <>
-                                <div key={content.id} className="...">
-                                  <div className="flex justify-between items-center mb-1">
-                                    <h4 className="font-semibold text-white">{content.title}</h4>
-                                    {content.text.length > MAX_LENGTH && (
-                                      <button
-                                        onClick={() => openModal(content)}
-                                        className="text-blue-400 hover:text-blue-300 text-sm font-medium"
-                                      >
-                                        View more
-                                      </button>
-                                    )}
-                                  </div>
-                                  <p className="text-base leading-relaxed whitespace-pre-line text-gray-100 font-medium">
-                                    {content.text.length > MAX_LENGTH
-                                      ? content.text.slice(0, MAX_LENGTH) + "..."
-                                      : content.text}
-                                  </p>
-                                </div>
-
-                                {showModal && modalContent && (
-                                  <div
-                                    className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50"
-                                    onClick={closeModal}
-                                  >
-                                    <div
-                                      className="bg-white text-black p-6 rounded max-w-lg max-h-[80vh] overflow-auto"
-                                      onClick={(e) => e.stopPropagation()}
+                              <div className="flex flex-col space-y-2">
+                                <p className="text-base leading-relaxed whitespace-pre-line text-gray-100 font-medium">
+                                  {content.text.length > MAX_LENGTH
+                                    ? content.text.slice(0, MAX_LENGTH) + "..."
+                                    : content.text}
+                                </p>
+                                {!isTeacher && content.text.length > MAX_LENGTH && (
+                                  <div className="flex justify-end">
+                                    <Link
+                                      to={`/courses/${courseId}/chapters/${chap.id}/contents/${content.id}`}
+                                      className="text-sm text-blue-600 hover:text-blue-800 underline"
                                     >
-                                      <h2 className="text-lg font-bold mb-4">{modalContent.title}</h2>
-                                      <p className="whitespace-pre-line">{modalContent.text}</p>
-                                      <button
-                                        onClick={closeModal}
-                                        className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                                      >
-                                        Close
-                                      </button>
-                                    </div>
+                                      View More
+                                    </Link>
                                   </div>
                                 )}
-                              </>
+                              </div>
                             ) : (
-                              'No content available.'
+                              <p className="text-gray-400">No content available.</p>
                             )}
-                          </p>
+                          </div>
                         )}
                       </div>
                     ))
@@ -860,13 +784,13 @@ const CourseDetails = () => {
             <div className="flex justify-end space-x-2">
               <button
                 onClick={() => setShowPopup(false)}
-                className="btn-gradient-gray"
+                className="btn-gradient-gray px-4 py-2 rounded"
               >
                 Cancel
               </button>
               <button
                 onClick={submitNewChapter}
-                className="btn-gradient-green"
+                className="btn-gradient-green px-4 py-2 rounded"
               >
                 Add
               </button>
@@ -965,13 +889,13 @@ const CourseDetails = () => {
             <div className="flex justify-end space-x-2">
               <button
                 onClick={() => setShowContentPopup(false)}
-                className="btn-gradient-gray"
+                className="btn-gradient-gray px-4 py-2 rounded"
               >
                 Cancel
               </button>
               <button
                 onClick={submitContent}
-                className="btn-gradient-green"
+                className="btn-gradient-green px-4 py-2 rounded"
               >
                 Add
               </button>
