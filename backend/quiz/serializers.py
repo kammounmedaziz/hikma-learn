@@ -20,87 +20,51 @@ class QuestionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Question
-        fields = ['id', 'text', 'question_type', 'points', 'difficulty_level', 'answers']
+        fields = ['id', 'text', 'question_type', 'points',
+                  'difficulty_level', 'answers']
 
     def create(self, validated_data):
-        answers_data = validated_data.pop('answers')
-        quiz = self.context.get('quiz')
-        if not quiz:
-            raise serializers.ValidationError("Quiz context is missing")
-        question = Question.objects.create(quiz=quiz, **validated_data)
-        for answer_data in answers_data:
-            Answer.objects.create(question=question, **answer_data)
-        return question
+        answers = validated_data.pop('answers')
+        q = Question.objects.create(quiz=self.context['quiz'], **validated_data)
+        Answer.objects.bulk_create(
+            Answer(question=q, **a) for a in answers
+        )
+        return q
 
     def update(self, instance, validated_data):
-        answers_data = validated_data.pop('answers')
-        instance.text = validated_data.get('text', instance.text)
-        instance.question_type = validated_data.get('question_type', instance.question_type)
-        instance.points = validated_data.get('points', instance.points)
-        instance.difficulty_level = validated_data.get('difficulty_level', instance.difficulty_level)
-        instance.save()
-
+        answers = validated_data.pop('answers')
+        instance = super().update(instance, validated_data)
         instance.answers.all().delete()
-        for answer_data in answers_data:
-            Answer.objects.create(question=instance, **answer_data)
+        Answer.objects.bulk_create(
+            Answer(question=instance, **a) for a in answers
+        )
         return instance
 
 
 class QuizSerializer(serializers.ModelSerializer):
-    questions = QuestionSerializer(many=True)
-    teacher = serializers.PrimaryKeyRelatedField(read_only=True)
-    question_count = serializers.IntegerField(read_only=True)
+    questions = QuestionSerializer(many=True, read_only=False)
+    teacher  = serializers.PrimaryKeyRelatedField(read_only=True)
+    question_count = serializers.ReadOnlyField()
 
     class Meta:
         model = Quiz
-        fields = [
-            'id', 'url', 'teacher', 'title', 'description', 'time_limit',
-            'is_published', 'creation_date', 'updated_date',
-            'questions', 'question_count'
-        ]
+        fields = ['id', 'url', 'teacher', 'title', 'description',
+                  'time_limit', 'is_published', 'creation_date',
+                  'updated_date', 'questions', 'question_count']
 
     def create(self, validated_data):
-        questions_data = validated_data.pop('questions')
+        questions = validated_data.pop('questions')
         quiz = Quiz.objects.create(**validated_data)
-
-        for question_data in questions_data:
-            if 'answers' not in question_data or not question_data['answers']:
-                raise serializers.ValidationError({
-                    "answers": [f"This field is required for question '{question_data.get('text', '<unknown>')}'."]
-                })
-
-            question_serializer = QuestionSerializer(
-                data=question_data,
-                context={'quiz': quiz}
-            )
-            question_serializer.is_valid(raise_exception=True)
-            question_serializer.save()
-
+        for qd in questions:
+            QuestionSerializer(context={'quiz': quiz}).create(qd)
         return quiz
 
     def update(self, instance, validated_data):
-        questions_data = validated_data.pop('questions')
-        instance.title = validated_data.get('title', instance.title)
-        instance.description = validated_data.get('description', instance.description)
-        instance.time_limit = validated_data.get('time_limit', instance.time_limit)
-        instance.is_published = validated_data.get('is_published', instance.is_published)
-        instance.save()
-
+        questions = validated_data.pop('questions')
+        instance = super().update(instance, validated_data)
         instance.questions.all().delete()
-
-        for question_data in questions_data:
-            if 'answers' not in question_data or not question_data['answers']:
-                raise serializers.ValidationError({
-                    "answers": [f"This field is required for question '{question_data.get('text', '<unknown>')}'."]
-                })
-
-            question_serializer = QuestionSerializer(
-                data=question_data,
-                context={'quiz': instance}
-            )
-            question_serializer.is_valid(raise_exception=True)
-            question_serializer.save()
-
+        for qd in questions:
+            QuestionSerializer(context={'quiz': instance}).create(qd)
         return instance
 
 class SubmissionAnswerSerializer(serializers.ModelSerializer):
