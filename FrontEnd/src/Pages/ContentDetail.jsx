@@ -36,6 +36,7 @@ const ContentDetail = () => {
     const url = content.content_kind === 'LINK' ? content.url : content.content_kind === 'FILE' ? content.file : null;
     const lowerUrl = url?.toLowerCase();
     const isImage = (u) => u?.match(/\.(jpeg|jpg|gif|png|svg)$/i) !== null;
+    const isVideo = (u) => u?.match(/\.(mp4)$/i) !== null;
 
     if (content.content_kind === 'TEXT') {
       return (
@@ -90,6 +91,20 @@ const ContentDetail = () => {
       );
     }
 
+    if (isVideo(lowerUrl)) {
+      return (
+        <div className="p-4 border border-white/20 rounded-lg">
+          <video
+            controls
+            className="w-full h-auto rounded"
+          >
+            <source src={url} type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      );
+    }
+
     return (
       <div className="p-4 border border-white/20 rounded-lg">
         <a
@@ -98,7 +113,7 @@ const ContentDetail = () => {
           rel="noopener noreferrer"
           className="text-blue-600 hover:text-blue-800 hover:underline"
         >
-          {url}
+          {url.split('/').pop()}
         </a>
       </div>
     );
