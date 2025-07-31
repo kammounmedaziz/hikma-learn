@@ -44,12 +44,26 @@ class QuestionSerializer(serializers.ModelSerializer):
 class QuizSerializer(serializers.ModelSerializer):
     questions = QuestionSerializer(many=True, read_only=False)
     teacher  = serializers.PrimaryKeyRelatedField(read_only=True)
+    submitted = serializers.SerializerMethodField()
 
     class Meta:
         model = Quiz
         fields = ['id', 'url', 'teacher', 'title', 'description',
                   'time_limit', 'is_published', 'creation_date',
-                  'updated_date', 'questions']
+                  'updated_date', 'questions', 'submitted']
+
+    def get_submitted(self, obj):
+        user = self.context['request'].user
+        if user.is_authenticated and user.user_type == 'student':
+            return obj.submissions.filter(student=user).exists()
+        return None
+
+    def to_representation(self, instance):
+        rep = super().to_representation(instance)
+        user = self.context['request'].user
+        if not (user.is_authenticated and user.user_type == 'student'):
+            rep.pop('submitted', None)
+        return rep
 
     def create(self, validated_data):
         questions = validated_data.pop('questions')
