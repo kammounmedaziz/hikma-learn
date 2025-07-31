@@ -23,9 +23,10 @@ import CreateQuiz from './Pages/teacher-quiz/CreateQuiz';
 import EditQuiz from './Pages/teacher-quiz/EditQuiz';
 import TeacherSettings from './Components/TeacherSettings';
 import PlaceholderPage from './Components/PlaceholderPage';
-import ExamsQuiz from './Pages/student-quiz/ExamsQuiz';
-import StudentResultPage from './Pages/student-quiz/StudentResultPage';
+import StudentResultPage from './Pages/student-quiz/QuizResults';
 import StudyOverview from './Pages/StudyOverview';
+import QuizList from './Pages/student-quiz/QuizList';
+import QuizView from './Pages/student-quiz/QuizView';
 
 const LandingPage = ({ showWelcome, setShowWelcome }) => {
   return (
@@ -68,9 +69,9 @@ function App() {
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/StudydDashboard" element={<StudyDashboard />}>
           <Route index element={<StudyOverview />} />
-          <Route path="ExamsQuiz" element={<ExamsQuiz />} />
-          <Route path="ExamsQuiz/:id" element={<ExamsQuiz />} />
-          <Route path="ResultPage/:id" element={<StudentResultPage />} />
+          <Route path="quizzes" element={<QuizList />} />
+          <Route path="quizzes/:id" element={<QuizView />} />
+          <Route path="quizzes/:id/results" element={<StudentResultPage />} />
           <Route path="courses" element={<PlaceholderPage title="courses" description="Track and submit assignments" />} />
           <Route path="settings" element={<PlaceholderPage title="settings" description="Track and submit assignments" />} />
           <Route path="assignments" element={<PlaceholderPage title="Assignments" description="Track and submit assignments" />} />

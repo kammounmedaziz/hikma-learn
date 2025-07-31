@@ -21,7 +21,6 @@ import {
 
 import StudyOverview from './StudyOverview';
 import StudentSettings from '../Components/StudentSettings';
-import ExamsQuiz from './student-quiz/ExamsQuiz';
 import MyCourses from './MyCourses';
 import { NavLink, Outlet } from 'react-router-dom';
 
@@ -61,7 +60,7 @@ const StudyDashboard = () => {
   const menuItems = [
     { id: 'overview', label: 'Overview', icon: Home, description: 'Study summary and quick insights', path: '' },
     { id: 'courses', label: 'My Courses', icon: BookOpen, description: 'Explore your enrolled courses', path: 'courses' },
-    { id: 'ExamsQuiz', label: 'Exams & Quizzes', icon: FileText, description: 'Upcoming tests and past results', path: 'ExamsQuiz' },
+    { id: 'ExamsQuiz', label: 'Exams & Quizzes', icon: FileText, description: 'Upcoming tests and past results', path: 'quizzes' },
     { id: 'assignments', label: 'Assignments', icon: Target, description: 'Track and submit assignments', path: 'assignments' },
     { id: 'schedule', label: 'Schedule', icon: Calendar, description: 'Daily and weekly learning schedule', path: 'schedule' },
     { id: 'progress', label: 'Progress & Analytics', icon: TrendingUp, description: 'Your learning analytics and goals', path: 'progress' },
