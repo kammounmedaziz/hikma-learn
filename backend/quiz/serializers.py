@@ -20,8 +20,7 @@ class QuestionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Question
-        fields = ['id', 'quiz', 'text', 'question_type', 'points', 'difficulty_level', 'answers']
-        extra_kwargs = {'quiz': {'required': False, 'allow_null': True}}
+        fields = ['id', 'text', 'question_type', 'points', 'difficulty_level', 'answers']
 
     def create(self, validated_data):
         answers_data = validated_data.pop('answers')
@@ -55,7 +54,7 @@ class QuizSerializer(serializers.ModelSerializer):
     class Meta:
         model = Quiz
         fields = [
-            'id', 'teacher', 'title', 'description', 'time_limit',
+            'id', 'url', 'teacher', 'title', 'description', 'time_limit',
             'is_published', 'creation_date', 'updated_date',
             'questions', 'question_count'
         ]
