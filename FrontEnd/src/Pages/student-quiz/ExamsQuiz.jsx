@@ -61,34 +61,34 @@ const ExamsQuiz = () => {
   };
 
   const handleSubmit = () => {
-  console.log('Submitted Answers:', answers);
+    console.log('Submitted Answers:', answers);
 
-  const questions = quiz.questions; // ✅ use quiz.questions directly
-  let totalCorrect = 0;
+    const questions = quiz.questions; // ✅ use quiz.questions directly
+    let totalCorrect = 0;
 
-  questions.forEach((q) => {
-    const correct = q.correctAnswers || [];
-    const selected = answers[q.id] || [];
+    questions.forEach((q) => {
+      const correct = q.correctAnswers || [];
+      const selected = answers[q.id] || [];
 
-    const correctSorted = [...correct].sort();
-    const selectedSorted = [...selected].sort();
+      const correctSorted = [...correct].sort();
+      const selectedSorted = [...selected].sort();
 
-    if (JSON.stringify(correctSorted) === JSON.stringify(selectedSorted)) {
-      totalCorrect++;
-    }
-  });
+      if (JSON.stringify(correctSorted) === JSON.stringify(selectedSorted)) {
+        totalCorrect++;
+      }
+    });
 
-  const scorePercent = Math.round((totalCorrect / questions.length) * 100);
+    const scorePercent = Math.round((totalCorrect / questions.length) * 100);
 
-navigate(`/StudydDashboard/ResultPage/${quiz.id}`, {
-  state: {
-    quiz,
-    answers,
-    scorePercent,
-  }
-});
+    navigate(`/StudydDashboard/ResultPage/${quiz.id}`, {
+      state: {
+        quiz,
+        answers,
+        scorePercent,
+      }
+    });
 
-};
+  };
 
 
 
@@ -100,29 +100,29 @@ navigate(`/StudydDashboard/ResultPage/${quiz.id}`, {
       <div className="justify-center">
         <div className="quiz-list-container">
           <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-gray-400 mb-6">Available Quizzes</h2>
-<ul className="quiz-list">
-  {Object.values(staticQuizzes).map((quiz) => (
-    <li key={quiz.id} className="quiz-card">
-      <button
-        onClick={() => {
-          localStorage.setItem(`seen-quiz-${quiz.id}`, 'true');
-          navigate(`/StudydDashboard/ExamsQuiz/${quiz.id}`);
-        }}
-        className="quiz-button"
-      >
-        <div className="quiz-title-row">
-          <span className="quiz-title">{quiz.name}</span>
-          <div className="quiz-icons">
-            <span className="score-indicator">Score: 0%</span>
-            {localStorage.getItem(`seen-quiz-${quiz.id}`) === 'true' && (
-              <span className="seen-icon">👁️</span> // You can use an actual icon here
-            )}
-          </div>
-        </div>
-      </button>
-    </li>
-  ))}
-</ul>
+          <ul className="quiz-list">
+            {Object.values(staticQuizzes).map((quiz) => (
+              <li key={quiz.id} className="quiz-card">
+                <button
+                  onClick={() => {
+                    localStorage.setItem(`seen-quiz-${quiz.id}`, 'true');
+                    navigate(`/StudydDashboard/ExamsQuiz/${quiz.id}`);
+                  }}
+                  className="quiz-button"
+                >
+                  <div className="quiz-title-row">
+                    <span className="quiz-title">{quiz.name}</span>
+                    <div className="quiz-icons">
+                      <span className="score-indicator">Score: 0%</span>
+                      {localStorage.getItem(`seen-quiz-${quiz.id}`) === 'true' && (
+                        <span className="seen-icon">👁️</span> // You can use an actual icon here
+                      )}
+                    </div>
+                  </div>
+                </button>
+              </li>
+            ))}
+          </ul>
 
         </div>
       </div>

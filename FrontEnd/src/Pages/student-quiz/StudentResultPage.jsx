@@ -14,7 +14,7 @@ const StudentResultPage = () => {
   return (
     <div className="relative text-gray-200">
       <div className="relative z-10 max-w-6xl mx-auto px-4 py-12">
-        
+
         {/* Title */}
         <h2 className="text-2xl text-center font-bold mb-6 text-white">
           Results for Quiz #{id}
@@ -40,7 +40,7 @@ const StudentResultPage = () => {
               let bgColor = "bg-gray-700";
               if (isSelected && isCorrect) bgColor = "bg-green-600";
               else if (isSelected && !isCorrect) bgColor = "bg-red-600";
-             
+
 
               return (
                 <div key={idx} className={`p-3 rounded mb-2 ${bgColor}`}>
