@@ -3,13 +3,9 @@ from .models import Quiz, Question, Answer, QuizSubmission, SubmissionAnswer
 
 @admin.register(Quiz)
 class QuizAdmin(admin.ModelAdmin):
-    list_display = ('title', 'teacher', 'is_published', 'question_count')
+    list_display = ('title', 'teacher', 'is_published')
     search_fields = ('title', 'teacher__username')
     list_filter = ('is_published', 'teacher')
-
-    def question_count(self, obj):
-        return obj.question_count
-    question_count.short_description = 'Number of Questions'
 
 @admin.register(Question)
 class QuestionAdmin(admin.ModelAdmin):

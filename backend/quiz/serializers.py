@@ -44,13 +44,12 @@ class QuestionSerializer(serializers.ModelSerializer):
 class QuizSerializer(serializers.ModelSerializer):
     questions = QuestionSerializer(many=True, read_only=False)
     teacher  = serializers.PrimaryKeyRelatedField(read_only=True)
-    question_count = serializers.ReadOnlyField()
 
     class Meta:
         model = Quiz
         fields = ['id', 'url', 'teacher', 'title', 'description',
                   'time_limit', 'is_published', 'creation_date',
-                  'updated_date', 'questions', 'question_count']
+                  'updated_date', 'questions']
 
     def create(self, validated_data):
         questions = validated_data.pop('questions')

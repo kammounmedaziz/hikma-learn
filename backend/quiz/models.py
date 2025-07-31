@@ -16,10 +16,6 @@ class Quiz(models.Model):
     def __str__(self):
         return f"{self.title}"
 
-    @property
-    def question_count(self):
-        return self.questions.count()
-
 class Question(models.Model):
     quiz = models.ForeignKey(Quiz, related_name='questions', on_delete=models.CASCADE)
     text = models.TextField(blank=True, null=True)  # Allow null/blank for flexibility
