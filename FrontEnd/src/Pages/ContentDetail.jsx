@@ -35,8 +35,6 @@ const ContentDetail = () => {
   const renderContent = () => {
     const url = content.content_kind === 'LINK' ? content.url : content.content_kind === 'FILE' ? content.file : null;
     const lowerUrl = url?.toLowerCase();
-    const isImage = (u) => u?.match(/\.(jpeg|jpg|gif|png|svg)$/i) !== null;
-    const isVideo = (u) => u?.match(/\.(mp4)$/i) !== null;
 
     if (content.content_kind === 'TEXT') {
       return (
@@ -67,7 +65,7 @@ const ContentDetail = () => {
       );
     }
 
-    if (isImage(lowerUrl)) {
+    if (content.file_kind === "IMAGE") {
       return (
         <div className="flex justify-center p-4 border border-white/20 rounded-lg">
           <img
@@ -79,7 +77,7 @@ const ContentDetail = () => {
       );
     }
 
-    if (lowerUrl?.endsWith('.pdf')) {
+    if (content.file_kind === "PDF") {
       return (
         <div className="p-4 border border-white/20 rounded-lg">
           <iframe
@@ -91,14 +89,14 @@ const ContentDetail = () => {
       );
     }
 
-    if (isVideo(lowerUrl)) {
+    if (content.file_kind === "VIDEO") {
       return (
         <div className="p-4 border border-white/20 rounded-lg">
           <video
             controls
             className="w-full h-auto rounded"
           >
-            <source src={url} type="video/mp4" />
+            <source src={url} type={content.file_mime_type} />
             Your browser does not support the video tag.
           </video>
         </div>
