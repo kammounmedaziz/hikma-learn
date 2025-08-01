@@ -22,6 +22,15 @@ class QuestionSerializer(serializers.ModelSerializer):
         model = Question
         fields = ['id', 'text', 'question_type', 'points',
                   'difficulty_level', 'answers']
+    def validate_answers(self, value):
+        if len(value) < 2:
+            raise serializers.ValidationError('Each question must have at least two answers.')
+        texts = [a['text'].strip().lower() for a in value]
+        if len(texts) != len(set(texts)):
+            raise serializers.ValidationError('Answer texts must be unique.')
+        if not any(a.get('is_correct', False) for a in value):
+            raise serializers.ValidationError('At least one answer must be marked correct.')
+        return value
 
     def create(self, validated_data):
         answers = validated_data.pop('answers')
@@ -64,6 +73,10 @@ class QuizSerializer(serializers.ModelSerializer):
         if not (user.is_authenticated and user.user_type == 'student'):
             rep.pop('submitted', None)
         return rep
+    def validate_questions(self, value):
+        if not value:
+            raise serializers.ValidationError('A quiz must contain at least one question.')
+        return value
 
     def create(self, validated_data):
         questions = validated_data.pop('questions')
