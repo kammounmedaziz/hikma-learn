@@ -694,7 +694,7 @@ const CourseDetails = () => {
                                         rel="noopener noreferrer"
                                         className="text-blue-600 hover:text-blue-800"
                                       >
-                                        {getFileName(url)}
+                                        {url}
                                       </a>
                                     );
                                     let embedUrl = url;
