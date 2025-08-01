@@ -32,7 +32,7 @@ const QuizView = () => {
                 }
                 if (data?.submitted) {
                     console.log('Quiz already submitted, redirecting to results');
-                    navigate(`/StudydDashboard/quizzes/${id}/results`, { state: { quiz: data } });
+                    navigate(`/StudydDashboard/quizzes/${id}/result`);
                     return;
                 }
                 setQuiz(data);
@@ -78,7 +78,7 @@ const QuizView = () => {
                     return;
                 }
                 console.log('Quiz submitted successfully:', submission);
-                navigate(`/StudydDashboard/quizzes/${quiz.id}/results`, { state: { quiz, submission } });
+                navigate(`/StudydDashboard/quizzes/${quiz.id}/result`);
             })
             .catch(error => {
                 console.error('Error submitting quiz:', error);

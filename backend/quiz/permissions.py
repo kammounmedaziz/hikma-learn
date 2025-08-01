@@ -17,6 +17,10 @@ class IsTeacherOrReadOnly(permissions.BasePermission):
             return obj.quiz.teacher == request.user
         return False
 
+class IsStudentOnly(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.user_type == UserType.STUDENT
+
 class IsStudentOrTeacherSubmissionAccess(permissions.BasePermission):
     """
     - Students can only create/view their own submissions.

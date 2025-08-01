@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Quiz, Question, Answer, QuizSubmission, SubmissionAnswer
 from django.contrib.auth.models import User
+from rest_framework.utils.serializer_helpers import ReturnDict
 
 class AnswerSerializer(serializers.ModelSerializer):
     class Meta:
@@ -10,9 +11,10 @@ class AnswerSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        request = self.context.get('request')
-        if request and request.user.user_type == 'student':
-            representation.pop('is_correct', None)
+        if not self.context.get('is_result', False):
+            request = self.context.get('request')
+            if request and request.user.user_type == 'student':
+                representation.pop('is_correct', None)
         return representation
 
 class QuestionSerializer(serializers.ModelSerializer):
@@ -185,3 +187,20 @@ class QuizSubmissionSerializer(serializers.ModelSerializer):
         submission.save()
 
         return submission
+
+class QuizStudentResultSerializer(serializers.Serializer):
+    def to_representation(self, submission):
+        request = self.context['request']
+        quiz = submission.quiz
+        chosen = set(
+            submission.answers.values_list('chosen_answer_id', flat=True)
+        )
+
+        # start with the full quiz serializer
+        data = QuizSerializer(quiz, context={'request': request, 'is_result': True}).data
+
+        data['grade'] = submission.grade
+        for q in data['questions']:
+            for a in q['answers']:
+                a['is_chosen'] = a['id'] in chosen
+        return data

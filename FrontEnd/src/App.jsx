@@ -71,7 +71,7 @@ function App() {
           <Route index element={<StudyOverview />} />
           <Route path="quizzes" element={<QuizList />} />
           <Route path="quizzes/:id" element={<QuizView />} />
-          <Route path="quizzes/:id/results" element={<StudentResultPage />} />
+          <Route path="quizzes/:id/result" element={<StudentResultPage />} />
           <Route path="courses" element={<PlaceholderPage title="courses" description="Track and submit assignments" />} />
           <Route path="settings" element={<PlaceholderPage title="settings" description="Track and submit assignments" />} />
           <Route path="assignments" element={<PlaceholderPage title="Assignments" description="Track and submit assignments" />} />

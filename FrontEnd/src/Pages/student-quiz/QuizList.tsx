@@ -4,7 +4,7 @@ import StudentQuizForm from '../../Components/student-quiz/StudentQuizForm';
 import '../student-quiz/StudentQuizForm.css'; // Add this line
 import '../../Components/teacherQuiz/QuizForm.css';
 import '../../Components/teacherQuiz/QuestionForm.css';
-import type Quiz from '../../types/student-quiz';
+import type { Quiz } from '../../types/student-quiz';
 
 const QuizList = () => {
     const navigate = useNavigate();
@@ -53,7 +53,7 @@ const QuizList = () => {
                                         navigate(`/StudydDashboard/quizzes/${quiz.id}`);
                                         return;
                                     }
-                                    navigate(`/StudydDashboard/quizzes/${quiz.id}/results`, { state: { quiz } });
+                                    navigate(`/StudydDashboard/quizzes/${quiz.id}/result`);
                                 }}
                                 className="quiz-button"
                             >

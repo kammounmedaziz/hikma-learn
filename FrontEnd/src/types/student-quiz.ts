@@ -1,18 +1,23 @@
-interface Answer {
+export interface AnswerBase {
   id: number;
   text: string;
 }
 
-interface Question {
+export interface Answer extends AnswerBase {}
+
+export interface QuestionBase {
   id: number;
   text: string;
   question_type: 'MCQ';
   points: number;
   difficulty_level: 'EASY' | 'MEDIUM' | 'HARD' | null;
+}
+
+export interface Question extends QuestionBase {
   answers: Answer[];
 }
 
-interface Quiz {
+export interface QuizBase {
   id: number;
   url: string;
   teacher: number;
@@ -22,17 +27,21 @@ interface Quiz {
   is_published: boolean;
   creation_date: string;
   updated_date: string;
-  questions: Question[];
   submitted: boolean;
 }
 
-interface SubmissionAnswer {
+export interface Quiz extends QuizBase {
+  questions: Question[];
+}
+
+// --- Submission / Result shapes ---
+export interface SubmissionAnswer {
   question: number;
   chosen_answer: number;
   is_correct: boolean;
 }
 
-interface Submission {
+export interface Submission {
   id: number;
   quiz: number;
   student: number;
@@ -41,5 +50,16 @@ interface Submission {
   answers: SubmissionAnswer[];
 }
 
-export type { Quiz, Question, Answer, SubmissionAnswer, Submission };
-export default Quiz;
+export interface AnswerResult extends AnswerBase {
+  is_correct: boolean;
+  is_chosen: boolean;
+}
+
+export interface QuestionResult extends QuestionBase {
+  answers: AnswerResult[];
+}
+
+export interface QuizResult extends QuizBase {
+  questions: QuestionResult[];
+  grade: number;
+}
