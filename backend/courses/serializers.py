@@ -1,6 +1,10 @@
+import webvtt
+from django.db.models import QuerySet
 from rest_framework import serializers
 from .models import Course, CourseFollow, Chapter, Content, ContentKind, Quiz
 from rest_framework.reverse import reverse
+from django.core.exceptions import ValidationError
+import re
 
 class CourseSerializer(serializers.ModelSerializer):
     teacher = serializers.ReadOnlyField(source='teacher.username')
@@ -40,20 +44,57 @@ class ReorderSerializer(serializers.Serializer):
 
 class ContentSerializer(serializers.ModelSerializer):
     content_url = serializers.SerializerMethodField()
+    subtitle_file = serializers.FileField(required=False, allow_null=True)
+    transcript_text = serializers.SerializerMethodField()
+    subtitle_file_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Content
         fields = [
             'id', 'content_url', 'title', 'content_kind',
             'url', 'file', 'file_kind', 'file_mime_type',
-            'text',
-            'order', 'creation_date', 'updated_date'
+            'text', 'order', 'subtitle_file', 'subtitle_file_url', 'transcript_text',
+            'creation_date', 'updated_date'
         ]
         read_only_fields = ['order', 'file_mime_type', 'file_kind', 'creation_date', 'updated_date']
 
     def get_content_url(self, obj):
+        try:
+            request = self.context.get('request')
+            return reverse('content-detail', kwargs={'course_pk': obj.chapter.course_id, 'chapter_pk': obj.chapter_id, 'pk': obj.pk }, request=request)
+        except (AttributeError, Chapter.DoesNotExist):
+            return None
+
+    def get_transcript_text(self, obj):
+        if obj.subtitle_file:
+            try:
+                from io import StringIO
+                content = obj.subtitle_file.read().decode('utf-8')
+                buffer = StringIO(content)
+                vtt = webvtt.read_buffer(buffer)
+                return ' '.join([cue.text.strip() for cue in vtt])
+            except Exception:
+                return ''
+        return ''
+
+    def get_fields(self):
+        fields = super().get_fields()
         request = self.context.get('request')
-        return reverse('content-detail', kwargs={'course_pk': obj.chapter.course_id, 'chapter_pk': obj.chapter_id, 'pk': obj.pk}, request=request)
+        if request and request.method == 'GET':
+            # For list views, instance is a QuerySet, so skip subtitle_file
+            if isinstance(getattr(self, 'instance', None), QuerySet):
+                fields.pop('subtitle_file', None)
+            else:
+                instance = getattr(self, 'instance', None)
+                if instance and (instance.content_kind != ContentKind.FILE or not getattr(instance, 'file_mime_type', '').startswith('video/')):
+                    fields.pop('subtitle_file', None)
+        return fields
+
+    def get_subtitle_file_url(self, obj):
+        request = self.context.get('request')
+        if obj.subtitle_file and hasattr(obj.subtitle_file, 'url'):
+            return request.build_absolute_uri(obj.subtitle_file.url) if request else obj.subtitle_file.url
+        return None
 
     def validate(self, attrs):
         kind = attrs.get('content_kind', self.instance and self.instance.content_kind)
@@ -93,3 +134,23 @@ class ContentSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({'quiz': 'Quiz field should only be filled for QUIZ content type.'})
 
         return attrs
+
+    def validate_subtitle_file(self, file):
+        if file:
+            try:
+                content = file.read().decode('utf-8', errors='ignore')
+                file.seek(0)
+                webvtt.from_string(content)
+            except Exception:
+                raise serializers.ValidationError("Invalid subtitle file format (expected a valid .vtt file).")
+        return file
+
+class SubtitleEditSerializer(serializers.Serializer):
+    subtitle_content = serializers.CharField()
+
+    def validate_subtitle_content(self, value):
+        try:
+            webvtt.from_string(value)
+        except Exception:
+            raise serializers.ValidationError("Invalid .vtt subtitle file format.")
+        return value

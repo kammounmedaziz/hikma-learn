@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { Form, FormGroup, Label, Input, Button, Alert } from 'reactstrap';
 import axios from 'axios';
 import "../App.css";
 
@@ -40,6 +41,8 @@ const CourseDetails = () => {
   const [showReorderPopup, setShowReorderPopup] = useState(false);
   const [reorderedChapters, setReorderedChapters] = useState([]);
   const [draggedItem, setDraggedItem] = useState(null);
+  const [subtitleError, setSubtitleError] = useState(null);
+  const [subtitleSuccess, setSubtitleSuccess] = useState(null);
 
   const MAX_LENGTH = 100;
 
@@ -222,6 +225,72 @@ const CourseDetails = () => {
     }
   };
 
+  const submitContent = async () => {
+    if (!contentForm.title) {
+      alert("Title is required.");
+      return;
+    }
+
+    if (contentType === 'TEXT' && !contentForm.text) {
+      alert("Text content is required.");
+      return;
+    }
+
+    if (contentType === 'LINK' && !contentForm.url) {
+      alert("URL is required.");
+      return;
+    }
+
+    if (contentType === 'FILE' && !contentForm.file) {
+      alert("File is required.");
+      return;
+    }
+
+    if (contentType === 'QUIZ') {
+      alert("Quiz creation is not yet implemented.");
+      return;
+    }
+
+    try {
+      const csrfToken = getCookie('csrftoken');
+      const formData = new FormData();
+      formData.append('title', contentForm.title);
+      formData.append('content_kind', contentType);
+
+      if (contentType === 'TEXT') {
+        formData.append('text', contentForm.text);
+      } else if (contentType === 'LINK') {
+        formData.append('url', contentForm.url);
+      } else if (contentType === 'FILE') {
+        formData.append('file', contentForm.file);
+      }
+
+      const res = await axios.post(
+        `http://127.0.0.1:8000/courses/${courseId}/chapters/${selectedChapterId}/contents/`,
+        formData,
+        {
+          headers: {
+            'X-CSRFToken': csrfToken,
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      setChapterContents((prev) => ({
+        ...prev,
+        [selectedChapterId]: [...(prev[selectedChapterId] || []), res.data],
+      }));
+
+      setShowContentPopup(false);
+      setContentForm({ title: '', text: '', url: '', file: null });
+      setContentType('TEXT');
+    } catch (err) {
+      console.error("Error adding content:", err);
+      alert("Failed to add content.");
+    }
+  };
+
   const submitEditContent = async (chapterId, contentId) => {
     try {
       const csrfToken = getCookie('csrftoken');
@@ -287,6 +356,70 @@ const CourseDetails = () => {
     } catch (error) {
       console.error('Erreur lors de la suppression:', error);
       alert('La suppression a échoué. Veuillez réessayer.');
+    }
+  };
+
+  const handleUploadSubtitle = async (chapterId, contentId, file) => {
+    if (!file) {
+      setSubtitleError('No file selected.');
+      return;
+    }
+    if (!file.name.toLowerCase().endswith('.vtt')) {
+      setSubtitleError('Please upload a valid .vtt file.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('subtitle_file', file);
+
+    try {
+      const res = await axios.post(
+        `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/subtitles/`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      setChapterContents(prev => ({
+        ...prev,
+        [chapterId]: prev[chapterId].map(c =>
+          c.id === contentId ? res.data : c
+        ),
+      }));
+      setSubtitleSuccess('Subtitle uploaded successfully!');
+      setSubtitleError(null);
+    } catch (err) {
+      setSubtitleError(err.response?.data?.error || 'Failed to upload subtitle.');
+      setSubtitleSuccess(null);
+    }
+  };
+
+  const handleDeleteSubtitle = async (chapterId, contentId) => {
+    if (!window.confirm('Confirm deletion of subtitle?')) return;
+
+    try {
+      await axios.delete(
+        `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/subtitles/`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setChapterContents(prev => ({
+        ...prev,
+        [chapterId]: prev[chapterId].map(c =>
+          c.id === contentId ? { ...c, subtitle_file: null, transcript_text: '' } : c
+        ),
+      }));
+      setSubtitleSuccess('Subtitle deleted successfully!');
+      setSubtitleError(null);
+    } catch (err) {
+      setSubtitleError(err.response?.data?.error || 'Failed to delete subtitle.');
+      setSubtitleSuccess(null);
     }
   };
 
@@ -471,27 +604,23 @@ const CourseDetails = () => {
                   </button>
 
                   {isTeacher && (
-                    <button onClick={() => handleEditChapter(chap)} title="Edit chapter" aria-label="Modifier" className="hover:text-gray-300">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4 12.5-12.5z" />
-                      </svg>
-                    </button>
-                  )}
-
-                  {isTeacher && (
-                    <button onClick={() => handleDeleteChapter(chap.id)} title="Delete chapter" aria-label="Supprimer" className="hover:text-gray-300">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-4 0a1 1 0 00-1 1v1h6V4a1 1 0 00-1-1m-4 0h4" />
-                      </svg>
-                    </button>
-                  )}
-
-                  {isTeacher && (
-                    <button onClick={() => handleAddContent(chap.id)} title="Add content" aria-label="Ajouter contenu" className="hover:text-gray-300">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                      </svg>
-                    </button>
+                    <>
+                      <button onClick={() => handleEditChapter(chap)} title="Edit chapter" aria-label="Modifier" className="hover:text-gray-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4 12.5-12.5z" />
+                        </svg>
+                      </button>
+                      <button onClick={() => handleDeleteChapter(chap.id)} title="Delete chapter" aria-label="Supprimer" className="hover:text-gray-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5-4h4m-4 0a1 1 0 00-1 1v1h6V4a1 1 0 00-1-1m-4 0h4" />
+                        </svg>
+                      </button>
+                      <button onClick={() => handleAddContent(chap.id)} title="Add content" aria-label="Ajouter contenu" className="hover:text-gray-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
@@ -532,6 +661,34 @@ const CourseDetails = () => {
                                 >
                                   🗑️
                                 </button>
+                                {content.content_kind === 'FILE' && content.file_mime_type?.startsWith('video/') && (
+                                  <>
+                                    <button
+                                      title="Upload subtitle"
+                                      className="text-blue-400 hover:text-blue-300 text-lg"
+                                    >
+                                      <label htmlFor={`subtitle-upload-${content.id}`} style={{ cursor: 'pointer' }}>
+                                        📜
+                                      </label>
+                                      <input
+                                        id={`subtitle-upload-${content.id}`}
+                                        type="file"
+                                        accept=".vtt"
+                                        style={{ display: 'none' }}
+                                        onChange={(e) => handleUploadSubtitle(chap.id, content.id, e.target.files[0])}
+                                      />
+                                    </button>
+                                    {content.subtitle_file && (
+                                      <button
+                                        onClick={() => handleDeleteSubtitle(chap.id, content.id)}
+                                        title="Delete subtitle"
+                                        className="text-red-400 hover:text-red-300 text-lg"
+                                      >
+                                        🗑️
+                                      </button>
+                                    )}
+                                  </>
+                                )}
                               </div>
                               <Link
                                 to={`/courses/${courseId}/chapters/${chap.id}/contents/${content.id}`}
@@ -615,7 +772,7 @@ const CourseDetails = () => {
                                   const isImage = (u) => u.match(/\.(jpeg|jpg|gif|png|svg)$/i) !== null;
                                   const isYouTube = lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be');
                                   const isPdf = lowerUrl.endsWith('.pdf');
-                                  const isVideo = lowerUrl.endsWith('.mp4');
+                                  const isVideo = lowerUrl.match(/\.(mp4)$/i);
 
                                   const YouTubeIcon = () => (
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="red" viewBox="0 0 24 24" stroke="none" className="inline w-6 h-6" aria-hidden="true">
@@ -765,6 +922,8 @@ const CourseDetails = () => {
                             )}
                           </div>
                         )}
+                        {subtitleError && <Alert color="danger" className="mt-2">{subtitleError}</Alert>}
+                        {subtitleSuccess && <Alert color="success" className="mt-2">{subtitleSuccess}</Alert>}
                       </div>
                     ))
                   ) : (
