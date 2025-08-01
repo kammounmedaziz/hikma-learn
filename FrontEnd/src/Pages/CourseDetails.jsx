@@ -202,6 +202,53 @@ const CourseDetails = () => {
     }
   };
 
+  const submitContent = async () => {
+    if (!contentForm.title) {
+      alert("Title is required.");
+      return;
+    }
+
+    const csrfToken = getCookie('csrftoken');
+    const formData = new FormData();
+
+    formData.append('title', contentForm.title);
+    formData.append('content_kind', contentType);
+
+    if (contentType === 'TEXT') {
+      if (!contentForm.text) return alert("Text is required.");
+      formData.append('text', contentForm.text);
+    } else if (contentType === 'LINK') {
+      if (!contentForm.url) return alert("URL is required.");
+      formData.append('url', contentForm.url);
+    } else if (contentType === 'FILE') {
+      if (!contentForm.file) return alert("File is required.");
+      formData.append('file', contentForm.file);
+    } else if (contentType === 'QUIZ') {
+      alert("Quiz support not implemented yet.");
+      return;
+    }
+
+    try {
+      const res = await axios.post(
+        `http://127.0.0.1:8000/courses/${courseId}/chapters/${selectedChapterId}/contents/`,
+        formData,
+        {
+          headers: {
+            'X-CSRFToken': csrfToken,
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      await fetchContentsForChapter(selectedChapterId);
+      setShowContentPopup(false);
+    } catch (err) {
+      console.error("Erreur ajout content :", err);
+      alert("Erreur lors de l'ajout du contenu.");
+    }
+  };
+
   const handleEditContent = (content) => {
     setEditingContentId(content.id);
     setEditContentData({
