@@ -90,6 +90,7 @@ class Content(models.Model):
     file = models.FileField(upload_to='content_files/', blank=True, null=True)
     file_kind = models.CharField(max_length=20, choices=FileKind.choices, blank=True, null=True)
     file_mime_type = models.CharField(max_length=100, blank=True, null=True)  # Optional MIME type for the file
+    subtitle_file = models.FileField(upload_to='content_subtitles/', blank=True, null=True)
     text = models.TextField(blank=True, null=True)
     order = models.PositiveIntegerField(default=1)
     creation_date = models.DateTimeField(auto_now_add=True)
