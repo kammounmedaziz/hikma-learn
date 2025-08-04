@@ -31,6 +31,7 @@ pillow==11.3.0
 prompt_toolkit==3.0.51
 ptyprocess==0.7.0
 pure_eval==0.2.3
+puremagic==1.30
 Pygments==2.19.2
 PyJWT==2.9.0
 pyxdg==0.28

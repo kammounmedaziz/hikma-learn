@@ -8,6 +8,21 @@ from django.core.exceptions import ValidationError
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 
+import puremagic
+
+def guess_mime_by_content(file_obj) -> str:
+    """
+    Seek and read the file-like object and guess only from its magic headers.
+    Returns a MIME string (e.g. 'image/png'), or 'application/octet-stream' if unknown.
+    """
+    file_obj.seek(0)
+    results = puremagic.magic_stream(file_obj)
+    file_obj.seek(0)
+    if not results:
+        return "application/octet-stream"
+    return results[0].mime_type or "application/octet-stream"
+
+
 
 class Course(models.Model):
     title = models.CharField(max_length=255)
@@ -135,8 +150,8 @@ class Content(models.Model):
         is_file_content = self.content_kind == ContentKind.FILE and self.file
 
         if is_file_content:
-            # Use untrusted browser MIME
-            self.file_mime_type = getattr(self.file.file, 'content_type', None) or 'application/octet-stream'
+            # Guess MIME type from file content
+            self.file_mime_type = guess_mime_by_content(self.file.file)
 
             # Guess file kind based on MIME type
             self.file_kind = guess_file_kind(self.file_mime_type)
