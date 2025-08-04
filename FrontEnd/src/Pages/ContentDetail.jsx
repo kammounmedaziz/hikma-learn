@@ -48,16 +48,14 @@ const ContentDetail = () => {
   useEffect(() => {
     if (content && videoRef.current) {
       const url = content.content_kind === 'LINK' ? content.url : content.content_kind === 'FILE' ? content.file : null;
-      const lowerUrl = url?.toLowerCase();
-      const isVideo = (u) => u?.match(/\.(mp4)$/i) !== null;
 
-      if (isVideo(lowerUrl) && !playerRef.current) {
+      if (content.file_kind === "VIDEO" && !playerRef.current) {
         console.log('Initializing video with URL:', url, 'Ref:', videoRef.current); // Debug timing
         setTimeout(() => {
           const player = videojs(videoRef.current, {
             controls: true,
             fluid: true,
-            sources: [{ src: url || 'https://www.w3schools.com/html/mov_bbb.mp4', type: 'video/mp4' }],
+            sources: [{ src: url || 'https://www.w3schools.com/html/mov_bbb.mp4', type: content.file_mime_type }],
             textTrackSettings: true,
           }, () => {
             console.log('Player ready:', player);
@@ -199,8 +197,6 @@ const ContentDetail = () => {
     const renderContent = () => {
       const url = content.content_kind === 'LINK' ? content.url : content.content_kind === 'FILE' ? content.file : null;
       const lowerUrl = url?.toLowerCase();
-      const isImage = (u) => u?.match(/\.(jpeg|jpg|gif|png|svg)$/i) !== null;
-      const isVideo = (u) => u?.match(/\.(mp4)$/i) !== null;
 
       if (content.content_kind === 'TEXT') {
         return (
@@ -231,7 +227,7 @@ const ContentDetail = () => {
         );
       }
 
-      if (isImage(lowerUrl)) {
+      if (content.file_kind === "IMAGE") {
         return (
           <div className="flex justify-center p-4 border border-white/20 rounded-lg">
             <img src={url} alt={content.title} className="max-w-full h-auto rounded shadow" />
@@ -239,7 +235,7 @@ const ContentDetail = () => {
         );
       }
 
-      if (lowerUrl?.endsWith('.pdf')) {
+      if (content.file_kind === "PDF") {
         return (
           <div className="p-4 border border-white/20 rounded-lg">
             <iframe src={url} title={content.title} className="w-full h-[80vh] rounded" />
@@ -247,7 +243,7 @@ const ContentDetail = () => {
         );
       }
 
-      if (isVideo(lowerUrl)) {
+      if (content.file_kind === "VIDEO") {
         console.log('Video URL:', url, 'Subtitle URL:', content.subtitle_file_url, 'MIME Type:', content.file_mime_type);
         return (
           <div className="p-4 border border-white/20 rounded-lg">
@@ -258,7 +254,7 @@ const ContentDetail = () => {
                 controls
                 preload="auto"
               >
-                <source src={url || 'https://www.w3schools.com/html/mov_bbb.mp4'} type="video/mp4" />
+                <source src={url || 'https://www.w3schools.com/html/mov_bbb.mp4'} type={content.file_mime_type} />
                 {content.subtitle_file_url && typeof content.subtitle_file_url === 'string' && (
                   <track kind="captions" src={content.subtitle_file_url} srcLang="en" label="English" default />
                 )}

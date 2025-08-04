@@ -769,10 +769,7 @@ const CourseDetails = () => {
 
                                   const lowerUrl = url.toLowerCase();
                                   const getFileName = (fullUrl) => fullUrl.split('/').pop();
-                                  const isImage = (u) => u.match(/\.(jpeg|jpg|gif|png|svg)$/i) !== null;
                                   const isYouTube = lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be');
-                                  const isPdf = lowerUrl.endsWith('.pdf');
-                                  const isVideo = lowerUrl.match(/\.(mp4)$/i);
 
                                   const YouTubeIcon = () => (
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="red" viewBox="0 0 24 24" stroke="none" className="inline w-6 h-6" aria-hidden="true">
@@ -825,7 +822,7 @@ const CourseDetails = () => {
                                         />
                                       </div>
                                     );
-                                  } else if (isPdf) {
+                                  } else if (content.file_kind === "PDF") {
                                     icon = <PdfIcon />;
                                     linkComponent = (
                                       <Link
@@ -835,7 +832,7 @@ const CourseDetails = () => {
                                         {getFileName(url)}
                                       </Link>
                                     );
-                                  } else if (isImage(lowerUrl)) {
+                                  } else if (content.file_kind === "IMAGE") {
                                     icon = <ImageIcon />;
                                     linkComponent = (
                                       <Link
@@ -854,7 +851,7 @@ const CourseDetails = () => {
                                         />
                                       </div>
                                     );
-                                  } else if (isVideo) {
+                                  } else if (content.file_kind === "VIDEO") {
                                     icon = <VideoIcon />;
                                     linkComponent = (
                                       <Link
