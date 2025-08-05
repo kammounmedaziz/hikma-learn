@@ -27,7 +27,7 @@ import {
   Eye
 } from 'lucide-react';
 import TeacherSettings from '../Components/TeacherSettings';
-
+import TeacherIssuesReportForm from './TeacherIssuesReportForm'
 const PlaceholderPage = ({ title, description }) => (
   <div className="space-y-8">
     <div className="text-center mb-8">
@@ -193,7 +193,7 @@ const TeacherDashboard = () => {
     { id: 'live_classes', label: 'Live Classes', icon: Video, description: 'Conduct virtual classes' },
     { id: 'forums', label: 'Discussion Forums', icon: MessageSquare, description: 'Moderate class discussions' },
     { id: 'notifications', label: 'Notifications', icon: Bell, description: 'System alerts and updates' },
-    { id: 'support', label: 'Support', icon: HelpCircle, description: 'Get help and report issues' },
+    { id: 'TeacherIssuesReportForm', label: 'Support', icon: HelpCircle, description: 'Get help and report issues' },
     { id: 'settings', label: 'Settings', icon: Settings, description: 'Configure your preferences' },
   ];
 
@@ -203,7 +203,9 @@ const TeacherDashboard = () => {
       case 'overview': 
         return <TeacherOverview />;
       case 'settings':
-        return <TeacherSettings/>
+        return <TeacherSettings/>;
+      case 'TeacherIssuesReportForm':
+        return <TeacherIssuesReportForm/>
       default:
         return <PlaceholderPage title={currentMenuItem?.label || 'Page Not Found'} description={currentMenuItem?.description || "This section is under development"} />;
     }

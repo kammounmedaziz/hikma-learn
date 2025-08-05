@@ -43,7 +43,7 @@ const LandingPage = ({ showWelcome, setShowWelcome }) => {
           
 
           <div className="relative z-10">
-            <MyCourses/>
+            <AdminDashboard/>
           </div>
         </div>
       )}

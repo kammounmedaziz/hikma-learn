@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import AdminManageTeachers from './AdminManageTeachers'
 import AdminManageStudents from './AdminManageStudents'
+import AdminManageIssues from './AdminManageIssues'
 const PlaceholderPage = ({ title, description }) => (
   <div className="space-y-8">
     <div className="text-center mb-8">
@@ -244,7 +245,7 @@ const AdminDashboard = () => {
     { id: 'content_moderation', label: 'Content Moderation', icon: FileText, description: 'Review and moderate content' },
     { id: 'notifications', label: 'System Notifications', icon: Bell, description: 'Platform-wide notifications' },
     { id: 'email_management', label: 'Email Management', icon: Mail, description: 'Configure email settings' },
-    { id: 'support', label: 'Support Center', icon: HelpCircle, description: 'Admin support and documentation' },
+    { id: 'AdminManageIssues', label: 'Support Center', icon: HelpCircle, description: 'Admin support and documentation' },
     { id: 'settings', label: 'System Settings', icon: Settings, description: 'Configure platform settings' },
   ];
 
@@ -257,6 +258,8 @@ const AdminDashboard = () => {
         return <AdminManageStudents/>;
       case 'AdminManageTeachers':
         return <AdminManageTeachers/>
+      case 'AdminManageIssues':
+        return <AdminManageIssues/>
       default:
         return <PlaceholderPage title={currentMenuItem?.label || 'Page Not Found'} description={currentMenuItem?.description || "This section is under development"} />;
     }

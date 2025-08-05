@@ -20,7 +20,8 @@ import {
 } from 'lucide-react';
 
 import StudyOverview from './StudyOverview';
-import StudentSettings from '../Components/StudentSettings'
+import StudentSettings from '../Components/StudentSettings';
+import IssuesReportForm from './StudentIssuesReportForm'
 //import MeetOurLearners from './MeetOurLearners';
 //import SharingFeedbacks from './SharingFeedbacks';
 //import Events from './Events';
@@ -76,7 +77,7 @@ const StudyDashboard = () => {
     { id: 'forum', label: 'Discussion Forum', icon: MessageSquare, description: 'Ask and answer questions' },
     { id: 'study_groups', label: 'Study Groups', icon: Users, description: 'Join or create study circles' },
     { id: 'notifications', label: 'Notifications', icon: Bell, description: 'Alerts and important messages' },
-    { id: 'support', label: 'Support Center', icon: HelpCircle, description: 'Ask for help or report issues' },
+    { id: 'ReportIssue', label: 'Support Center', icon: HelpCircle, description: 'Ask for help or report issues' },
     { id: 'settings', label: 'Settings', icon: Settings, description: 'Manage your profile and preferences' },
   ];
 
@@ -85,7 +86,7 @@ const StudyDashboard = () => {
     switch (currentPage) {
       case 'overview': return <StudyOverview />;
       case 'settings': return <StudentSettings/>
-    //  case 'meet_learners': return <MeetOurLearners />;
+      case 'ReportIssue': return <IssuesReportForm />;
     //  case 'sharing_feedbacks': return <SharingFeedbacks />;
       //case 'events': return <Events />;
       //case 'partners_supporters': return <PartnersAndSupporters />;
