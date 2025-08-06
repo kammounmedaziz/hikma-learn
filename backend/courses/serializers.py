@@ -69,7 +69,10 @@ class ContentSerializer(serializers.ModelSerializer):
         if obj.subtitle_file:
             try:
                 from io import StringIO
-                content = obj.subtitle_file.read().decode('utf-8')
+                # Reset file pointer just in case it was already read
+                obj.subtitle_file.seek(0)
+                content = obj.subtitle_file.read().decode('utf-8', errors='ignore')
+                obj.subtitle_file.seek(0)  # Optional: reset again after reading
                 buffer = StringIO(content)
                 vtt = webvtt.read_buffer(buffer)
                 return ' '.join([cue.text.strip() for cue in vtt])

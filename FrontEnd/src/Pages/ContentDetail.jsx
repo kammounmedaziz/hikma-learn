@@ -159,24 +159,30 @@ const ContentDetail = () => {
   const handleDeleteSubtitle = async () => {
     if (!window.confirm('Confirm deletion of subtitle?')) return;
     try {
+      if (playerRef.current) {
+        playerRef.current.pause(); // Pause video to release file lock
+        const tracks = playerRef.current.remoteTextTracks();
+        for (let i = tracks.length - 1; i >= 0; i--) {
+          playerRef.current.removeRemoteTextTrack(tracks[i]);
+        }
+      }
       await axios.delete(
         `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/subtitles/`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      setContent({ ...content, subtitle_file_url: null, transcript_text: '' });
-      if (playerRef.current) {
-        const tracks = playerRef.current.remoteTextTracks();
-        for (let i = tracks.length - 1; i >= 0; i--) {
-          playerRef.current.removeRemoteTextTrack(tracks[i]);
-        }
-      }
+      setContent((prevContent) => {
+        const updatedContent = { ...prevContent, subtitle_file_url: null, transcript_text: '' };
+        console.log('Updated content state after deletion:', updatedContent);
+        return updatedContent;
+      });
       setSubtitleSuccess('Subtitle deleted successfully!');
       setSubtitleError(null);
     } catch (err) {
       setSubtitleError(err.response?.data?.error || 'Failed to delete subtitle.');
       setSubtitleSuccess(null);
+      console.error('Delete subtitle error:', err);
     }
   };
 
@@ -258,10 +264,6 @@ const ContentDetail = () => {
                 controls
                 preload="auto"
               >
-                <source src={url || 'https://www.w3schools.com/html/mov_bbb.mp4'} type="video/mp4" />
-                {content.subtitle_file_url && typeof content.subtitle_file_url === 'string' && (
-                  <track kind="captions" src={content.subtitle_file_url} srcLang="en" label="English" default />
-                )}
               </video>
             </div>
             <div className="mt-4 flex space-x-4 justify-center">

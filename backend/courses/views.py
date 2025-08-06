@@ -1,4 +1,7 @@
+import logging
+import time
 import webvtt
+from django.core.files.storage import default_storage
 from django.shortcuts import render
 from rest_framework import viewsets, permissions, serializers
 from rest_framework.permissions import BasePermission, SAFE_METHODS
@@ -180,33 +183,86 @@ class ContentViewSet(viewsets.ModelViewSet):
             logger.error(f"Error uploading subtitle for content {pk}: {str(e)}")
             return Response({'detail': f'Internal server error: {str(e)}'},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    @action(detail=True, methods=['post'], url_path='edit-subtitles')
+    @action(detail=True, methods=['get', 'post'], url_path='edit-subtitles')
     def edit_subtitles(self, request, course_pk=None, chapter_pk=None, pk=None):
+        logger = logging.getLogger(__name__)
+        logger.info(
+            f"Received {request.method} request to edit_subtitles for content {pk}, course {course_pk}, chapter {chapter_pk}")
+
         content = self.get_object()
         if not content.subtitle_file:
+            logger.error("No subtitle file exists for this content")
             return Response({'error': 'No subtitle file exists for this content.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        if request.method == 'GET':
+            logger.info("Fetching subtitle content")
+            try:
+                with open(content.subtitle_file.path, 'r', encoding='utf-8') as f:
+                    subtitle_content = f.read()
+                return Response({'subtitle_content': subtitle_content}, status=status.HTTP_200_OK)
+            except Exception as e:
+                logger.exception(f"Failed to read subtitle file for content {pk}: {str(e)}")
+                return Response({'error': f'Failed to read subtitle file: {str(e)}'},
+                                status=status.HTTP_400_BAD_REQUEST)
 
-        subtitle_content = serializer.validated_data['subtitle_content']
-        try:
-            content.subtitle_file.delete(save=False)
-            content.subtitle_file.save(
-                os.path.basename(content.subtitle_file.name),
-                ContentFile(subtitle_content.encode('utf-8'))
-            )
-            content.save()
-        except Exception as e:
-            return Response({'error': f'Failed to update subtitle file: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
+        elif request.method == 'POST':
+            logger.info(f"POST request data: {request.data}")
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
 
-        serializer = ContentSerializer(content, context={'request': request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
+            subtitle_content = serializer.validated_data['subtitle_content']
+            logger.info("Valid subtitle content received")
+
+            try:
+                webvtt.from_string(subtitle_content)
+                logger.info("WebVTT content is valid")
+
+                original_filename = os.path.basename(
+                    content.subtitle_file.name) if content.subtitle_file.name else 'subtitles.vtt'
+                # Overwrite the file instead of deleting to avoid PermissionError
+                with open(content.subtitle_file.path, 'w', encoding='utf-8') as f:
+                    f.write(subtitle_content)
+                content.save()
+
+                serializer = ContentSerializer(content, context={'request': request})
+                logger.info("Subtitles updated successfully")
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            except Exception as e:
+                logger.exception(f"Subtitle update failed for content {pk}: {str(e)}")
+                return Response({'error': f'Failed to update subtitle file: {str(e)}'},
+                                status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=True, methods=['delete'], url_path='subtitles')
     def delete_subtitles(self, request, course_pk=None, chapter_pk=None, pk=None):
         content = self.get_object()
         if not content.subtitle_file:
             return Response({'error': 'No subtitle file to delete.'}, status=status.HTTP_400_BAD_REQUEST)
-        content.subtitle_file.delete(save=True)
+
+        file_path = content.subtitle_file.name
+        content.subtitle_file = None
+        content.transcript_text = ''
+        content.save()
+
+        # Attempt to delete the physical file with retries
+        for _ in range(3):  # Retry up to 3 times
+            try:
+                if default_storage.exists(file_path):
+                    default_storage.delete(file_path)
+                break
+            except PermissionError:
+                time.sleep(0.5)  # Wait briefly before retrying
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=True, methods=['get'], url_path='get-subtitles')
+    def get_subtitles(self, request, course_pk=None, chapter_pk=None, pk=None):
+        content = self.get_object()
+        if not content.subtitle_file:
+            return Response({'subtitle_content': ''})
+
+        file_path = content.subtitle_file.path
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content_text = f.read()
+            return Response({'subtitle_content': content_text})
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
