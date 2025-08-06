@@ -164,6 +164,7 @@ const SignInComponent = ({ onSubmit }) => {
       localStorage.setItem('token', data.access);
       localStorage.setItem('refreshToken', data.refresh);
       localStorage.setItem('username', data.username);
+      localStorage.setItem('userType', data.user_type);
       
       // If your backend provides user ID, store that too
       if (data.user_id) {

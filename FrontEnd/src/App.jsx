@@ -1,6 +1,6 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useState, useEffect } from 'react';
 import './index.css';
 import Navbar from './Components/MainNavbar';
 import Home from './Pages/Home';
@@ -27,6 +27,13 @@ import StudentResultPage from './Pages/student-quiz/QuizResults';
 import StudyOverview from './Pages/StudyOverview';
 import QuizList from './Pages/student-quiz/QuizList';
 import QuizView from './Pages/student-quiz/QuizView';
+import CourseDetails from './Pages/CourseDetails';
+import ContentDetail from './Pages/ContentDetail';
+import { ensureValidToken } from './utils/api';
+import MyCoursesTeacher from './Pages/MyCoursesTeacher.jsx';
+import MyCourses from './Pages/MyCourses.jsx';
+import AllCoursesStudent from './Pages/AllCoursesStudent.jsx';
+import AllCoursesTeacher from './Pages/AllCoursesTeacher.jsx';
 
 const LandingPage = ({ showWelcome, setShowWelcome }) => {
   return (
@@ -56,23 +63,45 @@ LandingPage.propTypes = {
   setShowWelcome: PropTypes.func.isRequired,
 };
 
+const getRedirectPath = () => {
+  const userType = localStorage.getItem('userType');
+  if (userType === 'student') return '/StudydDashboard';
+  if (userType === 'teacher') return '/TeacherDashboard';
+  if (userType === 'admin') return '/AdminDashboard';
+  return '/auth';
+};
+
 function App() {
-  const [showWelcome, setShowWelcome] = useState(true);
+  const [authReady, setAuthReady] = useState(false);
+  const [redirectPath, setRedirectPath] = useState('/auth');
+
+  useEffect(() => {
+    const init = async () => {
+      const ok = await ensureValidToken();
+      setRedirectPath(ok ? getRedirectPath() : '/auth');
+      setAuthReady(true);
+    };
+    init();
+
+    const sync = () => init();
+    window.addEventListener('storage', sync);
+    return () => window.removeEventListener('storage', sync);
+  }, []);
+
+  if (!authReady) return <div>Loading...</div>;
 
   return (
     <BrowserRouter>
       <Routes>
-        <Route
-          path="/"
-          element={<LandingPage showWelcome={showWelcome} setShowWelcome={setShowWelcome} />}
-        />
+        <Route path="/" element={<Navigate to={redirectPath} replace />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/StudydDashboard" element={<StudyDashboard />}>
           <Route index element={<StudyOverview />} />
           <Route path="quizzes" element={<QuizList />} />
           <Route path="quizzes/:id" element={<QuizView />} />
           <Route path="quizzes/:id/result" element={<StudentResultPage />} />
-          <Route path="courses" element={<PlaceholderPage title="courses" description="Track and submit assignments" />} />
+          <Route path="courses" element={<MyCourses/>} />
+          <Route path="all-courses" element={<AllCoursesStudent/>} />
           <Route path="settings" element={<PlaceholderPage title="settings" description="Track and submit assignments" />} />
           <Route path="assignments" element={<PlaceholderPage title="Assignments" description="Track and submit assignments" />} />
           <Route path="schedule" element={<PlaceholderPage title="Schedule" description="Daily and weekly learning schedule" />} />
@@ -96,10 +125,8 @@ function App() {
           <Route path="quizzes/create" element={<CreateQuiz />} />
           <Route path="quizzes/edit/:id" element={<EditQuiz />} />
           <Route path="settings" element={<TeacherSettings />} />
-          <Route
-            path="courses"
-            element={<PlaceholderPage title="My Courses" description="Manage your courses and curriculum" />}
-          />
+          <Route path="courses" element={<MyCoursesTeacher/>} />
+          <Route path="all-courses" element={<AllCoursesTeacher/>} />
           <Route
             path="grading"
             element={<PlaceholderPage title="Grading Center" description="Review and grade submissions" />}
@@ -142,6 +169,8 @@ function App() {
           />
         </Route>
         <Route path="/AdminDashboard" element={<AdminDashboard />} />
+        <Route path="/courses/:courseId/" element={<CourseDetails />} />
+        <Route path="/courses/:courseId/chapters/:chapterId/contents/:contentId" element={<ContentDetail />} />
       </Routes>
     </BrowserRouter>
   );

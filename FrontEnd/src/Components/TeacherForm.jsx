@@ -19,7 +19,7 @@ const TeacherForm = ({ onSubmit, onCancel, mode = 'add', initialData = {} }) => 
 
   const [errors, setErrors] = useState({});
 
-  // ✅ Preload initial data when in edit mode
+
   useEffect(() => {
     console.log("Initial data received:", initialData);
     if (mode === 'edit' && initialData) {

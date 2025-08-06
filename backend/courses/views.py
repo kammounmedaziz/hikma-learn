@@ -1,15 +1,17 @@
+import webvtt
 from django.shortcuts import render
 from rest_framework import viewsets, permissions, serializers
 from rest_framework.permissions import BasePermission, SAFE_METHODS
-
-from accounts.models import UserType
-from .models import Course, Chapter, CourseFollow, Content
-from .serializers import CourseSerializer, CourseFollowSerializer, ChapterSerializer, ContentSerializer
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
-
+from accounts.models import UserType
+from .models import Course, Chapter, CourseFollow, Content, ContentKind, FileKind
+from .serializers import CourseSerializer, CourseFollowSerializer, ChapterSerializer, ContentSerializer, SubtitleEditSerializer
 from .permissions import IsTeacherOrReadOnly, IsTeacherOfCourse, IsTeacherOfCourseOrReadOnly, IsTeacherOnly, IsStudentOnly, IsTeacherOfChapter
+import os
+from django.core.files.base import ContentFile
+from django.conf import settings
 
 class EmptySerializer(serializers.Serializer):
     pass
@@ -128,6 +130,8 @@ class ContentViewSet(viewsets.ModelViewSet):
         if self.action == 'reorder':
             from .serializers import ReorderSerializer
             return ReorderSerializer
+        elif self.action == 'edit_subtitles':
+            return SubtitleEditSerializer
         return super().get_serializer_class()
 
     @action(detail=False, methods=['post'], permission_classes=[IsTeacherOfChapter])
@@ -148,3 +152,61 @@ class ContentViewSet(viewsets.ModelViewSet):
             Content.objects.filter(id=content_id).update(order=order)
 
         return Response({"detail": "Contents reordered successfully."}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post', 'put'], url_path='upload-subtitles')
+    def upload_subtitles(self, request, course_pk=None, chapter_pk=None, pk=None):
+        content = self.get_object()
+        subtitle_file = request.FILES.get('subtitle_file')
+        if not subtitle_file:
+            return Response({'error': 'subtitle_file is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Validate file format
+            file_content = subtitle_file.read().decode('utf-8', errors='ignore')
+            subtitle_file.seek(0)  # Reset file pointer
+            webvtt.from_string(file_content)
+
+            # Use serializer to validate and save
+            serializer = ContentSerializer(content, data={'subtitle_file': subtitle_file}, partial=True,
+                                           context={'request': request})
+            if not serializer.is_valid():
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error uploading subtitle for content {pk}: {str(e)}")
+            return Response({'detail': f'Internal server error: {str(e)}'},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    @action(detail=True, methods=['post'], url_path='edit-subtitles')
+    def edit_subtitles(self, request, course_pk=None, chapter_pk=None, pk=None):
+        content = self.get_object()
+        if not content.subtitle_file:
+            return Response({'error': 'No subtitle file exists for this content.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        subtitle_content = serializer.validated_data['subtitle_content']
+        try:
+            content.subtitle_file.delete(save=False)
+            content.subtitle_file.save(
+                os.path.basename(content.subtitle_file.name),
+                ContentFile(subtitle_content.encode('utf-8'))
+            )
+            content.save()
+        except Exception as e:
+            return Response({'error': f'Failed to update subtitle file: {str(e)}'}, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer = ContentSerializer(content, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['delete'], url_path='subtitles')
+    def delete_subtitles(self, request, course_pk=None, chapter_pk=None, pk=None):
+        content = self.get_object()
+        if not content.subtitle_file:
+            return Response({'error': 'No subtitle file to delete.'}, status=status.HTTP_400_BAD_REQUEST)
+        content.subtitle_file.delete(save=True)
+        return Response(status=status.HTTP_204_NO_CONTENT)

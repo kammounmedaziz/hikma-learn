@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios'; // Added Axios
 import {
   Home,
   BookOpen,
@@ -16,13 +17,16 @@ import {
   ChevronRight,
   GraduationCap,
   Target,
-  Star
+  Star,
 } from 'lucide-react';
 
 import StudyOverview from './StudyOverview';
 import StudentSettings from '../Components/StudentSettings';
 import MyCourses from './MyCourses';
 import { NavLink, Outlet } from 'react-router-dom';
+import CourseList from '../Components/CourseList'; // ✅ import
+
+const AnimatedBackground = () => null;
 
 const PlaceholderPage = ({ title, description }) => (
   <div className="space-y-8">
@@ -34,7 +38,6 @@ const PlaceholderPage = ({ title, description }) => (
         {description}
       </p>
     </div>
-
     <div className="backdrop-blur-md bg-white/10 rounded-xl p-8 border border-white/20 text-center">
       <div className="mb-4">
         <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-full mx-auto mb-4 flex items-center justify-center">
@@ -52,14 +55,13 @@ const PlaceholderPage = ({ title, description }) => (
   </div>
 );
 
-const AnimatedBackground = () => null;
-
 const StudyDashboard = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const menuItems = [
     { id: 'overview', label: 'Overview', icon: Home, description: 'Study summary and quick insights', path: '' },
     { id: 'courses', label: 'My Courses', icon: BookOpen, description: 'Explore your enrolled courses', path: 'courses' },
+    { id: 'all-courses', label: 'All Courses', icon: GraduationCap, description: 'Explore our courses' , path: 'all-courses' },
     { id: 'ExamsQuiz', label: 'Exams & Quizzes', icon: FileText, description: 'Upcoming tests and past results', path: 'quizzes' },
     { id: 'assignments', label: 'Assignments', icon: Target, description: 'Track and submit assignments', path: 'assignments' },
     { id: 'schedule', label: 'Schedule', icon: Calendar, description: 'Daily and weekly learning schedule', path: 'schedule' },
@@ -96,7 +98,6 @@ const StudyDashboard = () => {
               </button>
             </div>
           </div>
-
           <nav className="mt-4 overflow-y-auto max-h-[calc(100vh-120px)]">
             {menuItems.map((item) => {
               const Icon = item.icon;
@@ -120,7 +121,6 @@ const StudyDashboard = () => {
             })}
           </nav>
         </div>
-
         <div className="flex-1 overflow-auto">
           <div className="p-4 md:p-8 relative z-10">
             <div className="backdrop-blur-lg bg-gray-900/30 rounded-2xl border border-gray-700 shadow-xl min-h-[calc(100vh-4rem)] p-4 md:p-8">
@@ -129,7 +129,6 @@ const StudyDashboard = () => {
           </div>
         </div>
       </div>
-
       <style>{`
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
         @keyframes spin-slower { to { transform: rotate(360deg); } }
