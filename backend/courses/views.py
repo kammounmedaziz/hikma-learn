@@ -1,6 +1,9 @@
+import asyncio
 import logging
+import re
 import time
 import webvtt
+from deepgram import DeepgramClient, PrerecordedOptions, Deepgram
 from django.core.files.storage import default_storage
 from django.shortcuts import render
 from rest_framework import viewsets, permissions, serializers
@@ -8,6 +11,9 @@ from rest_framework.permissions import BasePermission, SAFE_METHODS
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
+from webvtt import WebVTT, Caption
+from moviepy import VideoFileClip
+
 from accounts.models import UserType
 from .models import Course, Chapter, CourseFollow, Content, ContentKind, FileKind
 from .serializers import CourseSerializer, CourseFollowSerializer, ChapterSerializer, ContentSerializer, SubtitleEditSerializer
@@ -15,6 +21,32 @@ from .permissions import IsTeacherOrReadOnly, IsTeacherOfCourse, IsTeacherOfCour
 import os
 from django.core.files.base import ContentFile
 from django.conf import settings
+
+def format_timestamp(seconds):
+    hours = int(seconds // 3600)
+    minutes = int((seconds % 3600) // 60)
+    secs = int(seconds % 60)
+    millis = int((seconds - int(seconds)) * 1000)
+    return f"{hours:02}:{minutes:02}:{secs:02}.{millis:03}"
+
+def split_text_to_captions(text, segment_duration=5):
+    words = text.split()
+    words_per_segment = max(1, int(len(words) / (len(text) / segment_duration / 2)))  # heuristic
+    captions = []
+    start_time = 0
+
+    for i in range(0, len(words), words_per_segment):
+        segment_words = words[i:i+words_per_segment]
+        segment_text = ' '.join(segment_words)
+        end_time = start_time + segment_duration
+        captions.append({
+            'start': start_time,
+            'end': end_time,
+            'text': segment_text,
+        })
+        start_time = end_time
+
+    return captions
 
 class EmptySerializer(serializers.Serializer):
     pass
@@ -92,7 +124,6 @@ class ChapterViewSet(viewsets.ModelViewSet):
             from .serializers import ReorderSerializer
             return ReorderSerializer
         return super().get_serializer_class()
-
 
     @action(detail=False, methods=['post'], permission_classes=[IsTeacherOfCourse])
     def reorder(self, request, course_pk=None):
@@ -178,10 +209,145 @@ class ContentViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Exception as e:
-            import logging
             logger = logging.getLogger(__name__)
             logger.error(f"Error uploading subtitle for content {pk}: {str(e)}")
             return Response({'detail': f'Internal server error: {str(e)}'},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    @action(detail=True, methods=['post'], url_path='generate-subtitles', permission_classes=[IsTeacherOfChapter])
+    def generate_subtitles(self, request, pk=None, course_pk=None, chapter_pk=None):
+        logger = logging.getLogger(__name__)
+        logger.debug(f"User: {request.user}, Action: generate_subtitles for content {pk}")
+
+        content = self.get_object()
+
+        if content.content_kind != 'FILE' or content.file_kind != 'VIDEO':
+            return Response({'detail': 'Subtitles can only be generated for video content.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        if not content.file:
+            return Response({'detail': 'No video file available for transcription.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Get video duration using moviepy
+            video = VideoFileClip(content.file.path)
+            video_duration = video.duration  # Duration in seconds
+            video.close()
+            logger.debug(f"Video duration: {video_duration} seconds")
+
+            with open(content.file.path, 'rb') as f:
+                bytes_data = f.read()
+
+            from deepgram import DeepgramClient, PrerecordedOptions
+            # Initialize Deepgram client
+            dg_client = DeepgramClient(api_key=settings.DEEPGRAM_API_KEY)
+            source = {
+                'buffer': bytes_data,
+                'mimetype': content.file_mime_type,
+            }
+            options = PrerecordedOptions(
+                model='enhanced',  # Try 'enhanced' model for better utterance detection
+                smart_format=True,
+                punctuate=True,
+                utterances=True,
+                diarize=True
+            )
+            # Use synchronous transcribe_file method
+            response = dg_client.listen.rest.v('1').transcribe_file(source, options)
+            logger.debug(f"Transcription response type: {type(response)}, content: {response.to_dict()}")
+
+            # Extract transcript and utterances
+            transcript = response.results.channels[0].alternatives[0]  # ListenRESTAlternative object
+            logger.debug(f"Transcript attributes: {dir(transcript)}")
+            transcript_text = getattr(transcript, 'transcript', '') or ''
+            utterances = getattr(transcript, 'utterances', []) or []
+
+            # Generate WebVTT content
+            vtt = WebVTT()
+            if utterances:
+                logger.debug(f"Found {len(utterances)} utterances")
+                for utterance in utterances:
+                    start = getattr(utterance, 'start', 0)
+                    end = getattr(utterance, 'end', start + 5.0)  # Fallback end time
+                    text = getattr(utterance, 'transcript', '')
+                    speaker = getattr(utterance, 'speaker', 'Unknown')
+                    if text:  # Only add captions with non-empty text
+                        caption = Caption(
+                            start=format_timestamp(start),
+                            end=format_timestamp(end),
+                            text=f"Speaker {speaker}: {text}"
+                        )
+                        vtt.captions.append(caption)
+            else:
+                logger.warning("No utterances returned; checking for word-level data")
+                # Fallback: Try word-level data
+                words = getattr(transcript, 'words', []) or []
+                if words:
+                    logger.debug(f"Found {len(words)} words")
+                    chunk_duration = 5.0  # Target ~5 seconds per caption
+                    current_time = 0.0
+                    current_text = []
+                    for word in words:
+                        word_start = getattr(word, 'start', current_time)
+                        word_end = getattr(word, 'end', word_start + 0.5)  # Estimate word duration
+                        word_text = getattr(word, 'punctuated_word', getattr(word, 'word', ''))
+                        current_text.append(word_text)
+                        if word_end - current_time >= chunk_duration or len(current_text) >= 10:  # Limit chunk size
+                            caption = Caption(
+                                start=format_timestamp(current_time),
+                                end=format_timestamp(word_end),
+                                text=' '.join(current_text)
+                            )
+                            vtt.captions.append(caption)
+                            current_time = word_end
+                            current_text = []
+                    # Add final chunk if any words remain
+                    if current_text:
+                        caption = Caption(
+                            start=format_timestamp(current_time),
+                            end=format_timestamp(min(current_time + 5.0, video_duration)),
+                            text=' '.join(current_text)
+                        )
+                        vtt.captions.append(caption)
+                else:
+                    logger.warning("No words returned; falling back to text segmentation")
+                    # Last resort: Split transcript text into chunks
+                    if transcript_text:
+                        words = transcript_text.split()
+                        words_per_chunk = max(10, len(words) // 10)  # Aim for ~10 chunks
+                        chunk_duration = video_duration / max(1, len(words) // words_per_chunk)
+                        for i in range(0, len(words), words_per_chunk):
+                            chunk_text = ' '.join(words[i:i + words_per_chunk])
+                            start_time = i * chunk_duration / words_per_chunk
+                            end_time = min((i + words_per_chunk) * chunk_duration / words_per_chunk, video_duration)
+                            caption = Caption(
+                                start=format_timestamp(start_time),
+                                end=format_timestamp(end_time),
+                                text=chunk_text
+                            )
+                            vtt.captions.append(caption)
+                    else:
+                        logger.warning("No transcript text available; creating empty subtitle")
+                        caption = Caption(
+                            start='00:00:00.000',
+                            end=format_timestamp(min(1.0, video_duration)),
+                            text='No speech detected'
+                        )
+                        vtt.captions.append(caption)
+
+            # Save WebVTT file
+            vtt_content = vtt.content
+            file_name = f"subtitles_{content.id}.vtt"
+            content.subtitle_file.save(file_name, ContentFile(vtt_content.encode('utf-8')))
+            content.transcript_text = transcript_text
+            content.save()
+
+            serializer = self.get_serializer(content)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            logger.exception(f"Error generating subtitles for content {pk}: {str(e)}")
+            return Response({'detail': f'Failed to generate subtitles: {str(e)}'},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     @action(detail=True, methods=['get', 'post'], url_path='edit-subtitles')
     def edit_subtitles(self, request, course_pk=None, chapter_pk=None, pk=None):
