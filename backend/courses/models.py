@@ -1,13 +1,8 @@
 from django.db import models
-
 from accounts.models import User, UserType
-
-from django.db.models.signals import pre_save
+from django.db.models.signals import pre_save, post_delete
 from django.dispatch import receiver
 from django.core.exceptions import ValidationError
-from django.db.models.signals import post_delete
-from django.dispatch import receiver
-
 
 class Course(models.Model):
     title = models.CharField(max_length=255)
@@ -19,7 +14,6 @@ class Course(models.Model):
 
     def __str__(self):
         return self.title
-
 
 class CourseFollow(models.Model):
     student = models.ForeignKey(User, limit_choices_to={'user_type': UserType.STUDENT}, on_delete=models.CASCADE)
@@ -77,9 +71,8 @@ def guess_file_kind(mime_type: str) -> str:
     if not mime_type:
         return FileKind.OTHER
     for pattern, kind in MIME_TO_FILEKIND_MAP.items():
-        if mime_type.startswith(pattern):
+        if mime_type.startswith(pattern) or mime_type == pattern:
             return kind
-    # Return OTHER if no pattern matches
     return FileKind.OTHER
 
 class Content(models.Model):
@@ -89,12 +82,13 @@ class Content(models.Model):
     content_kind = models.CharField(max_length=20, choices=ContentKind.choices, default=ContentKind.FILE)
     file = models.FileField(upload_to='content_files/', blank=True, null=True)
     file_kind = models.CharField(max_length=20, choices=FileKind.choices, blank=True, null=True)
-    file_mime_type = models.CharField(max_length=100, blank=True, null=True)  # Optional MIME type for the file
+    file_mime_type = models.CharField(max_length=100, blank=True, null=True)
     subtitle_file = models.FileField(upload_to='content_subtitles/', blank=True, null=True)
     text = models.TextField(blank=True, null=True)
     order = models.PositiveIntegerField(default=1)
     creation_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
+    image_alt_text = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return self.title
@@ -105,6 +99,8 @@ class Content(models.Model):
                 raise ValidationError("File must be provided for FILE content type.")
             elif self.file.size == 0:
                 raise ValidationError("File cannot be empty.")
+            elif getattr(self.file.file, 'content_type', None) == 'application/pdf':
+                raise ValidationError("PDF files are not allowed for FILE content type.")
         elif self.content_kind == ContentKind.LINK:
             if not self.url:
                 raise ValidationError("URL must be provided for LINK content type.")
@@ -130,28 +126,29 @@ class Content(models.Model):
                 raise ValidationError("File kind should only be filled for FILE content type.")
             if self.file_mime_type:
                 raise ValidationError("File MIME type should only be filled for FILE content type.")
+        if self.content_kind == ContentKind.FILE and self.image_alt_text:
+            file_mime_type = getattr(self.file.file, 'content_type', None) or self.file_mime_type
+            if file_mime_type and not file_mime_type.startswith('image/'):
+                raise ValidationError("Image alt text should only be provided for image files.")
 
     def save(self, *args, **kwargs):
         is_file_content = self.content_kind == ContentKind.FILE and self.file
-
-        if is_file_content:
-            # Use untrusted browser MIME
-            self.file_mime_type = getattr(self.file.file, 'content_type', None) or 'application/octet-stream'
-
-            # Guess file kind based on MIME type
-            self.file_kind = guess_file_kind(self.file_mime_type)
-
+        # Mettre à jour file_mime_type et file_kind uniquement pour les nouveaux fichiers ou si non définis
+        if is_file_content and (not self.pk or self.file._committed is False or not self.file_mime_type or not self.file_kind):
+            try:
+                self.file_mime_type = getattr(self.file.file, 'content_type', None) or 'application/octet-stream'
+                self.file_kind = guess_file_kind(self.file_mime_type)
+            except AttributeError:
+                self.file_mime_type = 'application/octet-stream'
+                self.file_kind = FileKind.OTHER
         super().save(*args, **kwargs)
 
-
-# Incomplete Quiz model
 class Quiz(models.Model):
     content = models.OneToOneField(Content, related_name='quiz', on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     creation_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
-    # TODO: Complete quiz model
 
 class ContentSeen(models.Model):
     student = models.ForeignKey(User, limit_choices_to={'user_type': UserType.STUDENT}, on_delete=models.CASCADE)

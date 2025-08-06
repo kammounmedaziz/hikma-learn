@@ -47,14 +47,15 @@ class ContentSerializer(serializers.ModelSerializer):
     subtitle_file = serializers.FileField(required=False, allow_null=True)
     transcript_text = serializers.SerializerMethodField()
     subtitle_file_url = serializers.SerializerMethodField()
+    image_alt_text = serializers.CharField(required=False, allow_null=True, allow_blank=True)
 
     class Meta:
         model = Content
         fields = [
             'id', 'content_url', 'title', 'content_kind',
             'url', 'file', 'file_kind', 'file_mime_type',
-            'text', 'order', 'subtitle_file', 'subtitle_file_url', 'transcript_text',
-            'creation_date', 'updated_date'
+            'text', 'order', 'subtitle_file', 'subtitle_file_url', 
+            'transcript_text', 'image_alt_text', 'creation_date', 'updated_date'
         ]
         read_only_fields = ['order', 'file_mime_type', 'file_kind', 'creation_date', 'updated_date']
 
@@ -81,7 +82,6 @@ class ContentSerializer(serializers.ModelSerializer):
         fields = super().get_fields()
         request = self.context.get('request')
         if request and request.method == 'GET':
-            # For list views, instance is a QuerySet, so skip subtitle_file
             if isinstance(getattr(self, 'instance', None), QuerySet):
                 fields.pop('subtitle_file', None)
             else:
@@ -96,16 +96,23 @@ class ContentSerializer(serializers.ModelSerializer):
             return request.build_absolute_uri(obj.subtitle_file.url) if request else obj.subtitle_file.url
         return None
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        if representation['image_alt_text'] == '':
+            representation['image_alt_text'] = None
+        return representation
+
     def validate(self, attrs):
         kind = attrs.get('content_kind', self.instance and self.instance.content_kind)
 
         def get_field_value(field):
-            # Return the new value if provided, else fallback to instance's existing value (if any)
             if field in attrs:
                 return attrs[field]
             if self.instance:
                 return getattr(self.instance, field, None)
             return None
+
+        errors = {}
 
         if kind == ContentKind.FILE:
             file_val = get_field_value('file')
@@ -115,25 +122,48 @@ class ContentSerializer(serializers.ModelSerializer):
         elif kind == ContentKind.LINK:
             url_val = get_field_value('url')
             if not url_val:
-                raise serializers.ValidationError({'url': 'This field is required for LINK content.'})
+                errors['url'] = 'This field is required for LINK content.'
 
         elif kind == ContentKind.TEXT:
             text_val = get_field_value('text')
             if not text_val or not text_val.strip():
-                raise serializers.ValidationError({'text': 'This field is required for TEXT content.'})
+                errors['text'] = 'This field is required for TEXT content.'
 
         if kind != ContentKind.TEXT and get_field_value('text'):
-            raise serializers.ValidationError({'text': 'Text field should only be filled for TEXT content type.'})
+            errors['text'] = 'Text field should only be filled for TEXT content type.'
         if kind != ContentKind.LINK and get_field_value('url'):
-            raise serializers.ValidationError({'url': 'URL field should only be filled for LINK content type.'})
-        if kind != ContentKind.FILE:
-            if get_field_value('file'):
-                raise serializers.ValidationError({'file': 'File field should only be filled for FILE content type.'})
+            errors['url'] = 'URL field should only be filled for LINK content type.'
+        if kind != ContentKind.FILE and get_field_value('file'):
+            errors['file'] = 'File field should only be filled for FILE content type.'
         quiz_val = attrs.get('quiz') or (getattr(self.instance, 'quiz', None) if self.instance else None)
         if kind != ContentKind.QUIZ and quiz_val:
-            raise serializers.ValidationError({'quiz': 'Quiz field should only be filled for QUIZ content type.'})
+            errors['quiz'] = 'Quiz field should only be filled for QUIZ content type.'
+
+        # Validate image_alt_text
+        image_alt_text = attrs.get('image_alt_text', None)
+        if image_alt_text == '':
+            attrs['image_alt_text'] = None
+        if image_alt_text and kind == ContentKind.FILE:
+            file_mime_type = None
+            file_val = get_field_value('file')
+            if file_val and hasattr(file_val, 'content_type'):
+                file_mime_type = file_val.content_type
+            elif self.instance and self.instance.file_mime_type:
+                file_mime_type = self.instance.file_mime_type
+
+            if file_mime_type and not file_mime_type.startswith('image/'):
+                errors['image_alt_text'] = 'Image alt text should only be provided for image files.'
+
+        if errors:
+            raise serializers.ValidationError(errors)
 
         return attrs
+
+    def update(self, instance, validated_data):
+        # Protéger file_kind et file_mime_type contre les modifications
+        validated_data.pop('file_kind', None)
+        validated_data.pop('file_mime_type', None)
+        return super().update(instance, validated_data)
 
     def validate_subtitle_file(self, file):
         if file:
