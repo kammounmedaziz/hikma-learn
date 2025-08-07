@@ -179,3 +179,8 @@ EMAIL_USE_SSL = False  # must be False if you're using TLS
 EMAIL_HOST_USER=os.environ.get('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD=os.environ.get('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+
+FACEPP_API_KEY = os.environ.get('FACEPP_API_KEY')
+FACEPP_API_SECRET = os.environ.get('FACEPP_API_SECRET')
+FACESET_TOKEN = os.environ.get('FACESET_TOKEN')

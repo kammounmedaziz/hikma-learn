@@ -52,7 +52,7 @@ class SearchBar extends React.Component {
         >
           <input
             type="text"
-            placeholder="Search a city or airport..."
+            placeholder="Search ..."
             className="px-4 py-2 rounded-xl text-white bg-transparent placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-[#a855f7] w-64 transition-all duration-300"
             value={this.state.term}
             onChange={this.handleTermChange}

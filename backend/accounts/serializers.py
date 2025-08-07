@@ -64,3 +64,4 @@ class TeacherSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'user_type': {'read_only': True},
         }
+

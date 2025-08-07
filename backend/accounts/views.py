@@ -19,6 +19,8 @@ from django.core.mail import send_mail
 
 
 
+
+
 import random
 import string
 
@@ -31,10 +33,126 @@ from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 import logging
+import os
+import requests
+from rest_framework.response import Response
+from django.conf import settings
+
+
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
 
+API_KEY = settings.FACEPP_API_KEY
+API_SECRET = settings.FACEPP_API_SECRET
+FACESET_TOKEN = settings.FACESET_TOKEN
+
+
+
+@api_view(['POST'])
+def register_face_recognition(request):
+    serializer = RegisterSerializer(data=request.data)
+    
+    if serializer.is_valid():
+        user = serializer.save()
+
+        face_image = request.FILES.get('face_image')
+        if not face_image:
+            return Response({'error': 'Face image required.'}, status=400)
+
+        print("API Key is:", API_KEY)  # debug print
+
+        detect_response = requests.post(
+            'https://api-us.faceplusplus.com/facepp/v3/detect',
+            files={'image_file': face_image},  # correct key here
+            data={'api_key': API_KEY, 'api_secret': API_SECRET}
+        ).json()
+
+        print("Detect response:", detect_response)  # debug print
+
+        if not detect_response.get('faces'):
+            return Response({'error': 'No face detected.'}, status=400)
+
+        face_token = detect_response['faces'][0]['face_token']
+
+        addface_response = requests.post(
+            'https://api-us.faceplusplus.com/facepp/v3/faceset/addface',
+            data={
+                'api_key': API_KEY,
+                'api_secret': API_SECRET,
+                'faceset_token': FACESET_TOKEN,
+                'face_tokens': face_token
+            }
+        ).json()
+
+        if addface_response.get('face_added') != 1:
+            return Response({'error': 'Failed to add face to FaceSet.'}, status=500)
+
+        user.face_token = face_token
+        user.save()
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+def login_with_face(request):
+    face_image = request.FILES.get('face_image')
+    if not face_image:
+        return Response({'error': 'Face image is required.'}, status=400)
+
+    # Detect face
+    detect_response = requests.post(
+        'https://api-us.faceplusplus.com/facepp/v3/detect',
+        files={'image_file': face_image},
+        data={'api_key': API_KEY, 'api_secret': API_SECRET}
+    ).json()
+
+    if not detect_response.get('faces'):
+        return Response({'error': 'No face detected.'}, status=400)
+
+    face_token = detect_response['faces'][0]['face_token']
+
+    # Search for the face in the FaceSet
+    search_response = requests.post(
+        'https://api-us.faceplusplus.com/facepp/v3/search',
+        data={
+            'api_key': API_KEY,
+            'api_secret': API_SECRET,
+            'face_token': face_token,
+            'faceset_token': FACESET_TOKEN
+        }
+    ).json()
+
+    print("Search response:", search_response)
+
+    if 'results' not in search_response or not search_response['results']:
+        return Response({'error': 'Face not recognized.'}, status=401)
+
+    matched_token = search_response['results'][0]['face_token']
+    confidence = search_response['results'][0]['confidence']
+
+    # Optional: use confidence threshold to avoid false matches
+    if confidence < 80:
+        return Response({'error': 'Face match confidence too low.'}, status=401)
+
+    # Get the user with this face_token
+    try:
+        user = User.objects.get(face_token=matched_token)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found for this face.'}, status=404)
+
+    # Login: return tokens
+    refresh = RefreshToken.for_user(user)
+    return Response({
+        "message": "Face login successful",
+        "username": user.username,
+        "user_id": user.id,
+        "user_type": user.user_type,
+        "refresh": str(refresh),
+        "access": str(refresh.access_token),
+    }, status=200)
 
 
 @api_view([ 'POST'])
@@ -356,9 +474,7 @@ def delete_student(request, pk):
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-    
-    
-    
+
     
     
     

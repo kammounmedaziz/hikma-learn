@@ -19,11 +19,7 @@ class Issue(models.Model):
         choices=IssueStatus.choices,
         default=IssueStatus.SENT
     )
-    recipient_type = models.CharField(
-        max_length=10,
-        choices=RecipientType.choices,
-        default=RecipientType.TEACHER
-    )
+ 
 
     def __str__(self):
         return self.title
@@ -38,3 +34,4 @@ class Response(models.Model):
 
     def __str__(self):
         return f"Response to Issue #{self.issue.id}"
+    

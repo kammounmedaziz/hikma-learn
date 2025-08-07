@@ -21,6 +21,10 @@ class User(AbstractUser):
     # Teacher fields
     fields = models.JSONField(default=list, blank=True, null=True)
 
+    # Face Recognition
+    face_token = models.CharField(max_length=100, null=True, blank=True)
+
+
     def clean(self):
         # Ensure disabilities is reserved for students only
         if self.user_type != UserType.STUDENT and self.disabilities is not None and self.disabilities:
