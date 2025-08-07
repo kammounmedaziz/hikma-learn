@@ -1,3 +1,4 @@
+import mimetypes
 from django.db import models
 
 from accounts.models import User, UserType
@@ -73,9 +74,13 @@ MIME_TO_FILEKIND_MAP = {
     'text/csv': FileKind.SPREADSHEET,
 }
 
-def guess_file_kind(mime_type: str) -> str:
+def guess_file_kind(mime_type: str, file_name: str = None) -> str:
     if not mime_type:
         return FileKind.OTHER
+    if mime_type == 'application/octet-stream' and file_name:
+        guessed_mime, _ = mimetypes.guess_type(file_name)
+        if guessed_mime:
+            mime_type = guessed_mime
     for pattern, kind in MIME_TO_FILEKIND_MAP.items():
         if mime_type.startswith(pattern):
             return kind
@@ -135,11 +140,12 @@ class Content(models.Model):
         is_file_content = self.content_kind == ContentKind.FILE and self.file
 
         if is_file_content:
-            # Use untrusted browser MIME
-            self.file_mime_type = getattr(self.file.file, 'content_type', None) or 'application/octet-stream'
+            if self._state.adding or self.file != self.__class__.objects.get(pk=self.pk).file if self.pk else True:
+                # Use untrusted browser MIME
+                self.file_mime_type = getattr(self.file.file, 'content_type', None) or 'application/octet-stream'
 
-            # Guess file kind based on MIME type
-            self.file_kind = guess_file_kind(self.file_mime_type)
+                # Guess file kind based on MIME type
+                self.file_kind = guess_file_kind(self.file_mime_type)
 
         super().save(*args, **kwargs)
 

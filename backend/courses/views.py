@@ -238,8 +238,7 @@ class ContentViewSet(viewsets.ModelViewSet):
             with open(content.file.path, 'rb') as f:
                 bytes_data = f.read()
 
-            from deepgram import DeepgramClient, PrerecordedOptions
-            # Initialize Deepgram client
+            logger.debug(f"File MIME type: {content.file_mime_type}, Size: {len(bytes_data)} bytes")
             dg_client = DeepgramClient(api_key=settings.DEEPGRAM_API_KEY)
             source = {
                 'buffer': bytes_data,
@@ -254,18 +253,18 @@ class ContentViewSet(viewsets.ModelViewSet):
             )
             # Use synchronous transcribe_file method
             response = dg_client.listen.rest.v('1').transcribe_file(source, options)
-            logger.debug(f"Transcription response type: {type(response)}, content: {response.to_dict()}")
-
-            # Extract transcript and utterances
-            transcript = response.results.channels[0].alternatives[0]  # ListenRESTAlternative object
-            logger.debug(f"Transcript attributes: {dir(transcript)}")
+            transcript = response.results.channels[0].alternatives[0]
             transcript_text = getattr(transcript, 'transcript', '') or ''
             utterances = getattr(transcript, 'utterances', []) or []
+            words = getattr(transcript, 'words', []) or []
 
+            logger.debug(f"Transcript text length: {len(transcript_text)}")
+            logger.debug(f"Utterances count: {len(utterances)}, Words count: {len(words)}")
+            
             # Generate WebVTT content
             vtt = WebVTT()
             if utterances:
-                logger.debug(f"Found {len(utterances)} utterances")
+                logger.info(f"Generating captions from {len(utterances)} utterances")
                 for utterance in utterances:
                     start = getattr(utterance, 'start', 0)
                     end = getattr(utterance, 'end', start + 5.0)  # Fallback end time
@@ -278,62 +277,59 @@ class ContentViewSet(viewsets.ModelViewSet):
                             text=f"Speaker {speaker}: {text}"
                         )
                         vtt.captions.append(caption)
-            else:
-                logger.warning("No utterances returned; checking for word-level data")
-                # Fallback: Try word-level data
-                words = getattr(transcript, 'words', []) or []
-                if words:
-                    logger.debug(f"Found {len(words)} words")
-                    chunk_duration = 5.0  # Target ~5 seconds per caption
-                    current_time = 0.0
-                    current_text = []
-                    for word in words:
-                        word_start = getattr(word, 'start', current_time)
-                        word_end = getattr(word, 'end', word_start + 0.5)  # Estimate word duration
-                        word_text = getattr(word, 'punctuated_word', getattr(word, 'word', ''))
-                        current_text.append(word_text)
-                        if word_end - current_time >= chunk_duration or len(current_text) >= 10:  # Limit chunk size
-                            caption = Caption(
-                                start=format_timestamp(current_time),
-                                end=format_timestamp(word_end),
-                                text=' '.join(current_text)
-                            )
-                            vtt.captions.append(caption)
-                            current_time = word_end
-                            current_text = []
-                    # Add final chunk if any words remain
-                    if current_text:
+            elif words:
+                logger.warning("No utterances found. Falling back to word-level captions.")
+                chunk_duration = 5.0
+                current_time = 0.0
+                current_text = []
+                for word in words:
+                    word_start = getattr(word, 'start', current_time)
+                    word_end = getattr(word, 'end', word_start + 0.5)
+                    word_text = getattr(word, 'punctuated_word', getattr(word, 'word', ''))
+                    current_text.append(word_text)
+
+                    if word_end - current_time >= chunk_duration or len(current_text) >= 10:
                         caption = Caption(
                             start=format_timestamp(current_time),
-                            end=format_timestamp(min(current_time + 5.0, video_duration)),
+                            end=format_timestamp(word_end),
                             text=' '.join(current_text)
                         )
                         vtt.captions.append(caption)
-                else:
-                    logger.warning("No words returned; falling back to text segmentation")
-                    # Last resort: Split transcript text into chunks
-                    if transcript_text:
-                        words = transcript_text.split()
-                        words_per_chunk = max(10, len(words) // 10)  # Aim for ~10 chunks
-                        chunk_duration = video_duration / max(1, len(words) // words_per_chunk)
-                        for i in range(0, len(words), words_per_chunk):
-                            chunk_text = ' '.join(words[i:i + words_per_chunk])
-                            start_time = i * chunk_duration / words_per_chunk
-                            end_time = min((i + words_per_chunk) * chunk_duration / words_per_chunk, video_duration)
-                            caption = Caption(
-                                start=format_timestamp(start_time),
-                                end=format_timestamp(end_time),
-                                text=chunk_text
-                            )
-                            vtt.captions.append(caption)
-                    else:
-                        logger.warning("No transcript text available; creating empty subtitle")
-                        caption = Caption(
-                            start='00:00:00.000',
-                            end=format_timestamp(min(1.0, video_duration)),
-                            text='No speech detected'
-                        )
-                        vtt.captions.append(caption)
+                        current_time = word_end
+                        current_text = []
+
+                if current_text:
+                    caption = Caption(
+                        start=format_timestamp(current_time),
+                        end=format_timestamp(min(current_time + 5.0, video_duration)),
+                        text=' '.join(current_text)
+                    )
+                    vtt.captions.append(caption)
+
+            elif transcript_text:
+                logger.warning("No utterances or words; falling back to transcript segmentation.")
+                words_list = transcript_text.split()
+                words_per_chunk = max(10, len(words_list) // 10)
+                chunk_duration = video_duration / max(1, len(words_list) // words_per_chunk)
+
+                for i in range(0, len(words_list), words_per_chunk):
+                    chunk_text = ' '.join(words_list[i:i + words_per_chunk])
+                    start_time = i * chunk_duration / words_per_chunk
+                    end_time = min((i + words_per_chunk) * chunk_duration / words_per_chunk, video_duration)
+                    caption = Caption(
+                        start=format_timestamp(start_time),
+                        end=format_timestamp(end_time),
+                        text=chunk_text
+                    )
+                    vtt.captions.append(caption)
+            else:
+                logger.warning("No transcript data available. Creating a default empty caption.")
+                caption = Caption(
+                    start='00:00:00.000',
+                    end=format_timestamp(min(1.0, video_duration)),
+                    text='No speech detected'
+                )
+                vtt.captions.append(caption)
 
             # Save WebVTT file
             vtt_content = vtt.content
