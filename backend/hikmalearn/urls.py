@@ -25,6 +25,7 @@ urlpatterns = [
     path('api/', include('accounts.urls')),
     path('api-auth/', include('rest_framework.urls',namespace='rest_framework')),
     path("", include("courses.urls")),
+    path('api/workspace/', include('workspace.urls')),
 ]
 
 if settings.DEBUG:

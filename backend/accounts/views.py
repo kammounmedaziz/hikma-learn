@@ -13,7 +13,8 @@ from .models import User
 from .serializers import TeacherSerializer
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
-
+from django.contrib.auth import get_user_model
+from workspace.models import UserProfile
 
 from django.core.mail import send_mail
 
@@ -35,7 +36,8 @@ import logging
 logger = logging.getLogger(__name__)
 User = get_user_model()
 
-
+for user in User.objects.all():
+    UserProfile.objects.get_or_create(user=user)
 
 @api_view([ 'POST'])
 def create_teacher_user(request):
@@ -139,10 +141,20 @@ class RegisterView(APIView):
  
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def login_view(request):
     data = request.data
-    user = authenticate(username=data.get('username'), password=data.get('password'))
-    
+    username = data.get('username')
+    email = data.get('email')
+    password = data.get('password')
+
+    # Try authenticating with username or email
+    user = None
+    if username:
+        user = authenticate(username=username, password=password)
+    elif email:
+        user = authenticate(email=email, password=password)  # Only works if you have a custom backend
+
     if user is not None:
         refresh = RefreshToken.for_user(user)
         return Response({
@@ -201,8 +213,8 @@ def delete_teacher(request, pk):
     except User.DoesNotExist:
         return Response({'error': 'Teacher not found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+    )
 
 @api_view(['PUT'])
 @authentication_classes([JWTAuthentication])
@@ -356,13 +368,12 @@ def delete_student(request, pk):
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
+
+

@@ -11,7 +11,7 @@ import {
   Users,
   Settings,
   Bell,
-  Library,
+  Notebook,
   ChevronLeft,
   ChevronRight,
   GraduationCap,
@@ -22,7 +22,7 @@ import {
 import StudyOverview from './StudyOverview';
 import StudentSettings from '../Components/StudentSettings';
 import IssuesReportForm from './StudentIssuesReportForm'
-//import MeetOurLearners from './MeetOurLearners';
+import WorkSpace from './WorkSpacePage';
 //import SharingFeedbacks from './SharingFeedbacks';
 //import Events from './Events';
 //import PartnersAndSupporters from './PartnersAndSupporters';
@@ -73,7 +73,7 @@ const StudyDashboard = () => {
     { id: 'schedule', label: 'Schedule', icon: Calendar, description: 'Daily and weekly learning schedule' },
     { id: 'progress', label: 'Progress & Analytics', icon: TrendingUp, description: 'Your learning analytics and goals' },
     { id: 'achievements', label: 'Achievements', icon: Award, description: 'Your badges and certificates' },
-    { id: 'library', label: 'Resource Library', icon: Library, description: 'Extra resources and materials' },
+    { id: 'WorkSpace', label: 'Workspace', icon: Notebook, description: 'Extra resources and materials' },
     { id: 'forum', label: 'Discussion Forum', icon: MessageSquare, description: 'Ask and answer questions' },
     { id: 'study_groups', label: 'Study Groups', icon: Users, description: 'Join or create study circles' },
     { id: 'notifications', label: 'Notifications', icon: Bell, description: 'Alerts and important messages' },
@@ -87,7 +87,7 @@ const StudyDashboard = () => {
       case 'overview': return <StudyOverview />;
       case 'settings': return <StudentSettings/>
       case 'ReportIssue': return <IssuesReportForm />;
-    //  case 'sharing_feedbacks': return <SharingFeedbacks />;
+      case 'WorkSpace': return <WorkSpace />;
       //case 'events': return <Events />;
       //case 'partners_supporters': return <PartnersAndSupporters />;
       //case 'voices_community': return <VoicesOfCommunity />;

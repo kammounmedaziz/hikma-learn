@@ -23,10 +23,14 @@ const TeacherIssuesReportForm = ({ teacherId, onSubmit, onCancel }) => {
     setError(null);
 
     try {
+      // Helper to get JWT token from localStorage
+      const getToken = () => localStorage.getItem('access_token');
+
       const response = await fetch('http://localhost:8000/issues/create/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getToken()}`,
         },
         body: JSON.stringify({
           ...formData,
@@ -37,7 +41,7 @@ const TeacherIssuesReportForm = ({ teacherId, onSubmit, onCancel }) => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to submit issue');
+        throw new Error('Not authorized or failed to submit issue');
       }
 
       const newIssue = await response.json();

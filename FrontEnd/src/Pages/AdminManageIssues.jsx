@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { AlertCircle, User, FileText, Mail, ChevronDown, ChevronUp, Search } from 'lucide-react';
+import { AlertCircle, User, FileText, Mail,  Search } from 'lucide-react';
 
 const AdminIssuesDashboard = () => {
   const [issues, setIssues] = useState([]);
@@ -10,11 +10,19 @@ const AdminIssuesDashboard = () => {
   const [statusFilter, setStatusFilter] = useState('ALL');
 
   // Fetch all issues from backend
+  // Helper to get JWT token from localStorage
+  const getToken = () => localStorage.getItem('access_token');
+
   useEffect(() => {
     const fetchIssues = async () => {
       try {
-        const response = await fetch('http://localhost:8000/issues/');
-        if (!response.ok) throw new Error('Failed to fetch issues');
+        const response = await fetch('http://localhost:8000/issues/', {
+          headers: {
+            'Authorization': `Bearer ${getToken()}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        if (!response.ok) throw new Error('Not authorized or failed to fetch issues');
         const data = await response.json();
         setIssues(data);
       } catch (err) {
@@ -23,7 +31,6 @@ const AdminIssuesDashboard = () => {
         setLoading(false);
       }
     };
-
     fetchIssues();
   }, []);
 
@@ -49,12 +56,13 @@ const AdminIssuesDashboard = () => {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${getToken()}`,
           },
           body: JSON.stringify({ status: newStatus }),
         }
       );
 
-      if (!response.ok) throw new Error('Failed to update status');
+      if (!response.ok) throw new Error('Not authorized or failed to update status');
 
       const updatedIssue = await response.json();
       setIssues(issues.map(issue => 

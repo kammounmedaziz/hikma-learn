@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import  { useState, useEffect, useRef, useMemo } from 'react';
 import ProfileCard from '../Components/ProfileCard'; // Adjust the import path as needed
 
 import AOS from 'aos';
@@ -8,12 +8,12 @@ import { Sparkles } from "lucide-react"
 // Animated Background Component (same as Home page)
 const AnimatedBackground = () => {
   const blobRefs = useRef([])
-  const initialPositions = [
+  const initialPositions = useMemo(() => [
     { x: -4, y: 0 },
     { x: -4, y: 0 },
     { x: 20, y: -8 },
     { x: 20, y: -8 },
-  ]
+  ], []);
 
   useEffect(() => {
     let requestId
@@ -44,7 +44,7 @@ const AnimatedBackground = () => {
       window.removeEventListener("scroll", handleScroll)
       cancelAnimationFrame(requestId)
     }
-  }, [])
+  }, [initialPositions])
 
   return (
     <div className="fixed inset-0 ">
@@ -262,7 +262,7 @@ const Team = () => {
       </div>
 
 
-      <style jsx>{`
+      <style>{`
         .team-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));

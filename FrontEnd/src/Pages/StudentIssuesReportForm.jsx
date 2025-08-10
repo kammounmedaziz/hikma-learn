@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { FileText, User, Mail, AlertCircle, Save } from 'lucide-react';
+import { FileText, User, 
+   AlertCircle, Save } from 'lucide-react';
 
 const IssueReportForm = ({ onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -29,10 +30,14 @@ const IssueReportForm = ({ onSubmit, onCancel }) => {
     setError(null);
 
     try {
+      // Helper to get JWT token from localStorage
+      const getToken = () => localStorage.getItem('access_token');
+
       const response = await fetch('http://localhost:8000/issues/create/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getToken()}`,
         },
         body: JSON.stringify({
           ...formData,
@@ -42,7 +47,7 @@ const IssueReportForm = ({ onSubmit, onCancel }) => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to submit issue');
+        throw new Error('Not authorized or failed to submit issue');
       }
 
       const newIssue = await response.json();

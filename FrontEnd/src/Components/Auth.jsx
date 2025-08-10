@@ -140,57 +140,69 @@ const SignInComponent = ({ onSubmit }) => {
     username: '',
     password: ''
   });
-
-  const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setIsLoading(true);
+
     try {
       const response = await fetch('http://127.0.0.1:8000/api/login/', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify(formData)
       });
-      
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        throw new Error(`Server error: ${text.substring(0, 100)}`);
+      }
+
       const data = await response.json();
-      
+
       if (!response.ok) {
-        throw new Error(data.detail || data.error || 'Login failed');
+        throw new Error(data.error || data.detail || 'Login failed');
       }
 
-      // Store the tokens and user data in localStorage
-      localStorage.setItem('token', data.access);
-      localStorage.setItem('refreshToken', data.refresh);
-      localStorage.setItem('username', data.username);
-      
-      // If your backend provides user ID, store that too
-      if (data.user_id) {
-        localStorage.setItem('userId', data.user_id);
-      }
+      // Store tokens and user data (adjust keys if needed)
+      if (data.access) localStorage.setItem('access_token', data.access);
+      if (data.refresh) localStorage.setItem('refresh_token', data.refresh);
+      localStorage.setItem('user', JSON.stringify({
+        username: data.username,
+        user_id: data.user_id,
+        user_type: data.user_type
+      }));
 
-      console.log('Login successful, tokens stored:', {
-        token: data.access,
-        refreshToken: data.refresh,
-        username: data.username
-      });
-
+      // Call the success handler
       onSubmit(data);
+      
     } catch (error) {
+      setError(error.message);
       console.error('Login error:', error);
-      alert(error.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="p-3 bg-red-900/50 text-red-300 rounded-lg">
+          {error}
+        </div>
+      )}
       <InputField 
         icon={User} 
         type="text" 
         placeholder="Username" 
         value={formData.username} 
-        onChange={e => handleInputChange('username', e.target.value)} 
+        onChange={e => setFormData({...formData, username: e.target.value})} 
         required 
       />
       <InputField 
@@ -198,14 +210,18 @@ const SignInComponent = ({ onSubmit }) => {
         type="password" 
         placeholder="Password" 
         value={formData.password} 
-        onChange={e => handleInputChange('password', e.target.value)} 
+        onChange={e => setFormData({...formData, password: e.target.value})} 
         required 
       />
       <button 
         onClick={handleSubmit} 
-        className="w-full py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg flex items-center justify-center gap-2"
+        disabled={isLoading}
+        className={`w-full py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg flex items-center justify-center gap-2 ${
+          isLoading ? 'opacity-70 cursor-not-allowed' : ''
+        }`}
       >
-        Sign In <ArrowRight className="w-4 h-4" />
+        {isLoading ? 'Signing In...' : 'Sign In'} 
+        {!isLoading && <ArrowRight className="w-4 h-4" />}
       </button>
     </div>
   );
@@ -278,26 +294,29 @@ const AuthPage = () => {
 
   const handleToggle = () => setIsSignUp(!isSignUp);
 
-  
-  const handleSignInSubmit = data => {
-    const userType = data.user_type;
-    if (userType === 'student') {
-    navigate('/StudydDashboard');
-  } else if (userType === 'teacher') {
-    navigate('/TeacherDashboard');
-  } else if (userType === 'admin') {
-    navigate('/AdminDashboard');
-  } else {
-
-    alert('Unknown user type');
-  }
+  const handleSuccessfulLogin = (user) => {
+    // Redirect based on user type
+    switch(user.user_type) {
+      case 'student':
+        navigate('/StudydDashboard');
+        break;
+      case 'teacher':
+        navigate('/TeacherDashboard');
+        break;
+      case 'admin':
+        navigate('/AdminDashboard');
+        break;
+      default:
+        navigate('/');
+    }
   };
 
-
-
-  const handleSignUpSubmit = data => {
-    navigate('/auth');
+  const handleSignUpSubmit = (data) => {
+    // After successful signup, redirect to login
+    setIsSignUp(false);
+    // You might want to show a success message here
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden">
@@ -305,30 +324,39 @@ const AuthPage = () => {
       <div className="z-10 relative w-full max-w-md">
         <div className="text-center mb-8">
           <div>
-                    <img data-aos="fade-in" 
-                      data-aos-delay="100" 
-                      className="inline-block px-2 bg-gradient-to-r from-indigo-600 to-red-600 bg-clip-text text-transparent"
-                      src="src\assets\media\text.png" 
-                      alt="Welcome to"
-                      loading="lazy"
-                      />
-
-                  </div>
-          
+            <img 
+              data-aos="fade-in" 
+              data-aos-delay="100" 
+              className="inline-block px-2 bg-gradient-to-r from-indigo-600 to-red-600 bg-clip-text text-transparent"
+              src="src/assets/media/text.png" 
+              alt="Welcome to"
+              loading="lazy"
+            />
+          </div>
         </div>
         <div className="bg-gray-900/60 backdrop-blur-sm rounded-2xl border border-gray-700/50 shadow-lg">
           <div className="flex bg-gray-800/50 rounded-t-2xl overflow-hidden">
-            <button onClick={() => !isSignUp && handleToggle()} className={`flex-1 py-4 px-6 ${!isSignUp ? 'bg-gradient-to-r from-red-500 to-red-600 text-white' : 'text-gray-400'}`}> <LogIn className="w-4 h-4" /> Sign In </button>
-            <button onClick={() => isSignUp && handleToggle()} className={`flex-1 py-4 px-6 ${isSignUp ? 'bg-gradient-to-r from-red-500 to-red-600 text-white' : 'text-gray-400'}`}> <UserPlus className="w-4 h-4" /> Sign Up </button>
+            <button onClick={() => !isSignUp && handleToggle()} className={`flex-1 py-4 px-6 ${!isSignUp ? 'bg-gradient-to-r from-red-500 to-red-600 text-white' : 'text-gray-400'}`}> 
+              <LogIn className="w-4 h-4" /> Sign In 
+            </button>
+            <button onClick={() => isSignUp && handleToggle()} className={`flex-1 py-4 px-6 ${isSignUp ? 'bg-gradient-to-r from-red-500 to-red-600 text-white' : 'text-gray-400'}`}> 
+              <UserPlus className="w-4 h-4" /> Sign Up 
+            </button>
           </div>
           <div className="p-8">
-            {isSignUp ? <SignUpComponent onSubmit={handleSignUpSubmit} /> : <SignInComponent onSubmit={handleSignInSubmit} />}
+            {isSignUp ? (
+              <SignUpComponent onSubmit={handleSignUpSubmit} />
+            ) : (
+              <SignInComponent onSubmit={handleSuccessfulLogin} />
+            )}
           </div>
         </div>
         <div className="text-center mt-8 text-gray-400">
           <p>
             {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
-            <button onClick={handleToggle} className="text-red-400 font-semibold">{isSignUp ? 'Sign In' : 'Sign Up'}</button>
+            <button onClick={handleToggle} className="text-red-400 font-semibold">
+              {isSignUp ? 'Sign In' : 'Sign Up'}
+            </button>
           </p>
         </div>
       </div>
