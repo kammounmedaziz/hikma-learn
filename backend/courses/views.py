@@ -323,8 +323,8 @@ class ContentViewSet(viewsets.ModelViewSet):
 
             # Save WebVTT file
             vtt_content = vtt.content
-            file_name = f"subtitles_{content.id}.vtt"
-            content.subtitle_file.save(file_name, ContentFile(vtt_content.encode('utf-8')))
+            file_name = f"content_subtitles/subtitles_{content.id}.vtt"
+            content.subtitle_file = ContentFile(vtt_content.encode('utf-8'), name=file_name)
             content.transcript_text = transcript_text
             content.save()
 
