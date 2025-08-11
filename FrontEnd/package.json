@@ -29,6 +29,8 @@
     "dompurify": "^3.2.6",
     "flowbite-react": "^0.10.1",
     "framer-motion": "^12.16.0",
+    "html-react-parser": "^5.2.6",
+    "html-to-text": "^9.0.5",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.513.0",
     "prop-types": "^15.8.1",
