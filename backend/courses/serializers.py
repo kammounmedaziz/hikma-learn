@@ -46,14 +46,13 @@ class ContentSerializer(serializers.ModelSerializer):
     content_url = serializers.SerializerMethodField()
     subtitle_file = serializers.FileField(required=False, allow_null=True)
     transcript_text = serializers.SerializerMethodField()
-    subtitle_file_url = serializers.SerializerMethodField()
 
     class Meta:
         model = Content
         fields = [
             'id', 'content_url', 'title', 'content_kind',
             'url', 'file', 'file_kind', 'file_mime_type',
-            'text', 'order', 'subtitle_file', 'subtitle_file_url', 'transcript_text',
+            'text', 'order', 'subtitle_file', 'transcript_text',
             'creation_date', 'updated_date'
         ]
         read_only_fields = ['order', 'file_mime_type', 'file_kind', 'creation_date', 'updated_date']
@@ -92,12 +91,6 @@ class ContentSerializer(serializers.ModelSerializer):
                 if instance and (instance.content_kind != ContentKind.FILE or not getattr(instance, 'file_mime_type', '').startswith('video/')):
                     fields.pop('subtitle_file', None)
         return fields
-
-    def get_subtitle_file_url(self, obj):
-        request = self.context.get('request')
-        if obj.subtitle_file and hasattr(obj.subtitle_file, 'url'):
-            return request.build_absolute_uri(obj.subtitle_file.url) if request else obj.subtitle_file.url
-        return None
 
     def validate(self, attrs):
         kind = attrs.get('content_kind', self.instance and self.instance.content_kind)

@@ -62,10 +62,10 @@ const ContentDetail = () => {
             textTrackSettings: true,
           }, () => {
             console.log('Player ready:', player);
-            if (content.subtitle_file_url && typeof content.subtitle_file_url === 'string') {
+            if (content.subtitle_file && typeof content.subtitle_file === 'string') {
               player.addRemoteTextTrack({
                 kind: 'captions',
-                src: content.subtitle_file_url,
+                src: content.subtitle_file,
                 srcLang: 'en',
                 label: 'English',
                 default: true,
@@ -129,10 +129,10 @@ const ContentDetail = () => {
             }
           );
           setContent(res.data);
-          if (playerRef.current && res.data.subtitle_file_url) {
+          if (playerRef.current && res.data.subtitle_file) {
             playerRef.current.addRemoteTextTrack({
               kind: 'captions',
-              src: res.data.subtitle_file_url,
+              src: res.data.subtitle_file,
               srcLang: 'en',
               label: 'English',
               default: true,
@@ -187,10 +187,10 @@ const ContentDetail = () => {
             }
           );
           setContent(res.data);
-          if (playerRef.current && res.data.subtitle_file_url) {
+          if (playerRef.current && res.data.subtitle_file) {
             playerRef.current.addRemoteTextTrack({
               kind: 'captions',
-              src: res.data.subtitle_file_url,
+              src: res.data.subtitle_file,
               srcLang: 'en',
               label: 'English',
               default: true,
@@ -232,7 +232,7 @@ const ContentDetail = () => {
         }
       );
       setContent((prevContent) => {
-        const updatedContent = { ...prevContent, subtitle_file_url: null, transcript_text: '' };
+        const updatedContent = { ...prevContent, subtitle_file: null, transcript_text: '' };
         console.log('Updated content state after deletion:', updatedContent);
         return updatedContent;
       });
@@ -250,10 +250,10 @@ const ContentDetail = () => {
     setShowSubtitleEdit(false);
     setSubtitleSuccess('Subtitle updated successfully!');
     setSubtitleError(null);
-    if (playerRef.current && updatedContent.subtitle_file_url) {
+    if (playerRef.current && updatedContent.subtitle_file) {
       playerRef.current.addRemoteTextTrack({
         kind: 'captions',
-        src: updatedContent.subtitle_file_url,
+        src: updatedContent.subtitle_file,
         srcLang: 'en',
         label: 'English',
         default: true,
@@ -312,7 +312,7 @@ const ContentDetail = () => {
     }
 
     if (content.file_kind === "VIDEO" || isVideoByUrl) {
-      console.log('Video URL:', url, 'Subtitle URL:', content.subtitle_file_url, 'MIME Type:', content.file_mime_type);
+      console.log('Video URL:', url, 'Subtitle URL:', content.subtitle_file, 'MIME Type:', content.file_mime_type);
       return (
         <div className="p-4 border border-white/20 rounded-lg">
           <div className="aspect-w-16 aspect-h-9">
@@ -336,7 +336,7 @@ const ContentDetail = () => {
             )}
             {isTeacher && (
               <>
-                {!content.subtitle_file_url && (
+                {!content.subtitle_file && (
                   <button
                     onClick={handleGenerateSubtitles}
                     className="btn-gradient-red p-2 rounded flex items-center"
@@ -359,7 +359,7 @@ const ContentDetail = () => {
                     onChange={(e) => handleUploadSubtitle(e.target.files[0])}
                   />
                 </label>
-                {content.subtitle_file_url && (
+                {content.subtitle_file && (
                   <>
                     <button
                       onClick={() => setShowSubtitleEdit(!showSubtitleEdit)}
@@ -387,14 +387,14 @@ const ContentDetail = () => {
               </p>
             </div>
           )}
-          {isTeacher && showSubtitleEdit && content.subtitle_file_url && (
+          {isTeacher && showSubtitleEdit && content.subtitle_file && (
             <div className="mt-4">
               <SubtitleEdit
                 courseId={courseId}
                 chapterId={chapterId}
                 contentId={contentId}
                 token={token}
-                subtitleUrl={content.subtitle_file_url}
+                subtitleUrl={content.subtitle_file}
                 onSuccess={handleSubtitleUpdate}
                 className="bg-gray-900 text-white"
               />
