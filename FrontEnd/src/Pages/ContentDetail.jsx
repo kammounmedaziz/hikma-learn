@@ -138,8 +138,7 @@ const ContentDetail = () => {
       setSubtitleError('');
       const fetchContent = async () => {
         try {
-          const res = await axio
-s.get(
+          const res = await axios.get(
             `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/`,
             {
               headers: { Authorization: `Bearer ${token}` },
