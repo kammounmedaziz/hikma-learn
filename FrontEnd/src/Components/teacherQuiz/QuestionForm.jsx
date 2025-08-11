@@ -62,7 +62,7 @@ const QuestionForm = ({ question, questions, setQuestions, onDelete }) => {
           value={question.text}
           onChange={(e) => updateQuestion('text', e.target.value)}
           placeholder="Enter question"
-          className="question-input"
+          className="flex-grow p-2 bg-gray-700 text-white border-none rounded-lg-input"
         />
         <div className="score-container">
           <label htmlFor={`question-score-${question.id}`}>Score:</label> {/* Link label to input */}
@@ -71,7 +71,7 @@ const QuestionForm = ({ question, questions, setQuestions, onDelete }) => {
             type="number"
             value={question.score}
             onChange={(e) => updateScore(e.target.value)}
-            className="score-input"
+            className="w-16 p-[0.4rem] bg-gray-700 text-white border-none rounded-lg"
             min="0"
           />
         </div>
@@ -91,7 +91,9 @@ const QuestionForm = ({ question, questions, setQuestions, onDelete }) => {
             value={opt}
             onChange={(e) => updateOption(index, e.target.value)}
             placeholder={`Option ${index + 1}`}
-            className="option-input"
+            className="flex-grow p-2 bg-gray-700 text-white border-none rounded-lg mr-2"
+
+
           />
           <input
             id={`correct-${question.id}-opt-${index}`} // Unique id
