@@ -373,8 +373,8 @@ const CourseDetails = () => {
     formData.append('subtitle_file', file);
 
     try {
-      const res = await axios.post(
-        `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/subtitles/`,
+      const res = await axios.patch(
+        `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/`,
         formData,
         {
           headers: {
@@ -401,11 +401,15 @@ const CourseDetails = () => {
     if (!window.confirm('Confirm deletion of subtitle?')) return;
 
     try {
-      await axios.delete(
-        `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/subtitles/`,
+      const formData = new FormData();
+      formData.append('subtitle_file','');
+      await axios.patch(
+        `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/`,
+        formData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
           },
         }
       );

@@ -10,16 +10,27 @@ const SubtitleEdit = ({ courseId, chapterId, contentId, onSuccess, token }) => {
 
   useEffect(() => {
     const fetchSubtitleContent = async () => {
-      const url = `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/edit-subtitles/`;
-      console.log('Sending GET request to:', url);
       try {
-        const response = await axios.get(url, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        });
-        setSubtitleContent(response.data.subtitle_content || '');
+        const contentResponse = await axios.get(
+          `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+        const subtitleUrl = contentResponse.data.subtitle_file;
+        if (subtitleUrl) {
+          const subtitleResponse = await axios.get(subtitleUrl, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          setSubtitleContent(subtitleResponse.data || '');
+        } else {
+          setSubtitleContent('');
+        }
       } catch (err) {
         setError('Failed to load subtitle content.');
         console.error('Fetch subtitle error:', err.response?.data, err);
@@ -40,17 +51,20 @@ const SubtitleEdit = ({ courseId, chapterId, contentId, onSuccess, token }) => {
       return;
     }
 
-    const url = `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/edit-subtitles/`;
-    console.log('Sending POST request to:', url);
+    const url = `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/`;
+    console.log('Sending PATCH request to:', url);
 
     try {
-      const response = await axios.post(
+      const formData = new FormData();
+      const subtitleFile = new File([subtitleContent], 'subtitles.srt', { type: 'text/plain' });
+      formData.append('subtitle_file', subtitleFile);
+      const response = await axios.patch(
         url,
-        { subtitle_content: subtitleContent },
+        formData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
+            'Content-Type': 'multipart/form-data',
           },
         }
       );

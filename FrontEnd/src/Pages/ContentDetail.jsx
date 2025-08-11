@@ -106,9 +106,9 @@ const ContentDetail = () => {
       return;
     }
     try {
-      console.log('Sending POST request to:', `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/upload-subtitles/`);
-      const response = await axios.post(
-        `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/upload-subtitles/`,
+      console.log('Sending PATCH request to:', `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/`);
+      const response = await axios.patch(
+        `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/`,
         formData,
         {
           headers: {
@@ -225,10 +225,16 @@ const ContentDetail = () => {
           playerRef.current.removeRemoteTextTrack(tracks[i]);
         }
       }
-      await axios.delete(
-        `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/subtitles/`,
+      const formData = new FormData();
+      formData.append('subtitle_file','');
+      await axios.patch(
+        `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/`,
+        formData,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
         }
       );
       setContent((prevContent) => {

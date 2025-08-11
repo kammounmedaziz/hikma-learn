@@ -79,19 +79,6 @@ class ContentSerializer(serializers.ModelSerializer):
                 return ''
         return ''
 
-    def get_fields(self):
-        fields = super().get_fields()
-        request = self.context.get('request')
-        if request and request.method == 'GET':
-            # For list views, instance is a QuerySet, so skip subtitle_file
-            if isinstance(getattr(self, 'instance', None), QuerySet):
-                fields.pop('subtitle_file', None)
-            else:
-                instance = getattr(self, 'instance', None)
-                if instance and (instance.content_kind != ContentKind.FILE or not getattr(instance, 'file_mime_type', '').startswith('video/')):
-                    fields.pop('subtitle_file', None)
-        return fields
-
     def validate(self, attrs):
         kind = attrs.get('content_kind', self.instance and self.instance.content_kind)
 
@@ -140,13 +127,3 @@ class ContentSerializer(serializers.ModelSerializer):
             except Exception:
                 raise serializers.ValidationError("Invalid subtitle file format (expected a valid .vtt file).")
         return file
-
-class SubtitleEditSerializer(serializers.Serializer):
-    subtitle_content = serializers.CharField()
-
-    def validate_subtitle_content(self, value):
-        try:
-            webvtt.from_string(value)
-        except Exception:
-            raise serializers.ValidationError("Invalid .vtt subtitle file format.")
-        return value
