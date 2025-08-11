@@ -8,6 +8,7 @@ from django.dispatch import receiver
 from django.core.exceptions import ValidationError
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
+from pathlib import Path
 
 
 class Course(models.Model):
@@ -146,6 +147,11 @@ class Content(models.Model):
 
                 # Guess file kind based on MIME type
                 self.file_kind = guess_file_kind(self.file_mime_type)
+
+        if self.subtitle_file and self.file:
+            file_name = Path(self.file.name).stem
+            subtitle_ext = Path(self.subtitle_file.name).suffix
+            self.subtitle_file.name = f"{file_name}{subtitle_ext}"
 
         super().save(*args, **kwargs)
 
