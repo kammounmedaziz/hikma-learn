@@ -2,10 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Form, FormGroup, Label, Input, Button, Alert } from 'reactstrap';
 import axios from 'axios';
-import parse from 'html-react-parser';
-import { htmlToText } from 'html-to-text';
 import "../App.css";
-import RichTextEditor from "../Components/RichTextEditor.jsx";
 
 const CourseDetails = () => {
   const { courseId } = useParams();
@@ -372,13 +369,17 @@ const CourseDetails = () => {
       return;
     }
 
+    const formData = new FormData();
+    formData.append('subtitle_file', file);
+
     try {
-      const res = await axios.patchForm(
-        `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/`,
-        { subtitle_file: file },
+      const res = await axios.post(
+        `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/subtitles/`,
+        formData,
         {
           headers: {
             Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
           },
         }
       );
@@ -400,9 +401,8 @@ const CourseDetails = () => {
     if (!window.confirm('Confirm deletion of subtitle?')) return;
 
     try {
-      await axios.patchForm(
-        `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/`,
-        { subtitle_file: '' },
+      await axios.delete(
+        `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/subtitles/`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -710,12 +710,13 @@ const CourseDetails = () => {
                               placeholder="Title"
                             />
                             {editContentData.content_kind === 'TEXT' && (
-                              <div className="max-h-[400px] overflow-y-auto">
-                                <RichTextEditor
-                                  content={editContentData.text}
-                                  onChange={(html) => setEditContentData((prev) => ({ ...prev, text: html }))}
-                                />
-                              </div>
+                              <textarea
+                                name="text"
+                                value={editContentData.text}
+                                onChange={handleEditContentChange}
+                                className="w-full px-2 py-1 rounded bg-gray-800 text-white border border-gray-600"
+                                placeholder="Text content"
+                              />
                             )}
                             {editContentData.content_kind === 'LINK' && (
                               <input
@@ -896,36 +897,30 @@ const CourseDetails = () => {
                                 })()}
                               </div>
                             ) : content.text ? (
-                              <div className="flex flex-col space-y-2 content-detail-rendered">
-                                {parse(content.text.length > MAX_LENGTH
-                                  ? htmlToText(content.text, { wordwrap: MAX_LENGTH }).slice(0, MAX_LENGTH) + "..."
-                                  : content.text)}
+                              <div className="flex flex-col space-y-2">
+                                <p className="text-base leading-relaxed whitespace-pre-line text-gray-100 font-medium">
+                                  {content.text.length > MAX_LENGTH
+                                    ? content.text.slice(0, MAX_LENGTH) + "..."
+                                    : content.text}
+                                </p>
                                 {!isTeacher && content.text.length > MAX_LENGTH && (
                                   <div className="flex justify-end">
                                     <Link
                                       to={`/courses/${courseId}/chapters/${chap.id}/contents/${content.id}`}
                                       className="text-sm text-blue-600 hover:text-blue-800 underline"
-                                    >
+                                      >
                                       View More
                                     </Link>
                                   </div>
                                 )}
                               </div>
                             ) : (
-                              <p className="text-center text-gray-400 italic">This folder is empty.</p>
+                              <p className="text-gray-400">No content available.</p>
                             )}
                           </div>
                         )}
-                        {subtitleSuccess && (
-                          <Alert color="success" className="mt-2">
-                            {subtitleSuccess}
-                          </Alert>
-                        )}
-                        {subtitleError && (
-                          <Alert color="danger" className="mt-2">
-                            {subtitleError}
-                          </Alert>
-                        )}
+                        {subtitleError && <Alert color="danger" className="mt-2">{subtitleError}</Alert>}
+                        {subtitleSuccess && <Alert color="success" className="mt-2">{subtitleSuccess}</Alert>}
                       </div>
                     ))
                   ) : (
@@ -942,18 +937,17 @@ const CourseDetails = () => {
 
       {showPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-gray-900 text-white p-6 rounded-lg shadow-lg max-w-md w-full space-y-4">
-            <h2 className="text-xl font-semibold text-center">Add New Chapter</h2>
+          <div className="bg-gray-900 text-white p-6 rounded-lg shadow-lg w-full max-w-md space-y-4">
+            <h2 className="text-xl font-semibold">New Chapter</h2>
             <input
               type="text"
-              placeholder="Chapter Title *"
+              placeholder="Chapter title *"
               className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 text-white"
               value={newChapterTitle}
               onChange={(e) => setNewChapterTitle(e.target.value)}
             />
-            <input
-              type="text"
-              placeholder="Chapter Description *"
+            <textarea
+              placeholder="Description *"
               className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 text-white"
               value={newChapterDescription}
               onChange={(e) => setNewChapterDescription(e.target.value)}
@@ -978,7 +972,7 @@ const CourseDetails = () => {
 
       {showContentPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className={`bg-gray-900 text-white p-6 rounded-lg shadow-lg w-full ${contentType === 'TEXT' ? 'max-w-3xl' : 'max-w-md'} max-h-[80vh] ${contentType === 'TEXT' ? 'overflow-y-auto' : ''} space-y-4`}>
+          <div className="bg-gray-900 text-white p-6 rounded-lg shadow-lg w-full max-w-md space-y-4">
             <h2 className="text-xl font-semibold text-center">Add New Content</h2>
             <div className="grid grid-cols-4 gap-2">
               {[
@@ -1011,12 +1005,14 @@ const CourseDetails = () => {
               }
             />
             {contentType === 'TEXT' && (
-              <div className="max-h-[400px] overflow-y-auto">
-                <RichTextEditor
-                  content={contentForm.text}
-                  onChange={(html) => setContentForm((prev) => ({ ...prev, text: html }))}
-                />
-              </div>
+              <textarea
+                placeholder="Enter text"
+                className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 text-white"
+                value={contentForm.text}
+                onChange={(e) =>
+                  setContentForm((prev) => ({ ...prev, text: e.target.value }))
+                }
+              />
             )}
             {contentType === 'LINK' && (
               <input
@@ -1081,9 +1077,9 @@ const CourseDetails = () => {
 
       {showReorderPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-gray-900 text-white p-6 rounded-lg shadow-lg max-w-md w-full space-y-4">
-            <h2 className="text-xl font-semibold text-center">Reorder Chapters</h2>
-            <div className="space-y-2">
+          <div className="bg-gray-900 text-white p-6 rounded-lg shadow-lg w-full max-w-md space-y-4">
+            <h2 className="text-xl font-semibold">Reorder Chapters</h2>
+            <div className="space-y-2 max-h-[50vh] overflow-auto">
               {reorderedChapters.map((chapter) => (
                 <div
                   key={chapter.id}
@@ -1091,7 +1087,7 @@ const CourseDetails = () => {
                   onDragStart={(e) => handleDragStart(e, chapter)}
                   onDragOver={handleDragOver}
                   onDrop={(e) => handleDrop(e, chapter)}
-                  className="p-2 bg-gray-800 rounded cursor-move hover:bg-gray-700"
+                  className="p-2 bg-gray-700 rounded cursor-move text-white"
                 >
                   {chapter.title}
                 </div>
@@ -1100,13 +1096,13 @@ const CourseDetails = () => {
             <div className="flex justify-end space-x-2">
               <button
                 onClick={handleCancelReordering}
-                className="btn-gradient-gray px-4 py-2 rounded"
+                className="btn-gradient-gray px-4 py-2 rounded font-semibold"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveOrder}
-                className="btn-gradient-green px-4 py-2 rounded"
+                className="btn-gradient-green px-4 py-2 rounded font-semibold"
               >
                 Save Order
               </button>
