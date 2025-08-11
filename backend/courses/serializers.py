@@ -1,17 +1,22 @@
-import webvtt
-from django.db.models import QuerySet
+import os
+import logging
+import requests
+from django.core.exceptions import ValidationError
 from rest_framework import serializers
 from .models import Course, CourseFollow, Chapter, Content, ContentKind, Quiz
 from rest_framework.reverse import reverse
-from django.core.exceptions import ValidationError
-import re
+import webvtt
+
+logger = logging.getLogger(__name__)
 
 class CourseSerializer(serializers.ModelSerializer):
     teacher = serializers.ReadOnlyField(source='teacher.username')
     chapters_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Course
         fields = ['id', 'url', 'chapters_url', 'title', 'description', 'cover_photo', 'creation_date', 'updated_date', 'teacher']
+
     def get_chapters_url(self, obj):
         return reverse('chapter-list', kwargs={'course_pk': obj.pk}, request=self.context.get('request'))
 
@@ -24,10 +29,12 @@ class CourseFollowSerializer(serializers.ModelSerializer):
 class ChapterSerializer(serializers.ModelSerializer):
     chapter_url = serializers.SerializerMethodField()
     contents_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Chapter
         fields = ['id', 'chapter_url', 'contents_url', 'title', 'description', 'order', 'creation_date', 'updated_date']
         read_only_fields = ['creation_date', 'updated_date', 'order']
+
     def get_chapter_url(self, obj):
         request = self.context.get('request')
         return reverse('chapter-detail', kwargs={'course_pk': obj.course_id, 'pk': obj.pk}, request=request)
@@ -48,6 +55,7 @@ class ContentSerializer(serializers.ModelSerializer):
     transcript_text = serializers.SerializerMethodField()
     subtitle_file_url = serializers.SerializerMethodField()
     image_alt_text = serializers.CharField(required=False, allow_null=True, allow_blank=True)
+    generate_alt_text = serializers.BooleanField(write_only=True, required=False, default=False)
 
     class Meta:
         model = Content
@@ -55,7 +63,8 @@ class ContentSerializer(serializers.ModelSerializer):
             'id', 'content_url', 'title', 'content_kind',
             'url', 'file', 'file_kind', 'file_mime_type',
             'text', 'order', 'subtitle_file', 'subtitle_file_url', 
-            'transcript_text', 'image_alt_text', 'creation_date', 'updated_date'
+            'transcript_text', 'image_alt_text', 'creation_date', 'updated_date',
+            'generate_alt_text'
         ]
         read_only_fields = ['order', 'file_mime_type', 'file_kind', 'creation_date', 'updated_date']
 
@@ -77,18 +86,6 @@ class ContentSerializer(serializers.ModelSerializer):
             except Exception:
                 return ''
         return ''
-
-    def get_fields(self):
-        fields = super().get_fields()
-        request = self.context.get('request')
-        if request and request.method == 'GET':
-            if isinstance(getattr(self, 'instance', None), QuerySet):
-                fields.pop('subtitle_file', None)
-            else:
-                instance = getattr(self, 'instance', None)
-                if instance and (instance.content_kind != ContentKind.FILE or not getattr(instance, 'file_mime_type', '').startswith('video/')):
-                    fields.pop('subtitle_file', None)
-        return fields
 
     def get_subtitle_file_url(self, obj):
         request = self.context.get('request')
@@ -117,29 +114,28 @@ class ContentSerializer(serializers.ModelSerializer):
         if kind == ContentKind.FILE:
             file_val = get_field_value('file')
             if not file_val:
-                raise serializers.ValidationError({'file': 'This field is required for FILE content.'})
+                raise serializers.ValidationError({'file': 'This field is required for content type FILE.'})
 
         elif kind == ContentKind.LINK:
             url_val = get_field_value('url')
             if not url_val:
-                errors['url'] = 'This field is required for LINK content.'
+                errors['url'] = 'This field is required for content type LINK.'
 
         elif kind == ContentKind.TEXT:
             text_val = get_field_value('text')
             if not text_val or not text_val.strip():
-                errors['text'] = 'This field is required for TEXT content.'
+                errors['text'] = 'This field is required for content type TEXT.'
 
         if kind != ContentKind.TEXT and get_field_value('text'):
-            errors['text'] = 'Text field should only be filled for TEXT content type.'
+            errors['text'] = 'The text field should only be filled for content type TEXT.'
         if kind != ContentKind.LINK and get_field_value('url'):
-            errors['url'] = 'URL field should only be filled for LINK content type.'
+            errors['url'] = 'The URL field should only be filled for content type LINK.'
         if kind != ContentKind.FILE and get_field_value('file'):
-            errors['file'] = 'File field should only be filled for FILE content type.'
+            errors['file'] = 'The file field should only be filled for content type FILE.'
         quiz_val = attrs.get('quiz') or (getattr(self.instance, 'quiz', None) if self.instance else None)
         if kind != ContentKind.QUIZ and quiz_val:
-            errors['quiz'] = 'Quiz field should only be filled for QUIZ content type.'
+            errors['quiz'] = 'The quiz field should only be filled for content type QUIZ.'
 
-        # Validate image_alt_text
         image_alt_text = attrs.get('image_alt_text', None)
         if image_alt_text == '':
             attrs['image_alt_text'] = None
@@ -152,18 +148,86 @@ class ContentSerializer(serializers.ModelSerializer):
                 file_mime_type = self.instance.file_mime_type
 
             if file_mime_type and not file_mime_type.startswith('image/'):
-                errors['image_alt_text'] = 'Image alt text should only be provided for image files.'
+                errors['image_alt_text'] = 'Alt text should only be provided for image files.'
 
         if errors:
             raise serializers.ValidationError(errors)
 
         return attrs
 
+    def create(self, validated_data):
+        generate = validated_data.pop('generate_alt_text', False)
+        instance = super().create(validated_data)
+        if generate and instance.content_kind == ContentKind.FILE and instance.file_mime_type.startswith('image/'):
+            self._generate_and_save_alt_text(instance)
+        return instance
+
     def update(self, instance, validated_data):
-        # Protéger file_kind et file_mime_type contre les modifications
+        generate = validated_data.pop('generate_alt_text', False)
         validated_data.pop('file_kind', None)
         validated_data.pop('file_mime_type', None)
-        return super().update(instance, validated_data)
+        instance = super().update(instance, validated_data)
+        if generate and instance.content_kind == ContentKind.FILE and instance.file_mime_type.startswith('image/'):
+            self._generate_and_save_alt_text(instance)
+        return instance
+
+    def _generate_and_save_alt_text(self, instance):
+        try:
+            if not os.path.exists(instance.file.path):
+                logger.error(f"Image file not found: {instance.file.path}")
+                raise ValidationError(f"Image file not found: {instance.file.path}")
+            
+            with open(instance.file.path, 'rb') as f:
+                image_bytes = f.read()
+            
+            instance.image_alt_text = self._generate_alt_text(instance, image_bytes)
+            instance.save(update_fields=['image_alt_text'])
+            logger.info(f"Alt text generated and saved for content {instance.id}: {instance.image_alt_text}")
+        except Exception as e:
+            logger.error(f"Failed to generate alt text for content {instance.id}: {str(e)}")
+            raise ValidationError(f"Error generating alt text: {str(e)}")
+
+    def _generate_alt_text(self, instance, image_bytes):
+        ACCOUNT_ID = os.getenv('CLOUDFLARE_ACCOUNT_ID')
+        API_TOKEN = os.getenv('CLOUDFLARE_API_TOKEN')
+        if not ACCOUNT_ID or not API_TOKEN:
+            logger.error("Cloudflare credentials missing.")
+            raise ValidationError("Cloudflare credentials missing.")
+
+        MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10 MB
+        if len(image_bytes) > MAX_IMAGE_SIZE:
+            logger.error(f"Image size exceeds Cloudflare API limit: {len(image_bytes)} bytes")
+            raise ValidationError("Image size exceeds Cloudflare API limit.")
+
+        SUPPORTED_FORMATS = {'image/jpeg', 'image/png', 'image/webp'}
+        file_mime_type = instance.file_mime_type if hasattr(instance, 'file_mime_type') else None
+        if file_mime_type not in SUPPORTED_FORMATS:
+            logger.error(f"Unsupported image format: {file_mime_type}")
+            raise ValidationError(f"Unsupported image format: {file_mime_type}. Supported formats: {', '.join(SUPPORTED_FORMATS)}")
+
+        try:
+            image_array = list(image_bytes)
+            response = requests.post(
+                f"https://api.cloudflare.com/client/v4/accounts/{ACCOUNT_ID}/ai/run/@cf/llava-hf/llava-1.5-7b-hf",
+                headers={"Authorization": f"Bearer {API_TOKEN}"},
+                json={"prompt": "Generate a concise alt text description for this image.", "image": image_array}
+            )
+            logger.info(f"Cloudflare API response: {response.status_code} - {response.text}")
+            if response.status_code == 200:
+                result = response.json()
+                description = result.get('result', {}).get('description', '')
+                if not description:
+                    logger.error("No description generated by Cloudflare API")
+                    raise ValidationError("No description generated by Cloudflare API")
+                logger.info(f"Alt text generated: {description}")
+                return description
+            else:
+                error_message = response.json().get('errors', [{}])[0].get('message', response.text)
+                logger.error(f"Cloudflare API error: {response.status_code} - {error_message}")
+                raise ValidationError(f"Cloudflare API error: {response.status_code} - {error_message}")
+        except Exception as e:
+            logger.error(f"Error generating alt text: {str(e)}")
+            raise ValidationError(f"Error generating alt text: {str(e)}")
 
     def validate_subtitle_file(self, file):
         if file:
@@ -172,7 +236,7 @@ class ContentSerializer(serializers.ModelSerializer):
                 file.seek(0)
                 webvtt.from_string(content)
             except Exception:
-                raise serializers.ValidationError("Invalid subtitle file format (expected a valid .vtt file).")
+                raise ValidationError("Invalid subtitle file format (expected: valid .vtt file).")
         return file
 
 class SubtitleEditSerializer(serializers.Serializer):
@@ -182,5 +246,5 @@ class SubtitleEditSerializer(serializers.Serializer):
         try:
             webvtt.from_string(value)
         except Exception:
-            raise serializers.ValidationError("Invalid .vtt subtitle file format.")
+            raise ValidationError("Invalid .vtt file format.")
         return value

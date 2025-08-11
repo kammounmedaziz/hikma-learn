@@ -842,11 +842,12 @@ const CourseDetails = () => {
                                         {getFileName(url)}
                                       </Link>
                                     );
+                                    console.log('Image Alt Description for content ' + content.id + ':', content.image_alt_text || 'No description');
                                     preview = (
                                       <div className="flex justify-center">
                                         <img
                                           src={url}
-                                          alt={getFileName(url)}
+                                          alt={content.image_alt_text || content.title}
                                           className="max-w-full h-64 rounded shadow"
                                         />
                                       </div>
