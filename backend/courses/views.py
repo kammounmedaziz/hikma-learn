@@ -2,10 +2,15 @@ import asyncio
 import logging
 import re
 import time
+from asyncio.log import logger
+
 import webvtt
+from django.http import FileResponse
 from deepgram import DeepgramClient, PrerecordedOptions, Deepgram
 from django.core.files.storage import default_storage
+from django.http import Http404
 from django.shortcuts import render
+from django.views.decorators.clickjacking import xframe_options_exempt
 from rest_framework import viewsets, permissions, serializers
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 from rest_framework.decorators import action
@@ -50,6 +55,19 @@ def split_text_to_captions(text, segment_duration=5):
 
 class EmptySerializer(serializers.Serializer):
     pass
+
+@xframe_options_exempt
+def embedded_pdf_view(request, content_id):
+    try:
+        content = Content.objects.get(id=content_id, content_kind=ContentKind.FILE, file_kind=FileKind.PDF)
+        if not content.file:
+            logger.error(f"No file found for Content ID {content_id}")
+            raise Http404("PDF file not found.")
+        logger.info(f"Serving PDF: {content.file.path}")
+        return FileResponse(content.file.open('rb'), as_attachment=False)
+    except Content.DoesNotExist:
+        logger.error(f"Content ID {content_id} not found")
+        raise Http404("PDF content not found.")
 
 # Create your views here.
 class CourseViewSet(viewsets.ModelViewSet):

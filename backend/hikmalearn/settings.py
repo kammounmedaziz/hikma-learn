@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "accounts",
     "courses",
     'corsheaders',
+    'bleach'
 ]
 
 MIDDLEWARE = [
@@ -181,3 +182,16 @@ EMAIL_HOST_PASSWORD=os.environ.get('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 DEEPGRAM_API_KEY = "d2a788ddd8175ea27b56be9cadfac8f753f5844e"
+
+BLEACH_ALLOWED_TAGS = [
+    'p', 'ul', 'ol', 'li', 'strong', 'em', 'u',
+    'h1', 'h2', 'br', 'span',  # Core Tiptap tags
+]
+BLEACH_ALLOWED_ATTRIBUTES = {
+    '*': ['style'],  # Allow style attribute for span, p, etc.
+}
+BLEACH_ALLOWED_STYLES = [
+    'font-family', 'font-size', 'color', 'text-align'  # Tiptap inline styles
+]
+BLEACH_STRIP_TAGS = True  # Remove disallowed tags
+BLEACH_STRIP_COMMENTS = True  # Remove HTML comments

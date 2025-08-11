@@ -1,6 +1,9 @@
 import webvtt
+import bleach
 from django.db.models import QuerySet
 from rest_framework import serializers
+
+from hikmalearn.settings import BLEACH_ALLOWED_TAGS, BLEACH_ALLOWED_ATTRIBUTES
 from .models import Course, CourseFollow, Chapter, Content, ContentKind, Quiz
 from rest_framework.reverse import reverse
 from django.core.exceptions import ValidationError
@@ -124,6 +127,17 @@ class ContentSerializer(serializers.ModelSerializer):
             text_val = get_field_value('text')
             if not text_val or not text_val.strip():
                 raise serializers.ValidationError({'text': 'This field is required for TEXT content.'})
+            if text_val:
+                cleaned_text = bleach.clean(
+                    text_val,
+                    tags=BLEACH_ALLOWED_TAGS,
+                    attributes=BLEACH_ALLOWED_ATTRIBUTES,
+                    strip=True,
+                    strip_comments=True
+                )
+                if cleaned_text.endswith('<p></p>'):
+                    cleaned_text = cleaned_text[:-7]
+                attrs['text'] = cleaned_text
 
         if kind != ContentKind.TEXT and get_field_value('text'):
             raise serializers.ValidationError({'text': 'Text field should only be filled for TEXT content type.'})
