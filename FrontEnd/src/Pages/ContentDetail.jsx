@@ -96,8 +96,6 @@ const ContentDetail = () => {
       console.log('Invalid file extension:', file.name);
       return;
     }
-    const formData = new FormData();
-    formData.append('subtitle_file', file);
 
     if (!token) {
       setSubtitleError('Authentication token is missing.');
@@ -107,12 +105,11 @@ const ContentDetail = () => {
     }
     try {
       console.log('Sending PATCH request to:', `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/`);
-      const response = await axios.patch(
+      const response = await axios.patchForm(
         `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/`,
-        formData,
+        { subtitle_file: file },
         {
           headers: {
-            'Content-Type': 'multipart/form-data',
             Authorization: `Bearer ${token}`,
           },
         }
@@ -225,15 +222,12 @@ const ContentDetail = () => {
           playerRef.current.removeRemoteTextTrack(tracks[i]);
         }
       }
-      const formData = new FormData();
-      formData.append('subtitle_file','');
-      await axios.patch(
+      await axios.patchForm(
         `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/`,
-        formData,
+        { subtitle_file: '' },
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
           },
         }
       );

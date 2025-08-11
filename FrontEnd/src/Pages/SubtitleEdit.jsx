@@ -55,16 +55,13 @@ const SubtitleEdit = ({ courseId, chapterId, contentId, onSuccess, token }) => {
     console.log('Sending PATCH request to:', url);
 
     try {
-      const formData = new FormData();
       const subtitleFile = new File([subtitleContent], 'subtitles.srt', { type: 'text/plain' });
-      formData.append('subtitle_file', subtitleFile);
-      const response = await axios.patch(
+      const response = await axios.patchForm(
         url,
-        formData,
+        { subtitle_file: subtitleFile },
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
           },
         }
       );

@@ -369,17 +369,13 @@ const CourseDetails = () => {
       return;
     }
 
-    const formData = new FormData();
-    formData.append('subtitle_file', file);
-
     try {
-      const res = await axios.patch(
+      const res = await axios.patchForm(
         `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/`,
-        formData,
+        { subtitle_file: file },
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
           },
         }
       );
@@ -401,15 +397,12 @@ const CourseDetails = () => {
     if (!window.confirm('Confirm deletion of subtitle?')) return;
 
     try {
-      const formData = new FormData();
-      formData.append('subtitle_file','');
-      await axios.patch(
+      await axios.patchForm(
         `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/`,
-        formData,
+        {subtitle_file: ''},
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data',
           },
         }
       );
