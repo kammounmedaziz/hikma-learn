@@ -23,6 +23,7 @@ import {
 import StudyOverview from './StudyOverview';
 import StudentSettings from '../Components/StudentSettings';
 import MyCourses from './MyCourses';
+import { NavLink, Outlet } from 'react-router-dom';
 import CourseList from '../Components/CourseList'; // ✅ import
 
 const AnimatedBackground = () => null;
@@ -55,179 +56,24 @@ const PlaceholderPage = ({ title, description }) => (
 );
 
 const StudyDashboard = () => {
-  const [currentPage, setCurrentPage] = useState('overview');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [allCourses, setAllCourses] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        setLoading(true);
-        const token = localStorage.getItem('token') || '';
-        console.log('Fetching all courses with token...', token);
-
-        const coursesResponse = await axios.get('http://localhost:8000/courses/', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        console.log('Courses response status:', coursesResponse.status);
-        const coursesData = coursesResponse.data;
-
-        console.log('Fetching followed courses...');
-        const followedResponse = await axios.get('http://localhost:8000/courses/followed-courses/', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        console.log('Followed response status:', followedResponse.status);
-        const followedData = followedResponse.data;
-
-        // Map followed course IDs
-        const followedIds = new Set(followedData.map(course => course.id));
-
-        // Format courses with teacher as an object, matching AdminDashboard
-        const formattedCourses = coursesData.map(course => ({
-          id: course.id,
-          title: course.title,
-          description: course.description,
-          teacher: course.teacher && typeof course.teacher === 'object' ? course.teacher : { username: course.teacher || 'Unknown Teacher' },
-          isFollowed: followedIds.has(course.id),
-        }));
-        console.log('Formatted courses:', formattedCourses);
-        setAllCourses(formattedCourses);
-      } catch (err) {
-        console.error('Fetch error:', err);
-        setError(`Error fetching courses: ${err.message}. 
-          - Ensure the Django server is running at http://localhost:8000/.
-          - Check token authentication.
-          - Verify you are authenticated as a student.
-          - Check browser console for details.`);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCourses();
-  }, []);
-
-  const handleCourseAction = async (action, courseId) => {
-    console.log(`Action: ${action}, Course ID: ${courseId}`);
-    try {
-      const token = localStorage.getItem('token') || '';
-      let response;
-
-      if (action === 'follow') {
-        response = await axios.post(`http://localhost:8000/courses/${courseId}/follow/`, {}, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (response.status === 201) {
-          console.log(`${action} action succeeded`);
-        }
-      } else if (action === 'unfollow') {
-        response = await axios.delete(`http://localhost:8000/courses/${courseId}/follow/`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (response.status === 204) {
-          console.log(`${action} action succeeded`);
-        }
-      }
-
-      // Refresh courses to update isFollowed status
-      const updatedCoursesResponse = await axios.get('http://localhost:8000/courses/', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (updatedCoursesResponse.status !== 200) throw new Error(`Failed to refresh courses: ${updatedCoursesResponse.status}`);
-      const updatedCoursesData = updatedCoursesResponse.data;
-
-      const followedResponse = await axios.get('http://localhost:8000/courses/followed-courses/', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (followedResponse.status !== 200) throw new Error(`Failed to refresh followed courses: ${followedResponse.status}`);
-      const followedData = followedResponse.data;
-
-      const followedIds = new Set(followedData.map(course => course.id));
-      const updatedFormattedCourses = updatedCoursesData.map(course => ({
-        id: course.id,
-        title: course.title,
-        description: course.description,
-        teacher: course.teacher && typeof course.teacher === 'object' ? course.teacher : { username: course.teacher || 'Unknown Teacher' },
-        isFollowed: followedIds.has(course.id),
-      }));
-      setAllCourses(updatedFormattedCourses);
-    } catch (error) {
-      console.error(`${action} action failed:`, error.message);
-      setError(`Failed to ${action} course. Please try again.`);
-    }
-  };
 
   const menuItems = [
-    { id: 'overview', label: 'Overview', icon: Home, description: 'Study summary and quick insights' },
-    { id: 'all-courses', label: 'All Courses', icon: GraduationCap, description: 'Explore our courses' },
-    { id: 'courses', label: 'My Courses', icon: BookOpen, description: 'Explore your enrolled courses' },
-    { id: 'exams', label: 'Exams & Quizzes', icon: FileText, description: 'Upcoming tests and past results' },
-    { id: 'assignments', label: 'Assignments', icon: Target, description: 'Track and submit assignments' },
-    { id: 'schedule', label: 'Schedule', icon: Calendar, description: 'Daily and weekly learning schedule' },
-    { id: 'progress', label: 'Progress & Analytics', icon: TrendingUp, description: 'Your learning analytics and goals' },
-    { id: 'achievements', label: 'Achievements', icon: Award, description: 'Your badges and certificates' },
-    { id: 'library', label: 'Resource Library', icon: Library, description: 'Extra resources and materials' },
-    { id: 'forum', label: 'Discussion Forum', icon: MessageSquare, description: 'Ask and answer questions' },
-    { id: 'study_groups', label: 'Study Groups', icon: Users, description: 'Join or create study circles' },
-    { id: 'notifications', label: 'Notifications', icon: Bell, description: 'Alerts and important messages' },
-    { id: 'support', label: 'Support Center', icon: HelpCircle, description: 'Ask for help or report issues' },
-    { id: 'settings', label: 'Settings', icon: Settings, description: 'Manage your profile and preferences' },
+    { id: 'overview', label: 'Overview', icon: Home, description: 'Study summary and quick insights', path: '' },
+    { id: 'courses', label: 'My Courses', icon: BookOpen, description: 'Explore your enrolled courses', path: 'courses' },
+    { id: 'all-courses', label: 'All Courses', icon: GraduationCap, description: 'Explore our courses' , path: 'all-courses' },
+    { id: 'ExamsQuiz', label: 'Exams & Quizzes', icon: FileText, description: 'Upcoming tests and past results', path: 'quizzes' },
+    { id: 'assignments', label: 'Assignments', icon: Target, description: 'Track and submit assignments', path: 'assignments' },
+    { id: 'schedule', label: 'Schedule', icon: Calendar, description: 'Daily and weekly learning schedule', path: 'schedule' },
+    { id: 'progress', label: 'Progress & Analytics', icon: TrendingUp, description: 'Your learning analytics and goals', path: 'progress' },
+    { id: 'achievements', label: 'Achievements', icon: Award, description: 'Your badges and certificates', path: 'achievements' },
+    { id: 'library', label: 'Resource Library', icon: Library, description: 'Extra resources and materials', path: 'library' },
+    { id: 'forum', label: 'Discussion Forum', icon: MessageSquare, description: 'Ask and answer questions', path: 'forum' },
+    { id: 'study_groups', label: 'Study Groups', icon: Users, description: 'Join or create study circles', path: 'study_groups' },
+    { id: 'notifications', label: 'Notifications', icon: Bell, description: 'Alerts and important messages', path: 'notifications' },
+    { id: 'support', label: 'Support Center', icon: HelpCircle, description: 'Ask for help or report issues', path: 'support' },
+    { id: 'settings', label: 'Settings', icon: Settings, description: 'Manage your profile and preferences', path: 'settings' },
   ];
-
-  const renderPage = () => {
-    const currentMenuItem = menuItems.find((item) => item.id === currentPage);
-
-    switch (currentPage) {
-      case 'overview': return <StudyOverview />;
-      case 'settings': return <PlaceholderPage title="Settings" description="Manage your profile and preferences" />;
-      case 'exams': return <PlaceholderPage title="Exams & Quizzes" description="Upcoming tests and past results" />;
-      case 'assignments': return <PlaceholderPage title="Assignments" description="Track and submit assignments" />;
-      case 'schedule': return <PlaceholderPage title="Schedule" description="Daily and weekly learning schedule" />;
-      case 'progress': return <PlaceholderPage title="Progress & Analytics" description="Your learning analytics and goals" />;
-      case 'achievements': return <PlaceholderPage title="Achievements" description="Your badges and certificates" />;
-      case 'library': return <PlaceholderPage title="Resource Library" description="Extra resources and materials" />;
-      case 'forum': return <PlaceholderPage title="Discussion Forum" description="Ask and answer questions" />;
-      case 'study_groups': return <PlaceholderPage title="Study Groups" description="Join or create study circles" />;
-      case 'notifications': return <PlaceholderPage title="Notifications" description="Alerts and important messages" />;
-      case 'support': return <PlaceholderPage title="Support Center" description="Ask for help or report issues" />;
-      case 'courses':
-        return (
-          <div className="space-y-8">
-            <MyCourses />
-          </div>
-        );
-      case 'all-courses':
-        return (
-          <div className="space-y-8">
-            <div className="text-center mb-8">
-              <h2 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-gray-400 mb-4">
-                Explore All Courses
-              </h2>
-              <p className="text-gray-300 text-lg max-w-2xl mx-auto">
-                Browse all available courses and start learning something new today.
-              </p>
-            </div>
-            <div className="backdrop-blur-md bg-white/10 rounded-xl p-8 border border-white/20">
-              {loading ? (
-                <p className="text-gray-300 text-center">Loading courses...</p>
-              ) : error ? (
-                <p className="text-red-400 text-center">{error}</p>
-              ) : (
-                <CourseList
-                  role="student"
-                  courses={allCourses}
-                  onAction={handleCourseAction}
-                />
-              )}
-            </div>
-          </div>
-        );
-      default:
-        return <PlaceholderPage title={currentMenuItem?.label || 'Page Not Found'} description={currentMenuItem?.description || 'This section is under development.'} />;
-    }
-  };
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -256,19 +102,21 @@ const StudyDashboard = () => {
             {menuItems.map((item) => {
               const Icon = item.icon;
               return (
-                <button
+                <NavLink
                   key={item.id}
-                  onClick={() => setCurrentPage(item.id)}
-                  className={`w-full flex items-center px-4 py-3 text-left transition-all duration-300 hover:scale-105 ${
-                    currentPage === item.id
-                      ? 'bg-gradient-to-r from-red-500/20 to-gray-500/20 border-r-2 border-red-400 text-white shadow-lg'
-                      : 'text-gray-300 hover:bg-white/10 hover:text-white'
-                  }`}
+                  to={item.path}
+                  className={({ isActive }) =>
+                    `w-full flex items-center px-4 py-3 text-left transition-all duration-300 hover:scale-105 ${
+                      isActive
+                        ? 'bg-gradient-to-r from-red-500/20 to-gray-500/20 border-r-2 border-red-400 text-white shadow-lg'
+                        : 'text-gray-300 hover:bg-white/10 hover:text-white'
+                    }`
+                  }
                   title={!sidebarCollapsed ? item.description : item.label}
                 >
                   <Icon size={20} className="flex-shrink-0" />
                   {!sidebarCollapsed && <span className="ml-3 font-medium">{item.label}</span>}
-                </button>
+                </NavLink>
               );
             })}
           </nav>
@@ -276,7 +124,7 @@ const StudyDashboard = () => {
         <div className="flex-1 overflow-auto">
           <div className="p-4 md:p-8 relative z-10">
             <div className="backdrop-blur-lg bg-gray-900/30 rounded-2xl border border-gray-700 shadow-xl min-h-[calc(100vh-4rem)] p-4 md:p-8">
-              {renderPage()}
+              <Outlet />
             </div>
           </div>
         </div>

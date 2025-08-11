@@ -2,8 +2,7 @@ import webvtt
 import bleach
 from django.db.models import QuerySet
 from rest_framework import serializers
-
-from .models import Course, CourseFollow, Chapter, Content, ContentKind, Quiz
+from .models import Course, CourseFollow, Chapter, Content, ContentKind
 from rest_framework.reverse import reverse
 from django.core.exceptions import ValidationError
 import re

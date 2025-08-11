@@ -1,8 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Home, BookOpen, Users, FileText, Calendar, BarChart3, MessageSquare, Settings, Bell, GraduationCap, ChevronLeft, ChevronRight,
-  ClipboardList, Award, Video, Library, UserCheck, PieChart, TrendingUp, Mail, HelpCircle, Star, Plus, Edit, Eye
+  Home,
+  BookOpen,
+  Users,
+  FileText,
+  Calendar,
+  BarChart3,
+  MessageSquare,
+  Settings,
+  Bell,
+  GraduationCap,
+  ChevronLeft,
+  ChevronRight,
+  ClipboardList,
+  Library,
+  UserCheck,
+  Video,
+  HelpCircle,
+  TrendingUp,
+  Award, PieChart, Mail, Star, Plus, Edit, Eye
 } from 'lucide-react';
+import { Link, useLocation, Outlet } from 'react-router-dom';
 import TeacherSettings from '../Components/TeacherSettings';
 import MyCoursesTeacher from './MyCoursesTeacher.jsx';
 import CourseList from '../Components/CourseList'; // Import CourseList
@@ -150,143 +168,25 @@ const AnimatedBackground = () => (
 );
 
 const TeacherDashboard = () => {
-  const [currentPage, setCurrentPage] = useState('overview');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [allCourses, setAllCourses] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        setLoading(true);
-        console.log('Fetching all courses with authentication...');
-        const token = localStorage.getItem('token') || '';
-        const coursesResponse = await fetch('http://localhost:8000/courses/', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        console.log('Courses response status:', coursesResponse.status);
-        if (!coursesResponse.ok) {
-          throw new Error(`HTTP error! Status: ${coursesResponse.status}`);
-        }
-        const coursesData = await coursesResponse.json();
-        console.log('Raw courses data:', coursesData);
-
-        // Format all courses with teacher as an object, matching AdminDashboard
-        const formattedCourses = coursesData.map(course => ({
-          id: course.id,
-          title: course.title,
-          description: course.description,
-          teacher: course.teacher && typeof course.teacher === 'object' ? course.teacher : { username: course.teacher || 'Unknown Teacher' },
-          isFollowed: false,
-        }));
-        console.log('Formatted all courses:', formattedCourses);
-        setAllCourses(formattedCourses);
-      } catch (err) {
-        console.error('Fetch error:', err);
-        setError(`Error fetching courses: ${err.message}. 
-          - Ensure the Django server is running at http://localhost:8000/.
-          - Check CORS configuration in Django settings.
-          - Verify you are authenticated as a teacher.
-          - Check browser console for details.`);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCourses();
-  }, []);
-
-  const handleCourseAction = async (action, courseId) => {
-    console.log(`Action: ${action}, Course ID: ${courseId}`);
-    try {
-      let response;
-      if (action === 'viewOwn') {
-        response = await fetch(`http://localhost:8000/courses/${courseId}/`, {
-          method: 'GET',
-          headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
-        });
-      }
-
-      if (!response.ok) throw new Error(`Failed to ${action} course: ${response.status}`);
-      console.log(`${action} action succeeded`);
-
-      // Refresh course data if needed
-      const updatedCoursesResponse = await fetch('http://localhost:8000/courses/', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` },
-      });
-      if (!updatedCoursesResponse.ok) throw new Error(`Failed to refresh courses: ${updatedCoursesResponse.status}`);
-      const updatedCoursesData = await updatedCoursesResponse.json();
-      const formattedCourses = updatedCoursesData.map(course => ({
-        id: course.id,
-        title: course.title,
-        description: course.description,
-        teacher: course.teacher && typeof course.teacher === 'object' ? course.teacher : { username: course.teacher || 'Unknown Teacher' },
-        isFollowed: false,
-      }));
-      setAllCourses(formattedCourses);
-    } catch (err) {
-      console.error(`${action} action failed:`, err);
-    }
-  };
+  const location = useLocation();
 
   const menuItems = [
-    { id: 'overview', label: 'Dashboard', icon: Home, description: 'Overview of your teaching activities' },
-    { id: 'all-courses', label: 'All Courses', icon: GraduationCap, description: 'Explore all courses on the platform' },
-    { id: 'courses', label: 'My Courses', icon: BookOpen, description: 'Manage your courses and curriculum' },
-    { id: 'assignments', label: 'Assignments', icon: ClipboardList, description: 'Create and manage assignments' },
-    { id: 'grading', label: 'Grading Center', icon: FileText, description: 'Review and grade submissions' },
-    { id: 'attendance', label: 'Attendance', icon: UserCheck, description: 'Track student attendance' },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3, description: 'Student performance analytics' },
-    { id: 'schedule', label: 'Class Schedule', icon: Calendar, description: 'Manage your teaching schedule' },
-    { id: 'content', label: 'Content Library', icon: Library, description: 'Course materials and resources' },
-    { id: 'live_classes', label: 'Live Classes', icon: Video, description: 'Conduct virtual classes' },
-    { id: 'forums', label: 'Discussion Forums', icon: MessageSquare, description: 'Moderate class discussions' },
-    { id: 'notifications', label: 'Notifications', icon: Bell, description: 'System alerts and updates' },
-    { id: 'support', label: 'Support', icon: HelpCircle, description: 'Get help and report issues' },
-    { id: 'settings', label: 'Settings', icon: Settings, description: 'Configure your preferences' },
+    { id: 'overview', label: 'Dashboard', icon: Home, description: 'Overview of your teaching activities', path: '/teacherdashboard' },
+    { id: 'all-courses', label: 'All Courses', icon: GraduationCap, description: 'Explore all courses on the platform', path: '/teacherdashboard/all-courses' },
+    { id: 'courses', label: 'My Courses', icon: BookOpen, description: 'Manage your courses and curriculum', path: '/teacherdashboard/courses' },
+    { id: 'quizzes', label: 'Quizzes', icon: ClipboardList, description: 'Create and manage assignments', path: '/teacherdashboard/quizzes' },
+    { id: 'grading', label: 'Grading Center', icon: FileText, description: 'Review and grade submissions', path: '/teacherdashboard/grading' },
+    { id: 'attendance', label: 'Attendance', icon: UserCheck, description: 'Track student attendance', path: '/teacherdashboard/attendance' },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3, description: 'Student performance analytics', path: '/teacherdashboard/analytics' },
+    { id: 'schedule', label: 'Class Schedule', icon: Calendar, description: 'Manage your teaching schedule', path: '/teacherdashboard/schedule' },
+    { id: 'content', label: 'Content Library', icon: Library, description: 'Course materials and resources', path: '/teacherdashboard/content' },
+    { id: 'live_classes', label: 'Live Classes', icon: Video, description: 'Conduct virtual classes', path: '/teacherdashboard/live_classes' },
+    { id: 'forums', label: 'Discussion Forums', icon: MessageSquare, description: 'Moderate class discussions', path: '/teacherdashboard/forums' },
+    { id: 'notifications', label: 'Notifications', icon: Bell, description: 'System alerts and updates', path: '/teacherdashboard/notifications' },
+    { id: 'support', label: 'Support', icon: HelpCircle, description: 'Get help and report issues', path: '/teacherdashboard/support' },
+    { id: 'settings', label: 'Settings', icon: Settings, description: 'Configure your preferences', path: '/teacherdashboard/settings' },
   ];
-
-  const renderPage = () => {
-    const currentMenuItem = menuItems.find((item) => item.id === currentPage);
-    switch (currentPage) {
-      case 'overview':
-        return <TeacherOverview />;
-      case 'courses':
-        return <MyCoursesTeacher />;
-      case 'settings':
-        return <TeacherSettings />;
-      case 'all-courses':
-        return (
-          <div className="space-y-8">
-            <div className="text-center mb-8">
-              <h2 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-gray-400 mb-4">
-                All Courses
-              </h2>
-              <p className="text-gray-300 text-lg max-w-2xl mx-auto">
-                View all courses on the platform.
-              </p>
-            </div>
-            <div className="backdrop-blur-md bg-white/10 rounded-xl p-8 border border-white/20">
-              {loading ? (
-                <p className="text-gray-300 text-center">Loading courses...</p>
-              ) : error ? (
-                <p className="text-red-400 text-center">{error}</p>
-              ) : (
-                <CourseList
-                  role="teacher"
-                  courses={allCourses}
-                  onAction={handleCourseAction}
-                  currentTeacher={localStorage.getItem('username') || 'teacher1'} // Match your logged-in user
-                />
-              )}
-            </div>
-          </div>
-        );
-      default:
-        return <PlaceholderPage title={currentMenuItem?.label || 'Page Not Found'} description={currentMenuItem?.description || 'This section is under development'} />;
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-red-900 to-gray-900 relative overflow-hidden">
@@ -314,12 +214,13 @@ const TeacherDashboard = () => {
           <nav className="mt-4 overflow-y-auto max-h-[calc(100vh-120px)]">
             {menuItems.map((item) => {
               const Icon = item.icon;
+              const isActive = location.pathname === item.path || (item.id === 'overview' && location.pathname === '/teacherdashboard');
               return (
-                <button
+                <Link
                   key={item.id}
-                  onClick={() => setCurrentPage(item.id)}
+                  to={item.path}
                   className={`w-full flex items-center px-4 py-3 text-left transition-all duration-300 hover:scale-105 ${
-                    currentPage === item.id
+                    isActive
                       ? 'bg-gradient-to-r from-red-500/20 to-gray-500/20 border-r-2 border-red-400 text-white shadow-lg'
                       : 'text-gray-300 hover:bg-white/10 hover:text-white'
                   }`}
@@ -327,7 +228,7 @@ const TeacherDashboard = () => {
                 >
                   <Icon size={20} className="flex-shrink-0" />
                   {!sidebarCollapsed && <span className="ml-3 font-medium">{item.label}</span>}
-                </button>
+                </Link>
               );
             })}
           </nav>
@@ -335,7 +236,11 @@ const TeacherDashboard = () => {
         <div className="flex-1 overflow-auto">
           <div className="p-4 md:p-8 relative z-10">
             <div className="backdrop-blur-lg bg-gray-900/30 rounded-2xl border border-gray-700 shadow-xl min-h-[calc(100vh-4rem)] p-4 md:p-8">
-              {renderPage()}
+              {location.pathname === '/teacherdashboard' || location.pathname === '/teacherdashboard/overview' ? (
+                <TeacherOverview />
+              ) : (
+                <Outlet />
+              )}
             </div>
           </div>
         </div>
