@@ -58,7 +58,10 @@ INSTALLED_APPS = [
     "accounts",
     "courses",
     'corsheaders',
+    "quiz",
 ]
+
+
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -184,4 +187,5 @@ EMAIL_HOST_USER=os.environ.get('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD=os.environ.get('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
+DEEPGRAM_API_KEY = "d2a788ddd8175ea27b56be9cadfac8f753f5844e"
 X_FRAME_OPTIONS = 'ALLOW'

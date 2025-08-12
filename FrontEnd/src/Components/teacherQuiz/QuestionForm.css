@@ -1,0 +1,130 @@
+.question-card {
+  background-color: rgba(31, 41, 55, 0.5);
+  border: 1px solid #374151;
+  padding: 1rem;
+  border-radius: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 0 10px rgba(100, 102, 241, 0.3);
+  position: relative;
+}
+
+.question-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.question-input {
+  flex-grow: 1;
+  padding: 0.5rem;
+  background-color: #374151;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+}
+
+.score-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #d1d5db;
+}
+
+.score-input {
+  width: 4rem;
+  padding: 0.4rem;
+  background-color: #374151;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+}
+
+.option-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.option-delete {
+  padding: 0.25rem;
+  color: #f87171;
+  margin-right: 0.5rem;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+.option-delete:hover {
+  color: #dc2626;
+}
+
+.option-input {
+  flex-grow: 1;
+  padding: 0.5rem;
+  background-color: #374151;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  margin-right: 0.5rem;
+}
+
+.checkbox {
+  accent-color: #a650f7;
+  transform: scale(1.2);
+}
+
+.button-row {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.add-option-button {
+  padding: 0.4rem 1rem;
+  background: linear-gradient(to right, #3b82f6, #6366f1);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+.add-option-button:hover {
+  background: linear-gradient(to right, #2563eb, #4f46e5);
+}
+
+.delete-question-button {
+  padding: 0.4rem 1rem;
+  background: linear-gradient(to right, #ef4444, #be123c);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+}
+.delete-question-button:hover {
+  background: linear-gradient(to right, #dc2626, #7f1d1d);
+}
+
+.icon-button {
+  padding: 0.5rem 0.8rem;
+  font-size: 1.25rem;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+  box-shadow: 0 0 5px rgba(0,0,0,0.2);
+}
+
+.icon-button:hover {
+  transform: scale(1.1);
+}
+
+.icon-button.add {
+ 
+  color: white;
+}
+
+.icon-button.delete {
+
+  color: white;
+}
+

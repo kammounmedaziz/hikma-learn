@@ -2,6 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_nested.routers import NestedSimpleRouter
 from .views import CourseViewSet, ChapterViewSet, ContentViewSet
+from .views import embedded_pdf_view
 
 # Main router for courses
 router = DefaultRouter()
@@ -19,4 +20,5 @@ urlpatterns = [
     path('', include(router.urls)),
     path('', include(course_router.urls)),
     path('', include(chapter_router.urls)),
+    path('pdf/embed/<int:content_id>/', embedded_pdf_view, name='embed_pdf'),
 ]

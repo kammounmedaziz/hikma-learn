@@ -2,8 +2,10 @@ import os
 import logging
 import requests
 from django.core.exceptions import ValidationError
+import webvtt
+from django.db.models import QuerySet
 from rest_framework import serializers
-from .models import Course, CourseFollow, Chapter, Content, ContentKind, Quiz
+from .models import Course, CourseFollow, Chapter, Content, ContentKind
 from rest_framework.reverse import reverse
 import webvtt
 
@@ -53,7 +55,6 @@ class ContentSerializer(serializers.ModelSerializer):
     content_url = serializers.SerializerMethodField()
     subtitle_file = serializers.FileField(required=False, allow_null=True)
     transcript_text = serializers.SerializerMethodField()
-    subtitle_file_url = serializers.SerializerMethodField()
     image_alt_text = serializers.CharField(required=False, allow_null=True, allow_blank=True)
     generate_alt_text = serializers.BooleanField(write_only=True, required=False, default=False)
 
@@ -62,7 +63,7 @@ class ContentSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'content_url', 'title', 'content_kind',
             'url', 'file', 'file_kind', 'file_mime_type',
-            'text', 'order', 'subtitle_file', 'subtitle_file_url', 
+            'text', 'order', 'subtitle_file',
             'transcript_text', 'image_alt_text', 'creation_date', 'updated_date',
             'generate_alt_text'
         ]
@@ -79,19 +80,16 @@ class ContentSerializer(serializers.ModelSerializer):
         if obj.subtitle_file:
             try:
                 from io import StringIO
-                content = obj.subtitle_file.read().decode('utf-8')
+                # Reset file pointer just in case it was already read
+                obj.subtitle_file.seek(0)
+                content = obj.subtitle_file.read().decode('utf-8', errors='ignore')
+                obj.subtitle_file.seek(0)  # Optional: reset again after reading
                 buffer = StringIO(content)
                 vtt = webvtt.read_buffer(buffer)
                 return ' '.join([cue.text.strip() for cue in vtt])
             except Exception:
                 return ''
         return ''
-
-    def get_subtitle_file_url(self, obj):
-        request = self.context.get('request')
-        if obj.subtitle_file and hasattr(obj.subtitle_file, 'url'):
-            return request.build_absolute_uri(obj.subtitle_file.url) if request else obj.subtitle_file.url
-        return None
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -236,15 +234,5 @@ class ContentSerializer(serializers.ModelSerializer):
                 file.seek(0)
                 webvtt.from_string(content)
             except Exception:
-                raise ValidationError("Invalid subtitle file format (expected: valid .vtt file).")
+                raise serializers.ValidationError("Invalid subtitle file format (expected a valid .vtt file).")
         return file
-
-class SubtitleEditSerializer(serializers.Serializer):
-    subtitle_content = serializers.CharField()
-
-    def validate_subtitle_content(self, value):
-        try:
-            webvtt.from_string(value)
-        except Exception:
-            raise ValidationError("Invalid .vtt file format.")
-        return value

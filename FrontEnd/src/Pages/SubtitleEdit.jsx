@@ -2,20 +2,42 @@ import React, { useState, useEffect } from 'react';
 import { Form, FormGroup, Label, Input, Button, Alert } from 'reactstrap';
 import axios from 'axios';
 
-const SubtitleEdit = ({ courseId, chapterId, contentId, token, subtitleUrl, onSuccess }) => {
+const SubtitleEdit = ({ courseId, chapterId, contentId, onSuccess, token }) => {
   const [subtitleContent, setSubtitleContent] = useState('');
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (subtitleUrl) {
-      fetch(subtitleUrl)
-        .then((response) => response.text())
-        .then((data) => setSubtitleContent(data))
-        .catch(() => setError('Failed to load subtitle content.'));
-    }
-  }, [subtitleUrl]);
+    const fetchSubtitleContent = async () => {
+      try {
+        const contentResponse = await axios.get(
+          `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+        const subtitleUrl = contentResponse.data.subtitle_file;
+        if (subtitleUrl) {
+          const subtitleResponse = await axios.get(subtitleUrl, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          setSubtitleContent(subtitleResponse.data || '');
+        } else {
+          setSubtitleContent('');
+        }
+      } catch (err) {
+        setError('Failed to load subtitle content.');
+        console.error('Fetch subtitle error:', err.response?.data, err);
+      }
+    };
+    fetchSubtitleContent();
+  }, [courseId, chapterId, contentId, token]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,21 +45,35 @@ const SubtitleEdit = ({ courseId, chapterId, contentId, token, subtitleUrl, onSu
     setError(null);
     setSuccess(null);
 
+    if (!subtitleContent.trim()) {
+      setError('Subtitle content cannot be empty.');
+      setLoading(false);
+      return;
+    }
+
+    const url = `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/`;
+    console.log('Sending PATCH request to:', url);
+
     try {
-      const response = await axios.post(
-        `/api/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/edit-subtitles/`,
-        { subtitle_content: subtitleContent },
+      const subtitleFile = new File([subtitleContent], 'subtitles.srt', { type: 'text/plain' });
+      const response = await axios.patchForm(
+        url,
+        { subtitle_file: subtitleFile },
         {
           headers: {
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
           },
         }
       );
       setSuccess('Subtitle updated successfully!');
       onSuccess(response.data);
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to update subtitle.');
+      const errorMessage =
+        err.response?.data?.error ||
+        err.response?.data?.detail ||
+        `Failed to update subtitle. Status: ${err.response?.status || 'unknown'}.`;
+      setError(errorMessage);
+      console.error('Subtitle update error:', err.response?.data, err);
     } finally {
       setLoading(false);
     }
@@ -46,34 +82,21 @@ const SubtitleEdit = ({ courseId, chapterId, contentId, token, subtitleUrl, onSu
   return (
     <Form onSubmit={handleSubmit}>
       <FormGroup>
-        <Label for="subtitleContent" className="text-gray-300">Edit Subtitle (.vtt)</Label>
+        <Label for="subtitleContent">Subtitle Content</Label>
         <Input
-  type="textarea"
-  id="subtitleContent"
-  value={subtitleContent}
-  onChange={(e) => setSubtitleContent(e.target.value)}
-  rows={10}
-  className="bg-gray-800 text-white border-gray-600"
-  style={{
-    backgroundColor: '#1a202c',
-    color: '#ffffff',
-    borderColor: '#4a5568',
-    ':focus': {
-      backgroundColor: '#1a202c', // Maintain dark background on focus
-      color: '#ffffff',
-      borderColor: '#4a5568',
-      outline: 'none', // Remove default focus outline if unwanted
-      boxShadow: 'none', // Remove default focus shadow if present
-    },
-  }}
-  placeholder="Enter WebVTT content (e.g., WEBVTT\n\n00:00:01.000 --> 00:00:04.000\nText)"
-/>
+          type="textarea"
+          name="subtitleContent"
+          id="subtitleContent"
+          value={subtitleContent}
+          onChange={(e) => setSubtitleContent(e.target.value)}
+          rows="10"
+        />
       </FormGroup>
-      <Button color="primary" type="submit" disabled={loading || !subtitleContent}>
-        {loading ? 'Saving...' : 'Save Subtitle'}
+      {error && <Alert color="danger" className="mt-2" fade={true} timeout={3000}>{error}</Alert>}
+      {success && <Alert color="success" className="mt-2" fade={true} timeout={3000}>{success}</Alert>}
+      <Button color="primary" type="submit" disabled={loading}>
+        {loading ? 'Saving...' : 'Save Subtitles'}
       </Button>
-      {error && <Alert color="danger" className="mt-2">{error}</Alert>}
-      {success && <Alert color="success" className="mt-2">{success}</Alert>}
     </Form>
   );
 };

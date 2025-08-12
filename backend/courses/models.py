@@ -1,8 +1,28 @@
+import mimetypes
 from django.db import models
 from accounts.models import User, UserType
 from django.db.models.signals import pre_save, post_delete
 from django.dispatch import receiver
 from django.core.exceptions import ValidationError
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
+from pathlib import Path
+
+import puremagic
+
+def guess_mime_by_content(file_obj) -> str:
+    """
+    Seek and read the file-like object and guess only from its magic headers.
+    Returns a MIME string (e.g. 'image/png'), or 'application/octet-stream' if unknown.
+    """
+    file_obj.seek(0)
+    results = puremagic.magic_stream(file_obj)
+    file_obj.seek(0)
+    if not results:
+        return "application/octet-stream"
+    return results[0].mime_type or "application/octet-stream"
+
+
 
 class Course(models.Model):
     title = models.CharField(max_length=255)
@@ -67,9 +87,13 @@ MIME_TO_FILEKIND_MAP = {
     'text/csv': FileKind.SPREADSHEET,
 }
 
-def guess_file_kind(mime_type: str) -> str:
+def guess_file_kind(mime_type: str, file_name: str = None) -> str:
     if not mime_type:
         return FileKind.OTHER
+    if mime_type == 'application/octet-stream' and file_name:
+        guessed_mime, _ = mimetypes.guess_type(file_name)
+        if guessed_mime:
+            mime_type = guessed_mime
     for pattern, kind in MIME_TO_FILEKIND_MAP.items():
         if mime_type.startswith(pattern) or mime_type == pattern:
             return kind
@@ -133,22 +157,17 @@ class Content(models.Model):
 
     def save(self, *args, **kwargs):
         is_file_content = self.content_kind == ContentKind.FILE and self.file
-        # Mettre à jour file_mime_type et file_kind uniquement pour les nouveaux fichiers ou si non définis
-        if is_file_content and (not self.pk or self.file._committed is False or not self.file_mime_type or not self.file_kind):
-            try:
-                self.file_mime_type = getattr(self.file.file, 'content_type', None) or 'application/octet-stream'
-                self.file_kind = guess_file_kind(self.file_mime_type)
-            except AttributeError:
-                self.file_mime_type = 'application/octet-stream'
-                self.file_kind = FileKind.OTHER
-        super().save(*args, **kwargs)
 
-class Quiz(models.Model):
-    content = models.OneToOneField(Content, related_name='quiz', on_delete=models.CASCADE)
-    title = models.CharField(max_length=255)
-    description = models.TextField(blank=True, null=True)
-    creation_date = models.DateTimeField(auto_now_add=True)
-    updated_date = models.DateTimeField(auto_now=True)
+        if is_file_content:
+            # Guess file kind based on MIME type
+            self.file_kind = guess_file_kind(self.file_mime_type)
+
+        if self.subtitle_file and self.file:
+            file_name = Path(self.file.name).stem
+            subtitle_ext = Path(self.subtitle_file.name).suffix
+            self.subtitle_file.name = f"{file_name}{subtitle_ext}"
+
+        super().save(*args, **kwargs)
 
 class ContentSeen(models.Model):
     student = models.ForeignKey(User, limit_choices_to={'user_type': UserType.STUDENT}, on_delete=models.CASCADE)
