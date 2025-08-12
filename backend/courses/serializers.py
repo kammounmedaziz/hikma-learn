@@ -137,6 +137,10 @@ class ContentSerializer(serializers.ModelSerializer):
         image_alt_text = attrs.get('image_alt_text', None)
         if image_alt_text == '':
             attrs['image_alt_text'] = None
+
+        if image_alt_text and kind != ContentKind.FILE:
+            errors['image_alt_text'] = 'Alt text should only be provided for image files.'
+
         if image_alt_text and kind == ContentKind.FILE:
             file_mime_type = None
             file_val = get_field_value('file')
