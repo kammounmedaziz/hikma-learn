@@ -3,6 +3,7 @@ aiofiles==24.1.0
 aiohappyeyeballs==2.6.1
 aiohttp==3.12.15
 aiosignal==1.4.0
+annotated-types==0.7.0
 ansicon==1.89.0
 anyio==4.10.0
 asgiref==3.9.1
@@ -13,6 +14,7 @@ bpython==0.25
 certifi==2025.7.9
 chardet==5.2.0
 charset-normalizer==3.4.2
+cloudflare==4.3.1
 colorama==0.4.6
 curtsies==0.4.3
 cwcwidth==0.1.10
@@ -20,6 +22,7 @@ dataclasses-json==0.6.7
 decorator==5.2.1
 deepgram-sdk==4.8.1
 deprecation==2.1.0
+distro==1.9.0
 Django==5.2.4
 django-cors-headers==4.7.0
 django-environ==0.12.0
@@ -58,6 +61,8 @@ propcache==0.3.2
 ptyprocess==0.7.0
 pure_eval==0.2.3
 puremagic==1.30
+pydantic==2.11.7
+pydantic_core==2.33.2
 Pygments==2.19.2
 PyJWT==2.9.0
 python-decouple==3.8
@@ -71,6 +76,7 @@ tblib==3.1.0
 tqdm==4.67.1
 traitlets==5.14.3
 typing-inspect==0.9.0
+typing-inspection==0.4.1
 typing_extensions==4.14.1
 tzdata==2025.2
 urllib3==2.5.0
