@@ -158,22 +158,6 @@ class ContentSerializer(serializers.ModelSerializer):
 
         return attrs
 
-    def create(self, validated_data):
-        generate = validated_data.pop('generate_alt_text', False)
-        instance = super().create(validated_data)
-        if generate and instance.content_kind == ContentKind.FILE and instance.file_mime_type.startswith('image/'):
-            self._generate_and_save_alt_text(instance)
-        return instance
-
-    def update(self, instance, validated_data):
-        generate = validated_data.pop('generate_alt_text', False)
-        validated_data.pop('file_kind', None)
-        validated_data.pop('file_mime_type', None)
-        instance = super().update(instance, validated_data)
-        if generate and instance.content_kind == ContentKind.FILE and instance.file_mime_type.startswith('image/'):
-            self._generate_and_save_alt_text(instance)
-        return instance
-
     def _generate_and_save_alt_text(self, instance):
         try:
             if not os.path.exists(instance.file.path):
