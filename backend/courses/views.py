@@ -215,6 +215,11 @@ class ContentViewSet(viewsets.ModelViewSet):
             return Response({'detail': 'No image file available for alt text generation.'},
                             status=status.HTTP_400_BAD_REQUEST)
 
+        SUPPORTED_FORMATS = {'image/jpeg', 'image/png', 'image/webp'}
+        if content.file_mime_type not in SUPPORTED_FORMATS:
+            return Response({'detail': 'Unsupported image format for alt text generation.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
         ACCOUNT_ID = os.getenv('CLOUDFLARE_ACCOUNT_ID')
         API_TOKEN = os.getenv('CLOUDFLARE_API_TOKEN')
         if not ACCOUNT_ID or not API_TOKEN:
@@ -227,10 +232,6 @@ class ContentViewSet(viewsets.ModelViewSet):
             MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10 MB
             if len(image_bytes) > MAX_IMAGE_SIZE:
                 return Response({'detail': 'Image file is too large for alt text generation.'},
-                                status=status.HTTP_400_BAD_REQUEST)
-            SUPPORTED_FORMATS = {'image/jpeg', 'image/png', 'image/webp'}
-            if content.file_mime_type not in SUPPORTED_FORMATS:
-                return Response({'detail': 'Unsupported image format for alt text generation.'},
                                 status=status.HTTP_400_BAD_REQUEST)
 
             client = cloudflare.Cloudflare(api_token=API_TOKEN)
