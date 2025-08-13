@@ -305,13 +305,12 @@ const ContentDetail = () => {
   const handleGenerateAltText = async () => {
     try {
       console.log('Generating the alt text with the token:', token);
-      const res = await axios.patch(
-        `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/`,
-        { generate_alt_text: true },
+      const res = await axios.post(
+        `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/generate-alt-text/`,
+        {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
       console.log('Alternative text generation response:', res.data);
-      setContent(res.data);
       setAltText(res.data.image_alt_text || '');
       setAltSuccess('Generated alt text!');
       setAltError('');
@@ -415,7 +414,7 @@ const ContentDetail = () => {
                     onClick={handleUpdateAltText}
                     className="btn-gradient-red px-3 py-1.5 rounded text-sm"
                   >
-                    Save Manual
+                    Save
                   </button>
                   <button
                     onClick={handleGenerateAltText}
