@@ -160,7 +160,8 @@ class Content(models.Model):
 
         if is_file_content:
             # Guess file kind based on MIME type
-            self.file_kind = guess_file_kind(self.file_mime_type)
+            self.file_mime_type = guess_mime_by_content(self.file)
+            self.file_kind = guess_file_kind(self.file_mime_type, self.file.name)
 
         if self.subtitle_file and self.file:
             file_name = Path(self.file.name).stem
