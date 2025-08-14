@@ -37,9 +37,15 @@ const StudentResultPage = () => {
         </h2>
 
         <div className="flex justify-center mb-10">
-          {/* TODO: Change according to grade */}
-          <div className="w-40 h-40 rounded-full border-8 border-green-400 flex items-center justify-center text-3xl font-bold text-white">
-            {result.grade * 100}%
+          <div
+            className="w-40 h-40 rounded-full flex items-center justify-center text-3xl font-bold text-white"
+            style={{
+              background: `conic-gradient(#22c55e ${result.grade * 360}deg, #4b5563 0deg)`
+            }}
+          >
+            <div className="w-32 h-32 rounded-full bg-gray-800 flex items-center justify-center">
+              {(result.grade * 100).toFixed(0)}%
+            </div>
           </div>
         </div>
 
