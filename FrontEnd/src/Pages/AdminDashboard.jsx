@@ -25,8 +25,9 @@ import {
   CheckCircle
 } from 'lucide-react';
 import AdminManageTeachers from './AdminManageTeachers';
-import CourseList from '../Components/CourseList'; // Import CourseList
+import CourseList from '../Components/CourseList';
 import AdminManageStudents from './AdminManageStudents';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const PlaceholderPage = ({ title, description }) => (
   <div className="space-y-8">
@@ -233,6 +234,15 @@ const AdminDashboard = () => {
   const [allCourses, setAllCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Extract the current page from the URL path
+    const path = location.pathname.split('/AdminDashboard/')[1] || 'overview';
+    const normalizedPath = path === '' ? 'overview' : path;
+    setCurrentPage(normalizedPath);
+  }, [location.pathname]);
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -310,21 +320,21 @@ const AdminDashboard = () => {
   };
 
   const menuItems = [
-    { id: 'overview', label: 'Dashboard', icon: Home, description: 'System overview and key metrics' },
-    { id: 'AdminManagingStudents', label: 'Student Management', icon: Users, description: 'Manage students and teachers' },
-    { id: 'AdminManageTeachers', label: 'Teacher Management', icon: UserCheck, description: 'Approve new teacher registrations' },
-    { id: 'course_management', label: 'Course Management', icon: BookOpen, description: 'Oversee all courses and content' },
-    { id: 'institution_settings', label: 'Institution Settings', icon: Building, description: 'Configure institutional parameters' },
-    { id: 'analytics', label: 'Analytics & Reports', icon: BarChart3, description: 'Platform analytics and reporting' },
-    { id: 'financial', label: 'Financial Overview', icon: DollarSign, description: 'Revenue and financial metrics' },
-    { id: 'system_logs', label: 'System Logs', icon: Database, description: 'View system activity logs' },
-    { id: 'backup_restore', label: 'Backup & Restore', icon: Shield, description: 'Data backup and recovery' },
-    { id: 'scheduling', label: 'System Scheduling', icon: Calendar, description: 'Manage system maintenance' },
-    { id: 'content_moderation', label: 'Content Moderation', icon: FileText, description: 'Review and moderate content' },
-    { id: 'notifications', label: 'System Notifications', icon: Bell, description: 'Platform-wide notifications' },
-    { id: 'email_management', label: 'Email Management', icon: Mail, description: 'Configure email settings' },
-    { id: 'support', label: 'Support Center', icon: HelpCircle, description: 'Admin support and documentation' },
-    { id: 'settings', label: 'System Settings', icon: Settings, description: 'Configure platform settings' },
+    { id: 'overview', label: 'Dashboard', icon: Home, description: 'System overview and key metrics', path: 'overview' },
+    { id: 'AdminManagingStudents', label: 'Student Management', icon: Users, description: 'Manage students and teachers', path: 'AdminManagingStudents' },
+    { id: 'AdminManageTeachers', label: 'Teacher Management', icon: UserCheck, description: 'Approve new teacher registrations', path: 'AdminManageTeachers' },
+    { id: 'course_management', label: 'Course Management', icon: BookOpen, description: 'Oversee all courses and content', path: 'course_management' },
+    { id: 'institution_settings', label: 'Institution Settings', icon: Building, description: 'Configure institutional parameters', path: 'institution_settings' },
+    { id: 'analytics', label: 'Analytics & Reports', icon: BarChart3, description: 'Platform analytics and reporting', path: 'analytics' },
+    { id: 'financial', label: 'Financial Overview', icon: DollarSign, description: 'Revenue and financial metrics', path: 'financial' },
+    { id: 'system_logs', label: 'System Logs', icon: Database, description: 'View system activity logs', path: 'system_logs' },
+    { id: 'backup_restore', label: 'Backup & Restore', icon: Shield, description: 'Data backup and recovery', path: 'backup_restore' },
+    { id: 'scheduling', label: 'System Scheduling', icon: Calendar, description: 'Manage system maintenance', path: 'scheduling' },
+    { id: 'content_moderation', label: 'Content Moderation', icon: FileText, description: 'Review and moderate content', path: 'content_moderation' },
+    { id: 'notifications', label: 'System Notifications', icon: Bell, description: 'Platform-wide notifications', path: 'notifications' },
+    { id: 'email_management', label: 'Email Management', icon: Mail, description: 'Configure email settings', path: 'email_management' },
+    { id: 'support', label: 'Support Center', icon: HelpCircle, description: 'Admin support and documentation', path: 'support' },
+    { id: 'settings', label: 'System Settings', icon: Settings, description: 'Configure platform settings', path: 'settings' },
   ];
 
   const renderPage = () => {
@@ -398,7 +408,10 @@ const AdminDashboard = () => {
               return (
                 <button
                   key={item.id}
-                  onClick={() => setCurrentPage(item.id)}
+                  onClick={() => {
+                    setCurrentPage(item.id);
+                    navigate(`/AdminDashboard/${item.path}`);
+                  }}
                   className={`w-full flex items-center px-4 py-3 text-left transition-all duration-300 hover:scale-105 ${
                     currentPage === item.id
                       ? 'bg-gradient-to-r from-red-500/20 to-gray-500/20 border-r-2 border-red-400 text-white shadow-lg'

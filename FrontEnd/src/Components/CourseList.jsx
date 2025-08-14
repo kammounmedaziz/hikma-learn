@@ -115,53 +115,55 @@ const CourseList = ({ role, courses, onAction, currentTeacher = '' }) => {
       {localCourses.map((course) => (
         <div
           key={course.id}
-          className="bg-gray-900/40 border border-gray-700 p-4 rounded-xl shadow animate-fadeIn flex items-start"
+          className="bg-gray-900/40 border border-gray-700 p-4 rounded-xl shadow animate-fadeIn"
           style={{
             animationDelay: `${localCourses.indexOf(course) * 0.1}s`,
           }}
         >
-          {/* Photo on the left side with explicit placeholder */}
-          {role === 'admin' && (
-            <div className="mr-4 flex-shrink-0">
-              {course.cover_photo ? (
-                <img
-                  src={getImageSrc(course.cover_photo)}
-                  alt={course.title}
-                  className="w-32 h-20 object-cover rounded-lg"
-                  onError={(e) => {
-                    e.target.style.display = 'none';
-                    console.log(`Image failed to load for ${course.title}: ${e.target.src}`);
-                  }}
-                />
-              ) : (
-                <div className="w-32 h-20 rounded-lg bg-gray-600 flex items-center justify-center">
-                  <span className="text-gray-400 text-sm">No Image</span>
-                </div>
+          <div className="flex items-start">
+            {/* Photo on the left side with explicit placeholder */}
+            {role === 'admin' && (
+              <div className="mr-4 flex-shrink-0">
+                {course.cover_photo ? (
+                  <img
+                    src={getImageSrc(course.cover_photo)}
+                    alt={course.title}
+                    className="w-32 h-20 object-cover rounded-lg"
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      console.log(`Image failed to load for ${course.title}: ${e.target.src}`);
+                    }}
+                  />
+                ) : (
+                  <div className="w-32 h-20 rounded-lg bg-gray-600 flex items-center justify-center">
+                    <span className="text-gray-400 text-sm">No Image</span>
+                  </div>
+                )}
+              </div>
+            )}
+            {/* Text content */}
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-white">{course.title}</h3>
+              <p className="text-gray-400 text-sm italic mb-2">
+                Taught by {course.teacher?.username || course.teacher_name || course.teacher || 'Unknown Teacher'}
+              </p>
+              <p className="text-gray-300 line-clamp-3">{course.description}</p>
+            </div>
+            {/* Buttons */}
+            <div className="flex gap-2 ml-4">
+              {getButtonConfig(role, course.isFollowed, course.teacher?.username || course.teacher_name || course.teacher).map(
+                ({ action, icon: Icon, activeClass, label }, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleAction(action, course.id)}
+                    className="bg-red-600 hover:bg-red-700 text-white rounded-full w-10 h-10 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-md"
+                    title={label}
+                  >
+                    {Icon && <Icon size={20} className={activeClass || ''} />}
+                  </button>
+                )
               )}
             </div>
-          )}
-          {/* Text content */}
-          <div className="flex-1">
-            <h3 className="text-lg font-semibold text-white">{course.title}</h3>
-            <p className="text-gray-400 text-sm italic mb-2">
-              Taught by {course.teacher?.username || course.teacher_name || course.teacher || 'Unknown Teacher'}
-            </p>
-            <p className="text-gray-300 line-clamp-3">{course.description}</p>
-          </div>
-          {/* Buttons */}
-          <div className="flex gap-2 ml-4">
-            {getButtonConfig(role, course.isFollowed, course.teacher?.username || course.teacher_name || course.teacher).map(
-              ({ action, icon: Icon, activeClass, label }, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleAction(action, course.id)}
-                  className="bg-red-600 hover:bg-red-700 text-white rounded-full w-10 h-10 flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-md"
-                  title={label}
-                >
-                  {Icon && <Icon size={20} className={activeClass || ''} />}
-                </button>
-              )
-            )}
           </div>
           {(role === 'student' && !course.isFollowed || role === 'admin') && expandedCourse === course.id && (
             <div

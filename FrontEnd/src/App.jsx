@@ -34,6 +34,7 @@ import MyCoursesTeacher from './Pages/MyCoursesTeacher.jsx';
 import MyCourses from './Pages/MyCourses.jsx';
 import AllCoursesStudent from './Pages/AllCoursesStudent.jsx';
 import AllCoursesTeacher from './Pages/AllCoursesTeacher.jsx';
+import AdminManageStudents from './Pages/AdminManageStudents.jsx';
 
 const LandingPage = ({ showWelcome, setShowWelcome }) => {
   return (
@@ -168,7 +169,28 @@ function App() {
             element={<PlaceholderPage title="Page Not Found" description="This section is under development" />}
           />
         </Route>
-        <Route path="/AdminDashboard" element={<AdminDashboard />} />
+        <Route path="/AdminDashboard" element={<AdminDashboard />}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="overview" element={<AdminDashboard />} />
+          <Route path="AdminManagingStudents" element={<AdminManageStudents />} />
+          <Route path="AdminManageTeachers" element={<AdminManageTeachers />} />
+          <Route path="course_management" element={<AdminDashboard />} />
+          <Route path="institution_settings" element={<PlaceholderPage title="Institution Settings" description="Configure institutional parameters" />} />
+          <Route path="analytics" element={<PlaceholderPage title="Analytics & Reports" description="Platform analytics and reporting" />} />
+          <Route path="financial" element={<PlaceholderPage title="Financial Overview" description="Revenue and financial metrics" />} />
+          <Route path="system_logs" element={<PlaceholderPage title="System Logs" description="View system activity logs" />} />
+          <Route path="backup_restore" element={<PlaceholderPage title="Backup & Restore" description="Data backup and recovery" />} />
+          <Route path="scheduling" element={<PlaceholderPage title="System Scheduling" description="Manage system maintenance" />} />
+          <Route path="content_moderation" element={<PlaceholderPage title="Content Moderation" description="Review and moderate content" />} />
+          <Route path="notifications" element={<PlaceholderPage title="System Notifications" description="Platform-wide notifications" />} />
+          <Route path="email_management" element={<PlaceholderPage title="Email Management" description="Configure email settings" />} />
+          <Route path="support" element={<PlaceholderPage title="Support Center" description="Admin support and documentation" />} />
+          <Route path="settings" element={<PlaceholderPage title="System Settings" description="Configure platform settings" />} />
+          <Route
+            path="*"
+            element={<PlaceholderPage title="Page Not Found" description="This section is under development" />}
+          />
+        </Route>
         <Route path="/courses/:courseId/" element={<CourseDetails />} />
         <Route path="/courses/:courseId/chapters/:chapterId/contents/:contentId" element={<ContentDetail />} />
       </Routes>
