@@ -20,13 +20,14 @@ from webvtt import WebVTT, Caption
 from moviepy import VideoFileClip
 
 from accounts.models import UserType
-from .models import Course, Chapter, CourseFollow, Content, ContentKind, FileKind
+from .models import Course, Chapter, CourseFollow, Content, ContentKind, FileKind, ContentSeen
 from .serializers import CourseSerializer, CourseFollowSerializer, ChapterSerializer, ContentSerializer
 from .permissions import IsTeacherOrReadOnly, IsTeacherOfCourse, IsTeacherOfCourseOrReadOnly, IsTeacherOnly, IsStudentOnly, IsTeacherOfChapter
 import os
 from django.core.files.base import ContentFile
 from django.conf import settings
 import cloudflare
+from rest_framework.views import APIView
 
 def format_timestamp(seconds):
     hours = int(seconds // 3600)
@@ -122,7 +123,6 @@ class CourseViewSet(viewsets.ModelViewSet):
             if deleted:
                 return Response(status=status.HTTP_204_NO_CONTENT)
             return Response({"detail": "You are not following this course."}, status=status.HTTP_400_BAD_REQUEST)
-
 
 class ChapterViewSet(viewsets.ModelViewSet):
     serializer_class = ChapterSerializer
@@ -388,3 +388,14 @@ class ContentViewSet(viewsets.ModelViewSet):
             logger.exception(f"Error generating subtitles for content {pk}: {str(e)}")
             return Response({'detail': f'Failed to generate subtitles: {str(e)}'},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class MarkContentViewed(APIView):
+    permission_classes = [IsStudentOnly]
+
+    def post(self, request, course_pk, chapter_pk, pk):
+        try:
+            content = Content.objects.get(id=pk, chapter__id=chapter_pk, chapter__course__id=course_pk)
+            ContentSeen.objects.get_or_create(student=request.user, content=content)
+            return Response({"detail": "Content marked as viewed."}, status=status.HTTP_200_OK)
+        except Content.DoesNotExist:
+            return Response({"detail": "Content not found."}, status=status.HTTP_404_NOT_FOUND)

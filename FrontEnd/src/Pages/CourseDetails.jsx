@@ -631,21 +631,26 @@ const CourseDetails = () => {
                     chapterContents[chap.id].map(content => (
                       <div key={content.id} className="border border-white/20 p-4 rounded-lg bg-black/20 flex flex-col space-y-2">
                         <div className="flex items-center justify-between">
+                          
                           <div className="flex items-center space-x-2">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="#3b82f6"
-                              strokeWidth={2}
-                              className="w-6 h-6"
-                            >
-                              <circle cx="12" cy="12" r="10" />
-                            </svg>
+                            {!isTeacher && (
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill={content.is_viewed ? '#3b82f6' : 'none'}
+                                viewBox="0 0 24 24"
+                                stroke="#3b82f6"
+                                strokeWidth={2}
+                                className="w-6 h-6"
+                              >
+                                <circle cx="12" cy="12" r="10" />
+                              </svg>
+                            )}
                             <h4 className="font-semibold text-white">{content.title}</h4>
                           </div>
-                          {isTeacher && (
-                            <div className="flex flex-col items-end space-y-1">
+
+
+                          <div className="flex flex-col items-end space-y-1">
+                            {isTeacher && (
                               <div className="flex space-x-2">
                                 <button
                                   onClick={() => handleEditContent(content)}
@@ -690,14 +695,14 @@ const CourseDetails = () => {
                                   </>
                                 )}
                               </div>
-                              <Link
-                                to={`/courses/${courseId}/chapters/${chap.id}/contents/${content.id}`}
-                                className="text-sm text-blue-600 hover:text-blue-800 underline"
-                              >
-                                View More
-                              </Link>
-                            </div>
-                          )}
+                            )}
+                            <Link
+                              to={`/courses/${courseId}/chapters/${chap.id}/contents/${content.id}`}
+                              className="text-sm text-blue-600 hover:text-blue-800 underline"
+                            >
+                              View More
+                            </Link>
+                          </div>
                         </div>
 
                         {editingContentId === content.id ? (
@@ -771,21 +776,46 @@ const CourseDetails = () => {
                                   const isYouTube = lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be');
 
                                   const YouTubeIcon = () => (
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="red" viewBox="0 0 24 24" stroke="none" className="inline w-6 h-6" aria-hidden="true">
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      fill="red"
+                                      viewBox="0 0 24 24"
+                                      stroke="none"
+                                      className="inline w-6 h-6"
+                                      aria-hidden="true"
+                                    >
                                       <path d="M23.499 6.203a2.97 2.97 0 00-2.09-2.095C19.706 3.5 12 3.5 12 3.5s-7.706 0-9.41.608a2.97 2.97 0 00-2.09 2.095A31.14 31.14 0 000 12a31.14 31.14 0 00.5 5.797 2.97 2.97 0 002.09 2.095c1.704.608 9.41.608 9.41.608s7.706 0 9.41-.608a2.97 2.97 0 002.09-2.095A31.14 31.14 0 0024 12a31.14 31.14 0 00-.501-5.797zM9.75 15.021V8.979l6 3.02-6 3.022z" />
                                     </svg>
                                   );
 
                                   const PdfIcon = () => (
-                                    <span role="img" aria-label="PDF file" className="inline text-blue-600 text-lg">📄</span>
+                                    <span
+                                      role="img"
+                                      aria-label="PDF file"
+                                      className="inline text-blue-600 text-lg"
+                                    >
+                                      📄
+                                    </span>
                                   );
 
                                   const ImageIcon = () => (
-                                    <span role="img" aria-label="Image file" className="inline text-blue-600 text-lg">🖼️</span>
+                                    <span
+                                      role="img"
+                                      aria-label="Image file"
+                                      className="inline text-blue-600 text-lg"
+                                    >
+                                      🖼️
+                                    </span>
                                   );
 
                                   const VideoIcon = () => (
-                                    <span role="img" aria-label="Video file" className="inline text-blue-600 text-lg">🎥</span>
+                                    <span
+                                      role="img"
+                                      aria-label="Video file"
+                                      className="inline text-blue-600 text-lg"
+                                    >
+                                      🎥
+                                    </span>
                                   );
 
                                   let icon = null;
@@ -841,7 +871,10 @@ const CourseDetails = () => {
                                         {getFileName(url)}
                                       </Link>
                                     );
-                                    console.log('Image Alt Description for content ' + content.id + ':', content.image_alt_text || 'No description');
+                                    console.log(
+                                      'Image Alt Description for content ' + content.id + ':',
+                                      content.image_alt_text || 'No description'
+                                    );
                                     preview = (
                                       <div className="flex justify-center">
                                         <img
@@ -881,16 +914,6 @@ const CourseDetails = () => {
                                         {icon}
                                         {linkComponent}
                                       </div>
-                                      {!isTeacher && (
-                                        <div className="flex justify-end">
-                                          <Link
-                                            to={`/courses/${courseId}/chapters/${chap.id}/contents/${content.id}`}
-                                            className="text-sm text-blue-600 hover:text-blue-800 underline"
-                                          >
-                                            View More
-                                          </Link>
-                                        </div>
-                                      )}
                                       {preview}
                                     </>
                                   );
@@ -898,18 +921,13 @@ const CourseDetails = () => {
                               </div>
                             ) : content.text ? (
                               <div className="flex flex-col space-y-2 content-detail-rendered">
-                                {parse(content.text.length > MAX_LENGTH
-                                  ? htmlToText(content.text, { wordwrap: MAX_LENGTH }).slice(0, MAX_LENGTH) + "..."
-                                  : content.text)}
-                                {!isTeacher && content.text.length > MAX_LENGTH && (
-                                  <div className="flex justify-end">
-                                    <Link
-                                      to={`/courses/${courseId}/chapters/${chap.id}/contents/${content.id}`}
-                                      className="text-sm text-blue-600 hover:text-blue-800 underline"
-                                    >
-                                      View More
-                                    </Link>
-                                  </div>
+                                {parse(
+                                  content.text.length > MAX_LENGTH
+                                    ? htmlToText(content.text, { wordwrap: MAX_LENGTH }).slice(
+                                        0,
+                                        MAX_LENGTH
+                                      ) + "..."
+                                    : content.text
                                 )}
                               </div>
                             ) : (

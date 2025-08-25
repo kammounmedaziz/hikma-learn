@@ -22,8 +22,6 @@ def guess_mime_by_content(file_obj) -> str:
         return "application/octet-stream"
     return results[0].mime_type or "application/octet-stream"
 
-
-
 class Course(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()

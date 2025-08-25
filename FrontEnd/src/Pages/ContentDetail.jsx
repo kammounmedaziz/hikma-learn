@@ -51,12 +51,18 @@ const ContentDetail = () => {
       try {
         const res = await axios.get(
           `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
         setContent(res.data);
         setAltText(res.data.image_alt_text || '');
+        // Marquer le contenu comme vu seulement si l'utilisateur est un étudiant
+        if (userType === 'student') {
+          await axios.post(
+            `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/${contentId}/view/`,
+            {},
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+        }
         setLoading(false);
       } catch (err) {
         console.error("Erreur lors du chargement du contenu :", err);

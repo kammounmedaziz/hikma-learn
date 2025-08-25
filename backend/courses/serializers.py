@@ -5,9 +5,11 @@ from django.core.exceptions import ValidationError
 import webvtt
 from django.db.models import QuerySet
 from rest_framework import serializers
-from .models import Course, CourseFollow, Chapter, Content, ContentKind
+from .models import Course, CourseFollow, Chapter, Content, ContentKind, ContentSeen
 from rest_framework.reverse import reverse
 import webvtt
+from accounts.models import UserType  # Importez UserType pour vérifier le type d'utilisateur
+
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +57,7 @@ class ContentSerializer(serializers.ModelSerializer):
     content_url = serializers.SerializerMethodField()
     subtitle_file = serializers.FileField(required=False, allow_null=True)
     transcript_text = serializers.SerializerMethodField()
+    is_viewed = serializers.SerializerMethodField()
 
     class Meta:
         model = Content
@@ -62,7 +65,7 @@ class ContentSerializer(serializers.ModelSerializer):
             'id', 'content_url', 'title', 'content_kind',
             'url', 'file', 'file_kind', 'file_mime_type',
             'text', 'order', 'subtitle_file',
-            'transcript_text', 'image_alt_text', 'creation_date', 'updated_date',
+            'transcript_text', 'image_alt_text', 'creation_date', 'updated_date', 'is_viewed'
         ]
         read_only_fields = ['order', 'file_mime_type', 'file_kind', 'creation_date', 'updated_date']
 
@@ -88,10 +91,22 @@ class ContentSerializer(serializers.ModelSerializer):
                 return ''
         return ''
 
+    def get_is_viewed(self, obj):
+        user = self.context['request'].user
+        if user.is_authenticated:
+            return ContentSeen.objects.filter(student=user, content=obj).exists()
+        return False
+
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         if representation['image_alt_text'] == '':
             representation['image_alt_text'] = None
+        
+        # Exclure l'attribut is_viewed pour les enseignants
+        user = self.context.get('request').user
+        if user.is_authenticated and user.user_type == UserType.TEACHER:
+            representation.pop('is_viewed', None)
+        
         return representation
 
     def validate(self, attrs):
