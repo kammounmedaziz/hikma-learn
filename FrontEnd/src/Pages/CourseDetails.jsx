@@ -47,6 +47,10 @@ const CourseDetails = () => {
   const [subtitleError, setSubtitleError] = useState(null);
   const [subtitleSuccess, setSubtitleSuccess] = useState(null);
 
+  const [showContentReorderPopup, setShowContentReorderPopup] = useState(false);
+  const [reorderedContents, setReorderedContents] = useState([]);
+  const [selectedReorderChapterId, setSelectedReorderChapterId] = useState(null);
+
   const MAX_LENGTH = 100;
 
   const getCookie = (name) => {
@@ -62,6 +66,58 @@ const CourseDetails = () => {
       }
     }
     return cookieValue;
+  };
+
+  const handleToggleContentReordering = (chapterId) => {
+  setSelectedReorderChapterId(chapterId);
+  setReorderedContents(chapterContents[chapterId] || []);
+  setShowContentReorderPopup(true);
+};
+
+  const handleContentDragStart = (e, content) => {
+    setDraggedItem(content);
+    e.dataTransfer.setData('text/plain', content.id);
+  };
+
+  const handleContentDrop = (e, targetContent) => {
+    e.preventDefault();
+    if (!draggedItem || draggedItem.id === targetContent.id) return;
+    const newOrder = [...reorderedContents];
+    const draggedIndex = newOrder.findIndex(c => c.id === draggedItem.id);
+    const targetIndex = newOrder.findIndex(c => c.id === targetContent.id);
+    newOrder.splice(draggedIndex, 1);
+    newOrder.splice(targetIndex, 0, draggedItem);
+    setReorderedContents(newOrder);
+    setDraggedItem(null);
+  };
+
+  const handleSaveContentOrder = async () => {
+    try {
+      const csrfToken = getCookie('csrftoken');
+      const item_ids = reorderedContents.map(content => content.id);
+      const response = await axios.post(
+        `http://127.0.0.1:8000/courses/${courseId}/chapters/${selectedReorderChapterId}/contents/reorder/`,
+        { item_ids },
+        {
+          headers: {
+            'X-CSRFToken': csrfToken,
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      setChapterContents(prev => ({ ...prev, [selectedReorderChapterId]: reorderedContents }));
+      setShowContentReorderPopup(false);
+      alert(response.data.detail);
+    } catch (err) {
+      console.error("Erreur lors de la réorganisation :", err);
+      alert(err.response?.data?.detail || "Échec de l'enregistrement de l'ordre");
+    }
+  };
+
+  const handleCancelContentReordering = () => {
+    setShowContentReorderPopup(false);
+    setReorderedContents(chapterContents[selectedReorderChapterId] || []);
   };
 
   useEffect(() => {
@@ -97,19 +153,21 @@ const CourseDetails = () => {
   };
 
   const fetchContentsForChapter = async (chapterId) => {
-    try {
-      const res = await axios.get(
-        `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      setChapterContents(prev => ({ ...prev, [chapterId]: res.data }));
-    } catch (error) {
-      console.error("Erreur fetch contenus :", error);
-      setChapterContents(prev => ({ ...prev, [chapterId]: [] }));
-    }
-  };
+  try {
+    const res = await axios.get(
+      `http://127.0.0.1:8000/courses/${courseId}/chapters/${chapterId}/contents/`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    // Sort contents by order
+    const sortedContents = res.data.sort((a, b) => a.order - b.order);
+    setChapterContents(prev => ({ ...prev, [chapterId]: sortedContents }));
+  } catch (error) {
+    console.error("Erreur fetch contenus :", error);
+    setChapterContents(prev => ({ ...prev, [chapterId]: [] }));
+  }
+};
 
   const handleAddChapter = () => {
     setShowPopup(true);
@@ -597,6 +655,32 @@ const CourseDetails = () => {
                 </div>
 
                 <div className="flex items-center space-x-3">
+
+                  {isTeacher && (
+                    <div className="flex justify-end">
+                      <button
+                        onClick={() => handleToggleContentReordering(chap.id)}
+                        className="btn-gradient-blue flex items-center space-x-2 px-4 py-2 rounded font-semibold"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="#f3f4f6"
+                          strokeWidth={2}
+                          className="w-5 h-5"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M8 7h12m0 0l-4-4m4 4l-4 4m-12 6h12m-12 0l4 4m-4-4l4-4"
+                          />
+                        </svg>
+                        <span>Reorder Contents</span>
+                      </button>
+                    </div>
+                  )}
+
                   <button onClick={() => toggleChapter(chap.id)} aria-label="Toggle chapitre" className="text-white hover:text-gray-300">
                     <svg xmlns="http://www.w3.org/2000/svg" className={`w-6 h-6 transition-transform duration-300 ${expandedChapterId === chap.id ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -627,6 +711,7 @@ const CourseDetails = () => {
 
               {expandedChapterId === chap.id && (
                 <div className="mt-4 space-y-2 text-left text-gray-300">
+
                   {chapterContents[chap.id] && chapterContents[chap.id].length > 0 ? (
                     chapterContents[chap.id].map(content => (
                       <div key={content.id} className="border border-white/20 p-4 rounded-lg bg-black/20 flex flex-col space-y-2">
@@ -1125,6 +1210,42 @@ const CourseDetails = () => {
               </button>
               <button
                 onClick={handleSaveOrder}
+                className="btn-gradient-green px-4 py-2 rounded"
+              >
+                Save Order
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showContentReorderPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-900 text-white p-6 rounded-lg shadow-lg max-w-md w-full space-y-4">
+            <h2 className="text-xl font-semibold text-center">Reorder Contents</h2>
+            <div className="space-y-2">
+              {reorderedContents.map((content) => (
+                <div
+                  key={content.id}
+                  draggable
+                  onDragStart={(e) => handleContentDragStart(e, content)}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleContentDrop(e, content)}
+                  className="p-2 bg-gray-800 rounded cursor-move hover:bg-gray-700"
+                >
+                  {content.title}
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={handleCancelContentReordering}
+                className="btn-gradient-gray px-4 py-2 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveContentOrder}
                 className="btn-gradient-green px-4 py-2 rounded"
               >
                 Save Order
