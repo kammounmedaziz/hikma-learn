@@ -4,12 +4,13 @@ import { Alert } from 'reactstrap';
 import videojs from 'video.js';
 import 'video.js/dist/video-js.css';
 import axios from 'axios';
+import parse from 'html-react-parser';
 import SubtitleEdit from './SubtitleEdit.jsx';
-import { ChevronDown, Upload, Edit, Trash2, Eye, Sparkles, Settings, Plus, X  } from 'lucide-react';
+import { ChevronDown, Upload, Edit, Trash2, Eye, Sparkles, Settings, Plus, X } from 'lucide-react';
 import '../App.css';
 import DOMPurify from 'dompurify';
 
-// Font and size options (match RichTextEditor.jsx)
+// Font and size options
 const fontOptions = [
   { label: 'Arial', value: 'Arial, sans-serif' },
   { label: 'Times New Roman', value: 'Times New Roman, serif' },
@@ -22,6 +23,79 @@ const sizeOptions = [
   { label: '20px', value: '20px' },
   { label: '24px', value: '24px' },
 ];
+
+// Component to wrap each word for hover and zoom effect
+const WrapWords = ({ children }) => {
+  const [zoomedWord, setZoomedWord] = useState(null);
+
+  const handleWordClick = (word) => {
+    setZoomedWord(word);
+  };
+
+  const closeZoomBar = () => {
+    setZoomedWord(null);
+  };
+
+  const wrapText = (node, parentIndex = 0) => {
+    if (typeof node === 'string') {
+      return node.split(/\s+/).map((word, index) => {
+        const wordKey = `${word}-${parentIndex}-${index}`;
+        return (
+          <span
+            key={wordKey}
+            className="inline-block hover:scale-110 transition-transform duration-200 cursor-pointer mx-0.5"
+            onClick={() => handleWordClick(word)}
+            role="button"
+            tabIndex={0}
+            aria-label={`Afficher le mot ${word} en grand`}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                handleWordClick(word);
+              }
+            }}
+          >
+            {word}
+          </span>
+        );
+      }).reduce((acc, curr) => (acc.length ? [...acc, ' ', curr] : [curr]), []);
+    }
+    if (React.isValidElement(node)) {
+      return React.cloneElement(node, {}, React.Children.map(node.props.children, (child, idx) => wrapText(child, `${parentIndex}-${idx}`)));
+    }
+    return node;
+  };
+
+  return (
+    <>
+      {zoomedWord && (
+        <div
+          className="fixed top-0 left-0 right-0 bg-gray-800 p-4 flex items-center justify-between border-b border-white/20 z-50"
+          role="region"
+          aria-live="polite"
+          aria-label="Mot zoomé"
+        >
+          <span
+            className="text-4xl font-bold text-white"
+            style={{ fontFamily: localStorage.getItem('fontFamily') || 'inherit', fontSize: '48px' }}
+          >
+            {zoomedWord}
+          </span>
+          <button
+            onClick={closeZoomBar}
+            className="btn-gradient-red px-4 py-2 rounded text-sm"
+            aria-label="Fermer l'affichage du mot zoomé"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === 'Escape') closeZoomBar();
+            }}
+          >
+            Close
+          </button>
+        </div>
+      )}
+      {React.Children.map(children, (child, idx) => wrapText(child, idx))}
+    </>
+  );
+};
 
 const ContentDetail = () => {
   const { courseId, chapterId, contentId } = useParams();
@@ -341,6 +415,8 @@ const ContentDetail = () => {
   };
 
   const renderContent = () => {
+    if (!content) return <p className="text-gray-400">No content available.</p>;
+
     const url = content.content_kind === 'LINK' ? content.url : content.content_kind === 'FILE' ? content.file : null;
     const lowerUrl = url?.toLowerCase();
     const isVideoByUrl = lowerUrl?.match(/\.(mp4)$/i) !== null;
@@ -352,11 +428,14 @@ const ContentDetail = () => {
 
     if (content.content_kind === 'TEXT') {
       return (
-        <div
-          className="text-base leading-relaxed text-gray-100 font-medium p-4 border border-white/20 rounded-lg content-detail-rendered"
-          style={textStyle}
-          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content.text) }}
-        />
+        <div className="p-4 border border-white/20 rounded-lg">
+          <div
+            className="prose prose-invert max-w-none"
+            style={{ fontFamily: fontFamily || 'inherit', fontSize: fontSize || 'inherit' }}
+          >
+            <WrapWords>{parse(DOMPurify.sanitize(content.text))}</WrapWords>
+          </div>
+        </div>
       );
     }
 
@@ -368,70 +447,74 @@ const ContentDetail = () => {
         embedUrl = url.replace('youtu.be/', 'www.youtube.com/embed/');
       }
       return (
-        <div className="aspect-w-16 aspect-h-9 p-4 border border-white/20 rounded-lg">
-          <iframe
-            src={embedUrl}
-            title="YouTube video player"
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            className="w-full h-96 rounded"
-          />
+        <div className="p-4 border border-white/20 rounded-lg">
+          <div className="aspect-w-16 aspect-h-9">
+            <iframe
+              src={embedUrl}
+              title="YouTube video player"
+              frameBorder="0"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              className="w-full h-96 rounded"
+            />
+          </div>
         </div>
       );
     }
 
     if (content.file_kind === "IMAGE") {
       return (
-        <div className="relative flex justify-center p-4 border border-white/20 rounded-lg">
-          <img src={url} alt={content.image_alt_text || content.title} className="max-w-full h-auto rounded shadow" />
-          {isTeacher && (
-            <button
-              onClick={() => setShowAltPopup(true)}
-              className="absolute top-4 right-4 btn-gradient-red p-1.5 rounded flex items-center"
-              title="Manage Alt Text"
-            >
-              <Plus size={16} />
-            </button>
-          )}
-          {showAltPopup && isTeacher && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-gray-800 p-6 rounded-lg max-w-md w-full">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-bold text-white">Manage Alt Text</h3>
-                  <button
-                    onClick={() => setShowAltPopup(false)}
-                    className="bg-gray-600 p-1.5 rounded flex items-center"
-                    title="Close"
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-                {altError && <Alert color="danger" className="mb-2 text-sm">{altError}</Alert>}
-                {altSuccess && <Alert color="success" className="mb-2 text-sm">{altSuccess}</Alert>}
-                <textarea
-                  value={altText}
-                  onChange={(e) => setAltText(e.target.value)}
-                  className="block w-full p-3 bg-gray-700 text-white border border-gray-600 rounded mb-4 h-32 resize-y"
-                  placeholder="Enter alt text..."
-                />
-                <div className="flex space-x-2">
-                  <button
-                    onClick={handleUpdateAltText}
-                    className="btn-gradient-red px-3 py-1.5 rounded text-sm"
-                  >
-                    Save
-                  </button>
-                  <button
-                    onClick={handleGenerateAltText}
-                    className="btn-gradient-red px-3 py-1.5 rounded text-sm"
-                  >
-                    Generate with AI
-                  </button>
+        <div className="p-4 border border-white/20 rounded-lg">
+          <div className="relative flex justify-center">
+            <img src={url} alt={content.image_alt_text || content.title} className="max-w-full h-auto rounded shadow" />
+            {isTeacher && (
+              <button
+                onClick={() => setShowAltPopup(true)}
+                className="absolute top-4 right-4 btn-gradient-red p-1.5 rounded flex items-center"
+                title="Manage Alt Text"
+              >
+                <Plus size={16} />
+              </button>
+            )}
+            {showAltPopup && isTeacher && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-gray-800 p-6 rounded-lg max-w-md w-full">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-bold text-white">Manage Alt Text</h3>
+                    <button
+                      onClick={() => setShowAltPopup(false)}
+                      className="bg-gray-600 p-1.5 rounded flex items-center"
+                      title="Close"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                  {altError && <Alert color="danger" className="mb-2 text-sm">{altError}</Alert>}
+                  {altSuccess && <Alert color="success" className="mb-2 text-sm">{altSuccess}</Alert>}
+                  <textarea
+                    value={altText}
+                    onChange={(e) => setAltText(e.target.value)}
+                    className="block w-full p-3 bg-gray-700 text-white border border-gray-600 rounded mb-4 h-32 resize-y"
+                    placeholder="Enter alt text..."
+                  />
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={handleUpdateAltText}
+                      className="btn-gradient-red px-3 py-1.5 rounded text-sm"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={handleGenerateAltText}
+                      className="btn-gradient-red px-3 py-1.5 rounded text-sm"
+                    >
+                      Generate with AI
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       );
     }
@@ -552,11 +635,13 @@ const ContentDetail = () => {
                   </select>
                 </div>
               </div>
-              <div
-                className="mt-4 text-lg font-medium text-white"
-                style={{ fontFamily: fontFamily || 'inherit', fontSize: fontSize || 'inherit' }}
-              >
-                {content.transcript_text}
+              <div className="p-4 border border-white/20 rounded-lg">
+                <div
+                  className="mt-4 text-lg font-medium text-white"
+                  style={{ fontFamily: fontFamily || 'inherit', fontSize: fontSize || 'inherit' }}
+                >
+                  <WrapWords>{content.transcript_text}</WrapWords>
+                </div>
               </div>
             </div>
           )}
@@ -589,7 +674,7 @@ const ContentDetail = () => {
     return (
       <div className="p-4 border border-white/20 rounded-lg">
         <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 hover:underline">
-          {url.split('/').pop()}
+          {url?.split('/')?.pop() || 'Lien indisponible'}
         </a>
       </div>
     );
@@ -609,7 +694,7 @@ const ContentDetail = () => {
         >
           ⬅️
         </button>
-        <h1 className="text-3xl font-bold">{content.title}</h1>
+        <h1 className="text-3xl font-bold">{content?.title || 'Contenu'}</h1>
         <button
           onClick={() => setShowSettings(!showSettings)}
           className="btn-gradient-red p-2 rounded flex items-center"
