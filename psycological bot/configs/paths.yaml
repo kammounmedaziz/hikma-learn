@@ -1,0 +1,18 @@
+  paths:
+    base_dir: "C:/Users/MOHAMED AMINE/Desktop/Friendly_IA"
+    raw_data: "data/raw/empathetic_dialogues_llm"
+    processed_dir: "data/processed"
+    embeddings_dir: "data/embeddings"
+    
+  stt:
+    model_dir: "models/speech/stt/"
+    processed_data: "data/processed/stt/librispeech/"
+    fine_tuned_dir: "models/speech/stt/fine-tuned/"
+    sample_rate: 16000
+    language: "en"
+
+  tts:  # Add this section
+    audio_cache: "data/tts_audio_cache"
+    sample_rate: 22050
+    speaker_id: 2
+    cache_dir: "models/speech/tts/cache"

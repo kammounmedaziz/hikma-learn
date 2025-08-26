@@ -1,0 +1,8 @@
+target_counts:
+  angry: 15000
+  disgust: 15000  # Heavily augmented
+  fear: 15000
+  happy: 15000
+  sad: 15000
+  surprise: 15000
+  neutral: 15000

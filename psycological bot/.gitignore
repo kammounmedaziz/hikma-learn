@@ -1,0 +1,38 @@
+cat <<EOF > .gitignore
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.so
+.Python
+venv/
+env/
+
+# Data files
+data/raw/
+data/processed/
+data/embeddings/
+data/users_profiles/
+
+# Models (except configs)
+models/**/*
+!models/**/config.json
+
+# Logs
+logs/
+
+# IDE
+.vscode/
+.idea/
+
+# System
+.DS_Store
+Thumbs.db
+
+# Large files
+*.h5
+*.bin
+*.index
+*.pth
+*.pt
+EOF

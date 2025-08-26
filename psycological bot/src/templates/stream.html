@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Friendly IA Face</title>
+    <style>
+        body {
+            background-color: #1E1E28;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            color: white;
+        }
+        #faceCanvas {
+            border: 2px solid #444;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            background-color: #1E1E28;
+        }
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            max-width: 300px;
+        }
+        input, select, button {
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            font-size: 16px;
+        }
+        input, select {
+            background-color: #2E2E3A;
+            color: white;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:active {
+            background-color: #3E8E41;
+        }
+        .status {
+            margin-top: 10px;
+            color: #AAA;
+            font-size: 14px;
+        }
+    </style>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+<body>
+    <canvas id="faceCanvas" width="300" height="300"></canvas>
+    
+    <div class="controls">
+        <input type="text" id="speechText" placeholder="Enter text to speak" value="Hello friend!">
+        <select id="emotionSelect">
+            <option value="neutral">Neutral</option>
+            <option value="happy">Happy</option>
+            <option value="sad">Sad</option>
+            <option value="angry">Angry</option>
+            <option value="surprise">Surprise</option>
+        </select>
+        <button id="speakBtn">Speak</button>
+        <div class="status" id="status">Connecting...</div>
+    </div>
+
+    <script src="/static/js/face_stream.js"></script>
+</body>
+</html>
