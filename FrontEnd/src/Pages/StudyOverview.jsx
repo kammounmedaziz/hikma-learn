@@ -1,9 +1,9 @@
 import {  useEffect,  } from 'react';
 import { CalendarDays,   } from 'lucide-react';
 
-import AnimatedBackground from '../Components/Background'; 
+import AnimatedBackground from '../Components/Background';
 const StudyOverview = () => {
-  
+
 
   useEffect(() => {
 
@@ -96,7 +96,7 @@ const StudyOverview = () => {
           </div>
         </div>
 
-        
+
       </div>
     </div>
   );

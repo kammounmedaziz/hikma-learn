@@ -1,5 +1,4 @@
-import { useState } from 'react';
-
+import React, { useState, useEffect } from 'react';
 import {
   Home,
   Users,
@@ -25,8 +24,11 @@ import {
   AlertTriangle,
   CheckCircle
 } from 'lucide-react';
-import AdminManageTeachers from './AdminManageTeachers'
-import AdminManageStudents from './AdminManageStudents'
+import AdminManageTeachers from './AdminManageTeachers';
+import CourseList from '../Components/CourseList';
+import AdminManageStudents from './AdminManageStudents';
+import { useLocation, useNavigate } from 'react-router-dom';
+
 const PlaceholderPage = ({ title, description }) => (
   <div className="space-y-8">
     <div className="text-center mb-8">
@@ -157,7 +159,7 @@ const AdminOverview = () => (
           <div className="w-full bg-gray-700 rounded-full h-2">
             <div className="bg-red-400 h-2 rounded-full" style={{ width: '78%' }}></div>
           </div>
-          
+
           <div className="flex items-center justify-between">
             <span className="text-gray-300">Course Completion Rate</span>
             <span className="text-white font-bold">67%</span>
@@ -165,7 +167,7 @@ const AdminOverview = () => (
           <div className="w-full bg-gray-700 rounded-full h-2">
             <div className="bg-red-400 h-2 rounded-full" style={{ width: '67%' }}></div>
           </div>
-          
+
           <div className="flex items-center justify-between">
             <span className="text-gray-300">Storage Usage</span>
             <span className="text-white font-bold">2.4TB / 5TB</span>
@@ -229,36 +231,149 @@ const AnimatedBackground = () => (
 const AdminDashboard = () => {
   const [currentPage, setCurrentPage] = useState('overview');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [allCourses, setAllCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Extract the current page from the URL path
+    const path = location.pathname.split('/AdminDashboard/')[1] || 'overview';
+    const normalizedPath = path === '' ? 'overview' : path;
+    setCurrentPage(normalizedPath);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        setLoading(true);
+        console.log('Fetching all courses with authentication...');
+        const coursesResponse = await fetch('http://localhost:8000/courses/', {
+          credentials: 'include', // Include cookies for session authentication
+        });
+        console.log('Courses response status:', coursesResponse.status);
+        if (!coursesResponse.ok) {
+          throw new Error(`HTTP error! Status: ${coursesResponse.status}`);
+        }
+        const coursesData = await coursesResponse.json();
+        console.log('Raw courses data:', coursesData);
+
+        // Format courses with detailed teacher and cover_photo handling
+        const formattedCourses = coursesData.map(course => ({
+          id: course.id,
+          title: course.title,
+          description: course.description,
+          teacher: course.teacher || { username: course.teacher_name || 'Unknown Teacher' }, // Handle teacher as object or string
+          isFollowed: false, // Admins don't follow courses
+          cover_photo: course.cover_photo || null,
+        }));
+        console.log('Formatted courses:', formattedCourses);
+        setAllCourses(formattedCourses);
+      } catch (err) {
+        console.error('Fetch error:', err);
+        setError(`Error fetching courses: ${err.message}. 
+          - Ensure the Django server is running at http://localhost:8000/.
+          - Check CORS configuration in Django settings.
+          - Verify you are authenticated as an admin.
+          - Check browser console for details.`);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, []);
+
+  const handleCourseAction = async (action, courseId) => {
+    console.log(`Action: ${action}, Course ID: ${courseId}`);
+    try {
+      let response;
+      if (action === 'view') {
+        response = await fetch(`http://localhost:8000/courses/${courseId}/`, {
+          method: 'GET',
+          credentials: 'include',
+        });
+      }
+
+      if (!response.ok) throw new Error(`Failed to ${action} course: ${response.status}`);
+      console.log(`${action} action succeeded`);
+
+      // Optionally refresh course data if needed
+      const updatedCoursesResponse = await fetch('http://localhost:8000/courses/', {
+        credentials: 'include',
+      });
+      if (!updatedCoursesResponse.ok) throw new Error(`Failed to refresh courses: ${updatedCoursesResponse.status}`);
+      const updatedCoursesData = await updatedCoursesResponse.json();
+      const formattedCourses = updatedCoursesData.map(course => ({
+        id: course.id,
+        title: course.title,
+        description: course.description,
+        teacher: course.teacher || { username: course.teacher_name || 'Unknown Teacher' },
+        isFollowed: false,
+        cover_photo: course.cover_photo || null,
+      }));
+      setAllCourses(formattedCourses);
+    } catch (err) {
+      console.error(`${action} action failed:`, err);
+    }
+  };
 
   const menuItems = [
-    { id: 'overview', label: 'Dashboard', icon: Home, description: 'System overview and key metrics' },
-    { id: 'AdminManagingStudents', label: 'Student Management', icon: Users, description: 'Manage students and teachers' },
-    { id: 'AdminManageTeachers', label: 'Teacher Management', icon: UserCheck, description: 'Approve new teacher registrations' },
-    { id: 'course_management', label: 'Course Management', icon: BookOpen, description: 'Oversee all courses and content' },
-    { id: 'institution_settings', label: 'Institution Settings', icon: Building, description: 'Configure institutional parameters' },
-    { id: 'analytics', label: 'Analytics & Reports', icon: BarChart3, description: 'Platform analytics and reporting' },
-    { id: 'financial', label: 'Financial Overview', icon: DollarSign, description: 'Revenue and financial metrics' },
-    { id: 'system_logs', label: 'System Logs', icon: Database, description: 'View system activity logs' },
-    { id: 'backup_restore', label: 'Backup & Restore', icon: Shield, description: 'Data backup and recovery' },
-    { id: 'scheduling', label: 'System Scheduling', icon: Calendar, description: 'Manage system maintenance' },
-    { id: 'content_moderation', label: 'Content Moderation', icon: FileText, description: 'Review and moderate content' },
-    { id: 'notifications', label: 'System Notifications', icon: Bell, description: 'Platform-wide notifications' },
-    { id: 'email_management', label: 'Email Management', icon: Mail, description: 'Configure email settings' },
-    { id: 'support', label: 'Support Center', icon: HelpCircle, description: 'Admin support and documentation' },
-    { id: 'settings', label: 'System Settings', icon: Settings, description: 'Configure platform settings' },
+    { id: 'overview', label: 'Dashboard', icon: Home, description: 'System overview and key metrics', path: 'overview' },
+    { id: 'AdminManagingStudents', label: 'Student Management', icon: Users, description: 'Manage students and teachers', path: 'AdminManagingStudents' },
+    { id: 'AdminManageTeachers', label: 'Teacher Management', icon: UserCheck, description: 'Approve new teacher registrations', path: 'AdminManageTeachers' },
+    { id: 'course_management', label: 'Course Management', icon: BookOpen, description: 'Oversee all courses and content', path: 'course_management' },
+    { id: 'institution_settings', label: 'Institution Settings', icon: Building, description: 'Configure institutional parameters', path: 'institution_settings' },
+    { id: 'analytics', label: 'Analytics & Reports', icon: BarChart3, description: 'Platform analytics and reporting', path: 'analytics' },
+    { id: 'financial', label: 'Financial Overview', icon: DollarSign, description: 'Revenue and financial metrics', path: 'financial' },
+    { id: 'system_logs', label: 'System Logs', icon: Database, description: 'View system activity logs', path: 'system_logs' },
+    { id: 'backup_restore', label: 'Backup & Restore', icon: Shield, description: 'Data backup and recovery', path: 'backup_restore' },
+    { id: 'scheduling', label: 'System Scheduling', icon: Calendar, description: 'Manage system maintenance', path: 'scheduling' },
+    { id: 'content_moderation', label: 'Content Moderation', icon: FileText, description: 'Review and moderate content', path: 'content_moderation' },
+    { id: 'notifications', label: 'System Notifications', icon: Bell, description: 'Platform-wide notifications', path: 'notifications' },
+    { id: 'email_management', label: 'Email Management', icon: Mail, description: 'Configure email settings', path: 'email_management' },
+    { id: 'support', label: 'Support Center', icon: HelpCircle, description: 'Admin support and documentation', path: 'support' },
+    { id: 'settings', label: 'System Settings', icon: Settings, description: 'Configure platform settings', path: 'settings' },
   ];
 
   const renderPage = () => {
     const currentMenuItem = menuItems.find((item) => item.id === currentPage);
     switch (currentPage) {
-      case 'overview': 
+      case 'overview':
         return <AdminOverview />;
       case 'AdminManagingStudents':
-        return <AdminManageStudents/>;
+        return <AdminManageStudents />;
       case 'AdminManageTeachers':
-        return <AdminManageTeachers/>
+        return <AdminManageTeachers />;
+      case 'course_management':
+        return (
+          <div className="space-y-8">
+            <div className="text-center mb-8">
+              <h2 className="text-4xl md:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-gray-400 mb-4">
+                Course Management
+              </h2>
+              <p className="text-gray-300 text-lg max-w-2xl mx-auto">
+                Oversee and manage all courses on the platform.
+              </p>
+            </div>
+            <div className="backdrop-blur-md bg-white/10 rounded-xl p-8 border border-white/20">
+              {loading ? (
+                <p className="text-gray-300 text-center">Loading courses...</p>
+              ) : error ? (
+                <p className="text-red-400 text-center">{error}</p>
+              ) : (
+                <CourseList
+                  role="admin"
+                  courses={allCourses}
+                  onAction={handleCourseAction}
+                />
+              )}
+            </div>
+          </div>
+        );
       default:
-        return <PlaceholderPage title={currentMenuItem?.label || 'Page Not Found'} description={currentMenuItem?.description || "This section is under development"} />;
+        return <PlaceholderPage title={currentMenuItem?.label || 'Page Not Found'} description={currentMenuItem?.description || 'This section is under development'} />;
     }
   };
 
@@ -293,7 +408,10 @@ const AdminDashboard = () => {
               return (
                 <button
                   key={item.id}
-                  onClick={() => setCurrentPage(item.id)}
+                  onClick={() => {
+                    setCurrentPage(item.id);
+                    navigate(`/AdminDashboard/${item.path}`);
+                  }}
                   className={`w-full flex items-center px-4 py-3 text-left transition-all duration-300 hover:scale-105 ${
                     currentPage === item.id
                       ? 'bg-gradient-to-r from-red-500/20 to-gray-500/20 border-r-2 border-red-400 text-white shadow-lg'

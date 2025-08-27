@@ -14,7 +14,6 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-
 from django.contrib import admin
 from django.urls import include, path
 from django.conf import settings
@@ -29,6 +28,7 @@ urlpatterns = [
     path('token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     path('api-auth/', include('rest_framework.urls',namespace='rest_framework')),
     path("", include("courses.urls")),
+    path('quizzes/', include("quiz.urls")),
 ]
 
 if settings.DEBUG:

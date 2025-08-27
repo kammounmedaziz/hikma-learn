@@ -1,18 +1,75 @@
+import asyncio
+import logging
+import re
+import time
+from asyncio.log import logger
+
+import webvtt
+from django.http import FileResponse
+from deepgram import DeepgramClient, PrerecordedOptions, Deepgram
+from django.core.files.storage import default_storage
+from django.http import Http404
 from django.shortcuts import render
+from django.views.decorators.clickjacking import xframe_options_exempt
 from rest_framework import viewsets, permissions, serializers
 from rest_framework.permissions import BasePermission, SAFE_METHODS
-
-from accounts.models import UserType
-from .models import Course, Chapter, CourseFollow, Content
-from .serializers import CourseSerializer, CourseFollowSerializer, ChapterSerializer, ContentSerializer
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
+from webvtt import WebVTT, Caption
+from moviepy import VideoFileClip
 
+from accounts.models import UserType
+from .models import Course, Chapter, CourseFollow, Content, ContentKind, FileKind, ContentSeen
+from .serializers import CourseSerializer, CourseFollowSerializer, ChapterSerializer, ContentSerializer
 from .permissions import IsTeacherOrReadOnly, IsTeacherOfCourse, IsTeacherOfCourseOrReadOnly, IsTeacherOnly, IsStudentOnly, IsTeacherOfChapter
+import os
+from django.core.files.base import ContentFile
+from django.conf import settings
+import cloudflare
+from rest_framework.views import APIView
+
+def format_timestamp(seconds):
+    hours = int(seconds // 3600)
+    minutes = int((seconds % 3600) // 60)
+    secs = int(seconds % 60)
+    millis = int((seconds - int(seconds)) * 1000)
+    return f"{hours:02}:{minutes:02}:{secs:02}.{millis:03}"
+
+def split_text_to_captions(text, segment_duration=5):
+    words = text.split()
+    words_per_segment = max(1, int(len(words) / (len(text) / segment_duration / 2)))  # heuristic
+    captions = []
+    start_time = 0
+
+    for i in range(0, len(words), words_per_segment):
+        segment_words = words[i:i+words_per_segment]
+        segment_text = ' '.join(segment_words)
+        end_time = start_time + segment_duration
+        captions.append({
+            'start': start_time,
+            'end': end_time,
+            'text': segment_text,
+        })
+        start_time = end_time
+
+    return captions
 
 class EmptySerializer(serializers.Serializer):
     pass
+
+@xframe_options_exempt
+def embedded_pdf_view(request, content_id):
+    try:
+        content = Content.objects.get(id=content_id, content_kind=ContentKind.FILE, file_kind=FileKind.PDF)
+        if not content.file:
+            logger.error(f"No file found for Content ID {content_id}")
+            raise Http404("PDF file not found.")
+        logger.info(f"Serving PDF: {content.file.path}")
+        return FileResponse(content.file.open('rb'), as_attachment=False)
+    except Content.DoesNotExist:
+        logger.error(f"Content ID {content_id} not found")
+        raise Http404("PDF content not found.")
 
 # Create your views here.
 class CourseViewSet(viewsets.ModelViewSet):
@@ -67,7 +124,6 @@ class CourseViewSet(viewsets.ModelViewSet):
                 return Response(status=status.HTTP_204_NO_CONTENT)
             return Response({"detail": "You are not following this course."}, status=status.HTTP_400_BAD_REQUEST)
 
-
 class ChapterViewSet(viewsets.ModelViewSet):
     serializer_class = ChapterSerializer
     permission_classes = [IsTeacherOfCourseOrReadOnly]
@@ -87,7 +143,6 @@ class ChapterViewSet(viewsets.ModelViewSet):
             from .serializers import ReorderSerializer
             return ReorderSerializer
         return super().get_serializer_class()
-
 
     @action(detail=False, methods=['post'], permission_classes=[IsTeacherOfCourse])
     def reorder(self, request, course_pk=None):
@@ -148,3 +203,199 @@ class ContentViewSet(viewsets.ModelViewSet):
             Content.objects.filter(id=content_id).update(order=order)
 
         return Response({"detail": "Contents reordered successfully."}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], url_path='generate-alt-text', permission_classes=[IsTeacherOfChapter])
+    def generate_alt_text(self, request, pk=None, course_pk=None, chapter_pk=None):
+        logger = logging.getLogger(__name__)
+        content = self.get_object()
+        if content.content_kind != 'FILE' or content.file_kind != 'IMAGE':
+            return Response({'detail': 'Alt text can only be generated for image content.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        if not content.file:
+            return Response({'detail': 'No image file available for alt text generation.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        SUPPORTED_FORMATS = {'image/jpeg', 'image/png', 'image/webp'}
+        if content.file_mime_type not in SUPPORTED_FORMATS:
+            return Response({'detail': 'Unsupported image format for alt text generation.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        ACCOUNT_ID = os.getenv('CLOUDFLARE_ACCOUNT_ID')
+        API_TOKEN = os.getenv('CLOUDFLARE_API_TOKEN')
+        if not ACCOUNT_ID or not API_TOKEN:
+            return Response({'detail': 'Internal server error'},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        try:
+            image_bytes = content.file.read()
+            if not image_bytes:
+                return Response({'detail': 'Image file is empty.'}, status=status.HTTP_400_BAD_REQUEST)
+            MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10 MB
+            if len(image_bytes) > MAX_IMAGE_SIZE:
+                return Response({'detail': 'Image file is too large for alt text generation.'},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+            client = cloudflare.Cloudflare(api_token=API_TOKEN)
+            data = client.ai.run(
+                "@cf/llava-hf/llava-1.5-7b-hf",
+                account_id=ACCOUNT_ID,
+                image=image_bytes,
+                prompt="Generate a concise alt text description for this image.",
+                max_tokens=2048
+            )
+            description = data['description']
+
+            if not description:
+                logger.error("No description generated by Cloudflare API.")
+                logger.error(data)
+                return Response({'detail': 'No description generated by Cloudflare API'},
+                                status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+            return Response({'image_alt_text': description.strip()}, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.exception(f"Error generating alt text for content {pk}: {str(e)}")
+            return Response({'detail': f'Failed to generate alt text: {str(e)}'},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=True, methods=['post'], url_path='generate-subtitles', permission_classes=[IsTeacherOfChapter])
+    def generate_subtitles(self, request, pk=None, course_pk=None, chapter_pk=None):
+        logger = logging.getLogger(__name__)
+        logger.debug(f"User: {request.user}, Action: generate_subtitles for content {pk}")
+
+        content = self.get_object()
+
+        if content.content_kind != 'FILE' or content.file_kind != 'VIDEO':
+            return Response({'detail': 'Subtitles can only be generated for video content.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        if not content.file:
+            return Response({'detail': 'No video file available for transcription.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Get video duration using moviepy
+            video = VideoFileClip(content.file.path)
+            video_duration = video.duration  # Duration in seconds
+            video.close()
+            logger.debug(f"Video duration: {video_duration} seconds")
+
+            with open(content.file.path, 'rb') as f:
+                bytes_data = f.read()
+
+            logger.debug(f"File MIME type: {content.file_mime_type}, Size: {len(bytes_data)} bytes")
+            dg_client = DeepgramClient(api_key=settings.DEEPGRAM_API_KEY)
+            source = {
+                'buffer': bytes_data,
+                'mimetype': content.file_mime_type,
+            }
+            options = PrerecordedOptions(
+                model='enhanced',  # Try 'enhanced' model for better utterance detection
+                smart_format=True,
+                punctuate=True,
+                utterances=True,
+                diarize=True
+            )
+            # Use synchronous transcribe_file method
+            response = dg_client.listen.rest.v('1').transcribe_file(source, options)
+            transcript = response.results.channels[0].alternatives[0]
+            transcript_text = getattr(transcript, 'transcript', '') or ''
+            utterances = getattr(transcript, 'utterances', []) or []
+            words = getattr(transcript, 'words', []) or []
+
+            logger.debug(f"Transcript text length: {len(transcript_text)}")
+            logger.debug(f"Utterances count: {len(utterances)}, Words count: {len(words)}")
+            
+            # Generate WebVTT content
+            vtt = WebVTT()
+            if utterances:
+                logger.info(f"Generating captions from {len(utterances)} utterances")
+                for utterance in utterances:
+                    start = getattr(utterance, 'start', 0)
+                    end = getattr(utterance, 'end', start + 5.0)  # Fallback end time
+                    text = getattr(utterance, 'transcript', '')
+                    speaker = getattr(utterance, 'speaker', 'Unknown')
+                    if text:  # Only add captions with non-empty text
+                        caption = Caption(
+                            start=format_timestamp(start),
+                            end=format_timestamp(end),
+                            text=f"Speaker {speaker}: {text}"
+                        )
+                        vtt.captions.append(caption)
+            elif words:
+                logger.warning("No utterances found. Falling back to word-level captions.")
+                chunk_duration = 5.0
+                current_time = 0.0
+                current_text = []
+                for word in words:
+                    word_start = getattr(word, 'start', current_time)
+                    word_end = getattr(word, 'end', word_start + 0.5)
+                    word_text = getattr(word, 'punctuated_word', getattr(word, 'word', ''))
+                    current_text.append(word_text)
+
+                    if word_end - current_time >= chunk_duration or len(current_text) >= 10:
+                        caption = Caption(
+                            start=format_timestamp(current_time),
+                            end=format_timestamp(word_end),
+                            text=' '.join(current_text)
+                        )
+                        vtt.captions.append(caption)
+                        current_time = word_end
+                        current_text = []
+
+                if current_text:
+                    caption = Caption(
+                        start=format_timestamp(current_time),
+                        end=format_timestamp(min(current_time + 5.0, video_duration)),
+                        text=' '.join(current_text)
+                    )
+                    vtt.captions.append(caption)
+
+            elif transcript_text:
+                logger.warning("No utterances or words; falling back to transcript segmentation.")
+                words_list = transcript_text.split()
+                words_per_chunk = max(10, len(words_list) // 10)
+                chunk_duration = video_duration / max(1, len(words_list) // words_per_chunk)
+
+                for i in range(0, len(words_list), words_per_chunk):
+                    chunk_text = ' '.join(words_list[i:i + words_per_chunk])
+                    start_time = i * chunk_duration / words_per_chunk
+                    end_time = min((i + words_per_chunk) * chunk_duration / words_per_chunk, video_duration)
+                    caption = Caption(
+                        start=format_timestamp(start_time),
+                        end=format_timestamp(end_time),
+                        text=chunk_text
+                    )
+                    vtt.captions.append(caption)
+            else:
+                logger.warning("No transcript data available. Creating a default empty caption.")
+                caption = Caption(
+                    start='00:00:00.000',
+                    end=format_timestamp(min(1.0, video_duration)),
+                    text='No speech detected'
+                )
+                vtt.captions.append(caption)
+
+            # Save WebVTT file
+            vtt_content = vtt.content
+            file_name = f"content_subtitles/subtitles_{content.id}.vtt"
+            content.subtitle_file = ContentFile(vtt_content.encode('utf-8'), name=file_name)
+            content.transcript_text = transcript_text
+            content.save()
+
+            serializer = self.get_serializer(content)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            logger.exception(f"Error generating subtitles for content {pk}: {str(e)}")
+            return Response({'detail': f'Failed to generate subtitles: {str(e)}'},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class MarkContentViewed(APIView):
+    permission_classes = [IsStudentOnly]
+
+    def post(self, request, course_pk, chapter_pk, pk):
+        try:
+            content = Content.objects.get(id=pk, chapter__id=chapter_pk, chapter__course__id=course_pk)
+            ContentSeen.objects.get_or_create(student=request.user, content=content)
+            return Response({"detail": "Content marked as viewed."}, status=status.HTTP_200_OK)
+        except Content.DoesNotExist:
+            return Response({"detail": "Content not found."}, status=status.HTTP_404_NOT_FOUND)

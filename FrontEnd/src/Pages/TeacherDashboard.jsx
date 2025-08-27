@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Home,
   BookOpen,
@@ -13,20 +13,17 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardList,
-  Award,
-  Video,
   Library,
   UserCheck,
-  PieChart,
-  TrendingUp,
-  Mail,
+  Video,
   HelpCircle,
-  Star,
-  Plus,
-  Edit,
-  Eye
+  TrendingUp,
+  Award, PieChart, Mail, Star, Plus, Edit, Eye
 } from 'lucide-react';
+import { Link, useLocation, Outlet } from 'react-router-dom';
 import TeacherSettings from '../Components/TeacherSettings';
+import MyCoursesTeacher from './MyCoursesTeacher.jsx';
+import CourseList from '../Components/CourseList'; // Import CourseList
 
 const PlaceholderPage = ({ title, description }) => (
   <div className="space-y-8">
@@ -38,7 +35,6 @@ const PlaceholderPage = ({ title, description }) => (
         {description}
       </p>
     </div>
-
     <div className="backdrop-blur-md bg-white/10 rounded-xl p-8 border border-white/20 text-center">
       <div className="mb-4">
         <div className="w-16 h-16 bg-gradient-to-r from-red-500 to-red-600 rounded-full mx-auto mb-4 flex items-center justify-center">
@@ -66,7 +62,6 @@ const TeacherOverview = () => (
         Your teaching dashboard - manage classes, track student progress, and create engaging content
       </p>
     </div>
-
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       <div className="backdrop-blur-md bg-white/10 rounded-xl p-6 border border-white/20 hover:bg-white/20 transition-all duration-300">
         <div className="flex items-center justify-between mb-4">
@@ -76,7 +71,6 @@ const TeacherOverview = () => (
         <h3 className="text-lg font-semibold text-white mb-2">Total Students</h3>
         <p className="text-green-400 text-sm">+12 this month</p>
       </div>
-
       <div className="backdrop-blur-md bg-white/10 rounded-xl p-6 border border-white/20 hover:bg-white/20 transition-all duration-300">
         <div className="flex items-center justify-between mb-4">
           <BookOpen className="w-8 h-8 text-red-400" />
@@ -85,7 +79,6 @@ const TeacherOverview = () => (
         <h3 className="text-lg font-semibold text-white mb-2">Active Courses</h3>
         <p className="text-red-400 text-sm">2 new this semester</p>
       </div>
-
       <div className="backdrop-blur-md bg-white/10 rounded-xl p-6 border border-white/20 hover:bg-white/20 transition-all duration-300">
         <div className="flex items-center justify-between mb-4">
           <ClipboardList className="w-8 h-8 text-green-400" />
@@ -94,7 +87,6 @@ const TeacherOverview = () => (
         <h3 className="text-lg font-semibold text-white mb-2">Pending Reviews</h3>
         <p className="text-yellow-400 text-sm">6 urgent</p>
       </div>
-
       <div className="backdrop-blur-md bg-white/10 rounded-xl p-6 border border-white/20 hover:bg-white/20 transition-all duration-300">
         <div className="flex items-center justify-between mb-4">
           <TrendingUp className="w-8 h-8 text-yellow-400" />
@@ -104,7 +96,6 @@ const TeacherOverview = () => (
         <p className="text-green-400 text-sm">+5% improvement</p>
       </div>
     </div>
-
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
       <div className="backdrop-blur-md bg-white/10 rounded-xl p-6 border border-white/20">
         <h3 className="text-xl font-bold text-white mb-4 flex items-center">
@@ -135,7 +126,6 @@ const TeacherOverview = () => (
           </div>
         </div>
       </div>
-
       <div className="backdrop-blur-md bg-white/10 rounded-xl p-6 border border-white/20">
         <h3 className="text-xl font-bold text-white mb-4 flex items-center">
           <Bell className="w-5 h-5 mr-2 text-yellow-400" />
@@ -178,42 +168,30 @@ const AnimatedBackground = () => (
 );
 
 const TeacherDashboard = () => {
-  const [currentPage, setCurrentPage] = useState('overview');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const location = useLocation();
 
   const menuItems = [
-    { id: 'overview', label: 'Dashboard', icon: Home, description: 'Overview of your teaching activities' },
-    { id: 'courses', label: 'My Courses', icon: BookOpen, description: 'Manage your courses and curriculum' },
-    { id: 'assignments', label: 'Assignments', icon: ClipboardList, description: 'Create and manage assignments' },
-    { id: 'grading', label: 'Grading Center', icon: FileText, description: 'Review and grade submissions' },
-    { id: 'attendance', label: 'Attendance', icon: UserCheck, description: 'Track student attendance' },
-    { id: 'analytics', label: 'Analytics', icon: BarChart3, description: 'Student performance analytics' },
-    { id: 'schedule', label: 'Class Schedule', icon: Calendar, description: 'Manage your teaching schedule' },
-    { id: 'content', label: 'Content Library', icon: Library, description: 'Course materials and resources' },
-    { id: 'live_classes', label: 'Live Classes', icon: Video, description: 'Conduct virtual classes' },
-    { id: 'forums', label: 'Discussion Forums', icon: MessageSquare, description: 'Moderate class discussions' },
-    { id: 'notifications', label: 'Notifications', icon: Bell, description: 'System alerts and updates' },
-    { id: 'support', label: 'Support', icon: HelpCircle, description: 'Get help and report issues' },
-    { id: 'settings', label: 'Settings', icon: Settings, description: 'Configure your preferences' },
+    { id: 'overview', label: 'Dashboard', icon: Home, description: 'Overview of your teaching activities', path: '/teacherdashboard' },
+    { id: 'all-courses', label: 'All Courses', icon: GraduationCap, description: 'Explore all courses on the platform', path: '/teacherdashboard/all-courses' },
+    { id: 'courses', label: 'My Courses', icon: BookOpen, description: 'Manage your courses and curriculum', path: '/teacherdashboard/courses' },
+    { id: 'quizzes', label: 'Quizzes', icon: ClipboardList, description: 'Create and manage assignments', path: '/teacherdashboard/quizzes' },
+    { id: 'grading', label: 'Grading Center', icon: FileText, description: 'Review and grade submissions', path: '/teacherdashboard/grading' },
+    { id: 'attendance', label: 'Attendance', icon: UserCheck, description: 'Track student attendance', path: '/teacherdashboard/attendance' },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3, description: 'Student performance analytics', path: '/teacherdashboard/analytics' },
+    { id: 'schedule', label: 'Class Schedule', icon: Calendar, description: 'Manage your teaching schedule', path: '/teacherdashboard/schedule' },
+    { id: 'content', label: 'Content Library', icon: Library, description: 'Course materials and resources', path: '/teacherdashboard/content' },
+    { id: 'live_classes', label: 'Live Classes', icon: Video, description: 'Conduct virtual classes', path: '/teacherdashboard/live_classes' },
+    { id: 'forums', label: 'Discussion Forums', icon: MessageSquare, description: 'Moderate class discussions', path: '/teacherdashboard/forums' },
+    { id: 'notifications', label: 'Notifications', icon: Bell, description: 'System alerts and updates', path: '/teacherdashboard/notifications' },
+    { id: 'support', label: 'Support', icon: HelpCircle, description: 'Get help and report issues', path: '/teacherdashboard/support' },
+    { id: 'settings', label: 'Settings', icon: Settings, description: 'Configure your preferences', path: '/teacherdashboard/settings' },
   ];
-
-  const renderPage = () => {
-    const currentMenuItem = menuItems.find((item) => item.id === currentPage);
-    switch (currentPage) {
-      case 'overview': 
-        return <TeacherOverview />;
-      case 'settings':
-        return <TeacherSettings/>
-      default:
-        return <PlaceholderPage title={currentMenuItem?.label || 'Page Not Found'} description={currentMenuItem?.description || "This section is under development"} />;
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-red-900 to-gray-900 relative overflow-hidden">
       <AnimatedBackground />
       <div className="flex h-screen relative z-10">
-        {/* Sidebar */}
         <div className={`backdrop-blur-md bg-black/20 border-r border-white/10 shadow-2xl transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-64'}`}>
           <div className="p-4 border-b border-white/10">
             <div className="flex items-center justify-between">
@@ -233,16 +211,16 @@ const TeacherDashboard = () => {
               </button>
             </div>
           </div>
-
           <nav className="mt-4 overflow-y-auto max-h-[calc(100vh-120px)]">
             {menuItems.map((item) => {
               const Icon = item.icon;
+              const isActive = location.pathname === item.path || (item.id === 'overview' && location.pathname === '/teacherdashboard');
               return (
-                <button
+                <Link
                   key={item.id}
-                  onClick={() => setCurrentPage(item.id)}
+                  to={item.path}
                   className={`w-full flex items-center px-4 py-3 text-left transition-all duration-300 hover:scale-105 ${
-                    currentPage === item.id
+                    isActive
                       ? 'bg-gradient-to-r from-red-500/20 to-gray-500/20 border-r-2 border-red-400 text-white shadow-lg'
                       : 'text-gray-300 hover:bg-white/10 hover:text-white'
                   }`}
@@ -250,22 +228,23 @@ const TeacherDashboard = () => {
                 >
                   <Icon size={20} className="flex-shrink-0" />
                   {!sidebarCollapsed && <span className="ml-3 font-medium">{item.label}</span>}
-                </button>
+                </Link>
               );
             })}
           </nav>
         </div>
-
-        {/* Main Content */}
         <div className="flex-1 overflow-auto">
           <div className="p-4 md:p-8 relative z-10">
             <div className="backdrop-blur-lg bg-gray-900/30 rounded-2xl border border-gray-700 shadow-xl min-h-[calc(100vh-4rem)] p-4 md:p-8">
-              {renderPage()}
+              {location.pathname === '/teacherdashboard' || location.pathname === '/teacherdashboard/overview' ? (
+                <TeacherOverview />
+              ) : (
+                <Outlet />
+              )}
             </div>
           </div>
         </div>
       </div>
-
       <style>{`
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
         @keyframes spin-slower { to { transform: rotate(360deg); } }
