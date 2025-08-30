@@ -1,0 +1,147 @@
+.forum-test {
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.forum-test h1 {
+  color: #2c3e50;
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.status-message {
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 4px;
+  background-color: #e8f5e8;
+  border: 1px solid #4caf50;
+  color: #2e7d32;
+}
+
+.tabs {
+  display: flex;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #ddd;
+}
+
+.tabs button {
+  padding: 10px 20px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 16px;
+  border-bottom: 3px solid transparent;
+  margin-right: 10px;
+}
+
+.tabs button.active {
+  border-bottom-color: #3498db;
+  color: #3498db;
+  font-weight: bold;
+}
+
+.tabs button:hover {
+  background-color: #f5f5f5;
+}
+
+.tab-content {
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.questions-list, .subjects-list, .notifications-list {
+  display: grid;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.question-item, .subject-item, .notification-item {
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #fafafa;
+}
+
+.question-item h3 {
+  margin: 0 0 10px 0;
+  color: #2c3e50;
+}
+
+.answers-section {
+  margin-top: 15px;
+  padding: 15px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+}
+
+.answer-item {
+  padding: 10px;
+  margin: 10px 0;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.pinned-badge {
+  background-color: #ffeb3b;
+  color: #333;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  margin-left: 10px;
+}
+
+.create-forms {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.create-form {
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: #fafafa;
+}
+
+.create-form h3 {
+  margin-top: 0;
+  color: #2c3e50;
+}
+
+.create-form input,
+.create-form textarea,
+.create-form select {
+  width: 100%;
+  padding: 8px;
+  margin: 8px 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.create-form textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.create-form button {
+  background-color: #3498db;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.create-form button:hover {
+  background-color: #2980b9;
+}
+
+.create-form button:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+}

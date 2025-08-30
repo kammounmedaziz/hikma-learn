@@ -22,6 +22,8 @@ import TeacherDashboard from './Pages/TeacherDhasboard'
 //import WorkSpacePage from './Pages/WorkSpacePage'
 import { getCurrentUser } from './services/auth';
 import Unauthorized from './Components/Unauthorized';
+//import XPBar from './Components/XPBar';
+import QuestionsFeed from './Pages/ForumTest';
 //import XPBar from './components/XPBar';
 //import WorkspaceLayout from './components/WorkspaceLayout';
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
@@ -59,7 +61,7 @@ const LandingPage = ({ showWelcome, setShowWelcome }) => {
           </div>
           
           <div className="relative z-10">
-            <AuthPage/>
+            <AuthPage />
           </div>
         </div>
       )}

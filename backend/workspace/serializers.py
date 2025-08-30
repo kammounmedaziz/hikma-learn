@@ -84,10 +84,13 @@ class StatsSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         fields = ['xp', 'level', 'streak_days', 'tasks_completed_total', 
-                 'focus_minutes_total', 'xp_needed', 'progress']
+                 'focus_minutes_total', 'focus_sessions_count', 'xp_needed', 'progress']
     
     def get_xp_needed(self, obj):
         return obj.level * 1000
     
     def get_progress(self, obj):
-        return (obj.xp / (obj.level * 1000)) * 100
+        xp_needed = obj.level * 100
+        if xp_needed > 0:
+            return min(100, (obj.xp / xp_needed) * 100)
+        return 0
