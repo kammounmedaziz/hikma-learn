@@ -55,6 +55,8 @@ INSTALLED_APPS = [
     "courses",
     'corsheaders',
     'workspace',
+    'channels',
+    'forum',
 ]
 
 MIDDLEWARE = [

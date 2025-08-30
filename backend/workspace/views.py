@@ -20,6 +20,8 @@ from .models import *
 from .serializers import *
 from .permissions import IsWorkspaceOwner, IsTaskOwner
 
+from .serializers import StatsSerializer
+
 
 # Base view class with common authentication settings
 class AuthenticatedAPIView(generics.GenericAPIView):
@@ -400,3 +402,37 @@ class UserStatsView(AuthenticatedAPIView, generics.RetrieveAPIView):
 class BadgeListView(AuthenticatedAPIView, generics.ListAPIView):
     serializer_class = BadgeSerializer
     queryset = Badge.objects.all()
+
+
+
+
+
+class UserStatsView(AuthenticatedAPIView, generics.GenericAPIView):
+    def get(self, request):
+        try:
+            profile = UserProfile.objects.get(user=request.user)
+            data = {
+                'xp': profile.xp,
+                'level': profile.level,
+                'streak_days': profile.streak_days,
+                'tasks_completed_total': profile.tasks_completed_total,
+                'focus_minutes_total': profile.focus_minutes_total,
+                'focus_sessions_count': profile.focus_sessions_count,
+                'xp_needed': profile.level * 1000,
+                'progress': min(100, (profile.xp / (profile.level * 1000)) * 100) if profile.level * 1000 > 0 else 0
+            }
+            return Response(data)
+        except UserProfile.DoesNotExist:
+            # Create profile if it doesn't exist
+            profile = UserProfile.objects.create(user=request.user)
+            data = {
+                'xp': 0,
+                'level': 1,
+                'streak_days': 0,
+                'tasks_completed_total': 0,
+                'focus_minutes_total': 0,
+                'focus_sessions_count': 0,
+                'xp_needed': 100,
+                'progress': 0
+            }
+            return Response(data)
