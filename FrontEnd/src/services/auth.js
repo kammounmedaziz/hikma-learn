@@ -18,7 +18,7 @@ export const login = async (credentials) => {
   const data = await response.json();
   localStorage.setItem('access_token', data.access);
   localStorage.setItem('refresh_token', data.refresh);
-  
+
   // Get user profile after successful login
   try {
     const user = await fetchWithAuth('/profile/');
@@ -42,11 +42,10 @@ export const getCurrentUser = () => {
   return user ? JSON.parse(user) : null;
 };
 
-
 export const refreshToken = async () => {
   const refresh = localStorage.getItem('refresh_token');
   if (!refresh) throw new Error('No refresh token');
-  
+
   const response = await fetch(`${API_BASE}/token/refresh/`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -61,4 +60,23 @@ export const refreshToken = async () => {
   const data = await response.json();
   localStorage.setItem('access_token', data.access);
   return data.access;
+};
+
+
+
+export const verifyToken = async () => {
+  const token = localStorage.getItem('access_token');
+  if (!token) return false;
+  
+  try {
+    const response = await fetch(`${API_BASE}/profile/`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    return response.ok;
+  } catch (error) {
+    return false;
+  }
 };
