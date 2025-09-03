@@ -30,7 +30,11 @@ import WorkSpace from './WorkSpacePage';
 //import Actualite from './Actualite';
 //import Contact from './Contact';
 import MyCourses from './MyCourses';  // <-- Import your MyCourses component
+<<<<<<< HEAD
 import Forum from './Forum';
+=======
+import ForumTest from './ForumTest';
+>>>>>>> 98ef83a0c2dbba3014249d1cf9bc8345139fec5c
 
 const PlaceholderPage = ({ title, description }) => (
   <div className="space-y-8">
@@ -89,7 +93,11 @@ const StudyDashboard = () => {
       case 'settings': return <StudentSettings/>
       case 'ReportIssue': return <IssuesReportForm />;
       case 'WorkSpace': return <WorkSpace />;
+<<<<<<< HEAD
       case 'forum': return <Forum />;
+=======
+      case 'forum': return <ForumTest />;
+>>>>>>> 98ef83a0c2dbba3014249d1cf9bc8345139fec5c
       //case 'partners_supporters': return <PartnersAndSupporters />;
       //case 'voices_community': return <VoicesOfCommunity />;
       //case 'actualite': return <Actualite />;

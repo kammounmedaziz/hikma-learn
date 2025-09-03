@@ -23,6 +23,10 @@ import TeacherDashboard from './Pages/TeacherDhasboard'
 import { getCurrentUser } from './services/auth';
 import Unauthorized from './Components/Unauthorized';
 //import XPBar from './Components/XPBar';
+<<<<<<< HEAD
+=======
+import QuestionsFeed from './Pages/ForumTest';
+>>>>>>> 98ef83a0c2dbba3014249d1cf9bc8345139fec5c
 //import XPBar from './components/XPBar';
 //import WorkspaceLayout from './components/WorkspaceLayout';
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
